@@ -366,7 +366,8 @@ function nutidigSektion(){
    overskrift som et spørgsmål, og prikker der viser hvor i rækken man er. */
 function sektionHeader(id){
   const {sek, liste, idx} = sektionPos(id);
-  const forrige = idx>0 ? liste[idx-1].id : 'hjem';
+  // fase 1 begynder ikke på forsiden, men på datovalget lige før kortet
+  const forrige = idx>0 ? liste[idx-1].id : (sek.fase===1 ? 'turdato' : 'hjem');
   const F = FASER[sek.fase];
   const prikker = liste.map((x,i)=>`<span class="sek-prik ${i===idx?'aktiv':''} ${sektionKlar(x.id)?'klaret':''}"></span>`).join('');
   return `<div class="skærm-top">
@@ -757,7 +758,32 @@ function skærmHjem(){
 }
 function startForberedelse(){
   s.forberedelse = nyForberedelse();
-  gem(); gåTil(sektionListe(1)[0].id);
+  gem(); gåTil('turdato');
+}
+/* Datoen er det første, man vælger — før kortet. Den er ikke et af de tre
+   punkter i planen, men forudsætningen for dem: solnedgang, nedtælling og
+   invitationen hænger alle på den. */
+function skærmTurDato(){
+  const f = s.forberedelse;
+  if(!f){ gåTil('hjem'); return; }
+  $('indhold').innerHTML = `<div class="side anim">
+    <div class="skærm-top">
+      <button class="tilbage" onclick="gåTil('hjem')">${ik('tilbage')}</button>
+      <div><div class="etiket">Planlæg turen · først en dato</div>
+        <h1 style="font-size:22px">Hvornår vil I afsted?</h1></div>
+    </div>
+    <p class="dæmpet" style="margin-bottom:14px">Sæt datoen først — så ved vi, hvornår solen går ned det sted, I vælger bagefter.</p>
+    <div class="kort">
+      <label class="felt-etiket" style="margin-top:0">Dato</label>
+      <input type="date" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
+      <label class="felt-etiket">Ca. afgangstid <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
+      <input type="time" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
+    </div>
+    <div style="margin-top:24px">
+      <button class="knap primær bred" ${f.dato?`onclick="gåTil('destination')"`:'disabled'}>Videre til kortet ${ik('pil')}</button>
+    </div>
+    <div style="text-align:center;margin-top:16px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>
+  </div>`;
 }
 function hjemmeIgen(){
   s.anmeldAfventer = { sted: s.påTur.sted, dato: s.påTur.startet };
@@ -965,7 +991,7 @@ function dageTil(iso){
 function tjeklisteData(){
   const f = s.forberedelse;
   return [
-    { navn:'Dato',          under: f.dato?pænDato(f.dato):'Vælg afrejsedato',      klar:!!f.dato,        aktion:"gåTil('spontan-tid')" },
+    { navn:'Dato',          under: f.dato?pænDato(f.dato):'Vælg afrejsedato',      klar:!!f.dato,        aktion:f.spontan?"gåTil('spontan-tid')":"gåTil('turdato')" },
     { navn:'Destination',   under: f.destination?esc(f.destination.navn):'Find et sted', klar:!!f.destination, aktion:"gåTil('destination')" },
     { navn:'Invitation',    under: invUnderTekst(f),                               klar: invErKlar(f),   aktion:"gåTil('invitation')" },
     { navn:'Forplejning',   under: forplejningKlar()?valgtMad().length+' valgt':'Mad og drikke til turen', klar: forplejningKlar(), aktion:"gåTil('mad')" },
@@ -1385,14 +1411,6 @@ function brugGPS(){
 function gpsFallback(){
   sætDestination({ navn:'Jeres position (demo — Aarhus)', x:92, y:120 });
 }
-function sætTurDato(v){
-  if(!s.forberedelse) return;
-  s.forberedelse.dato = v || null;
-  gem();
-  // opdater kun værtskortet (solnedgang) — undgå at genindlæse hele kortet
-  const vk = document.getElementById('vaert-kort');
-  if(vk) vk.outerHTML = værtsKort();
-}
 function værtsKort(){
   const f = s.forberedelse;
   const dest = f && f.destination;
@@ -1444,24 +1462,8 @@ function skærmDestination(){
       <button class="knap blød bred lille" style="margin-top:10px" onclick="brugGPS()">${ik('gps')} Brug min position</button>
       ${dest?`<div class="sted-chips" style="margin-top:12px"><span class="sted-chip valgt">${ik('nål')} ${esc(dest.navn)}</span></div>`:''}
     </div>
-    ${dest?`
-    <div class="kort">
-      <div class="etiket">Hvornår vil I afsted?</div>
-      <label class="felt-etiket" style="margin-top:10px">Dato</label>
-      <input type="date" value="${s.forberedelse.dato||''}" onchange="sætTurDato(this.value)">
-      <label class="felt-etiket">Ca. afgangstid <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-      <input type="time" value="${s.forberedelse.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
-    </div>`:''}
     ${værtsKort()}
     ${sektionFod('destination')}
-    <div class="sektion"><h2>Køreklar — testede steder</h2></div>
-    <p class="dæmpet" style="margin:-4px 0 14px;font-size:13px">10 destinationer, vi selv har sovet på.</p>
-    ${TESTEDE.map(t=>`
-    <div class="forslag-knap" onclick="åbnTestet('${t.id}')" style="margin-bottom:11px;${t.klar?'':'opacity:.75'}">
-      <span class="f-ikon">${ik(t.klar?'stjerne':'nål')}</span>
-      <span style="flex:1"><b>${esc(t.navn)}</b><br><span class="dæmpet" style="font-size:12.5px">${t.klar?esc(t.kort):'OD udfylder beskrivelse, billede og faciliteter'}</span></span>
-      <span class="pil">${ik('pil')}</span>
-    </div>`).join('')}
   </div>`;
   tegnRigtigtKort();
 }
@@ -1994,6 +1996,7 @@ function tegn(){
   if(!s.onboarded){ skærmOnboarding(); tegnNav(); return; }
   switch(true){
     case aktivSkærm==='hjem':         skærmHjem(); break;
+    case aktivSkærm==='turdato':      skærmTurDato(); break;
     case aktivSkærm==='destination':  skærmDestination(); break;
     case aktivSkærm==='aktivitet':    skærmAktivitet(); break;
     case aktivSkærm==='bilen':        skærmBilen(); break;
