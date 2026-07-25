@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARYTMI — vælg mindre, oplev mere</title>
+<meta name="theme-color" content="#3a3227">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" sizes="32x32" href="brand/arytmi_logopakke_endelig/favicon_puls_A/arytmi_puls_A_32.png">
+<link rel="icon" type="image/png" sizes="256x256" href="brand/arytmi_logopakke_endelig/favicon_puls_A/arytmi_puls_A_256.png">
+<link rel="apple-touch-icon" href="brand/arytmi_logopakke_endelig/favicon_puls_A/arytmi_puls_A_180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="telefon">
+  <div class="succes-flash" id="flash"></div>
+  <!-- Landskabet følger med rundt i appen — dæmpet, bag alt indhold -->
+  <div class="app-baggrund" aria-hidden="true">
+    <svg class="bg-bund" viewBox="0 0 430 170" preserveAspectRatio="none">
+      <path d="M0 54 C60 30 120 44 180 36 C250 27 300 50 350 40 C390 33 415 40 430 36 V170 H0 Z" fill="#3a3227" opacity=".055"/>
+      <path d="M0 88 C70 68 130 84 200 74 C280 63 330 86 430 70 V170 H0 Z" fill="#3a3227" opacity=".075"/>
+      <path d="M0 126 C90 110 180 126 270 118 C340 112 400 122 430 116 V170 H0 Z" fill="#3a3227" opacity=".1"/>
+    </svg>
+    <svg class="bg-traeer" viewBox="0 0 430 170" preserveAspectRatio="none">
+      <g fill="#3a3227" opacity=".085">
+        <path d="m36 92 8-16 8 16zM38 79l6-12 6 12z"/>
+        <path d="m388 84 7-14 7 14zM390 73l5-10 5 10z"/>
+      </g>
+    </svg>
+  </div>
+  <div class="indhold" id="indhold"></div>
+  <nav class="bundnav" id="bundnav"></nav>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
