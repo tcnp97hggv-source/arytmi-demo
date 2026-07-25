@@ -643,12 +643,12 @@ function vælgNotif(til){
 /* =============================================================
    FORSIDE — ét helt billede, én beslutning: forbered turen
    ============================================================= */
-/* Arytmi-tæller — kompakt hjerteslag øverst; tæller årets forstyrrelser */
+/* Arytmi-tæller — kompakt hjerteslag øverst; tæller årets arytmer */
 function arytmiTæller(){
   const iÅr = s.ture.filter(t=>t.dato && String(t.dato).startsWith(String(new Date().getFullYear()))).length;
   // rytmestregen bor i ordmærket — tælleren nøjes med hjerteslaget
-  return `<button class="aryt-tæller" onclick="gåTil('log')" aria-label="${iÅr} forstyrrelser i år" title="Forstyrrelser i år">
-    <span class="at-label">Forstyrrelser i år:</span>
+  return `<button class="aryt-tæller" onclick="gåTil('log')" aria-label="${iÅr} arytmer i år" title="Arytmer i år">
+    <span class="at-label">Arytmer i år:</span>
     <svg class="at-hjerte" viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.6 3 8.9 3 5.7 5.4 4 7.8 4 9.7 4 11.2 5.2 12 6.4 12.8 5.2 14.3 4 16.2 4 18.6 4 21 5.7 21 8.9 21 14.6 12 21 12 21Z"/></svg>
     <span class="at-tal">${iÅr}</span>
   </button>`;

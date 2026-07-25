@@ -85,7 +85,7 @@
   .ht-side{display:flex;align-items:center;min-width:0}
   .ht-side.højre{justify-content:flex-end}
   .h-logo{pointer-events:none}
-  .h-logo .logo-svg{height:28px}
+  .h-logo .logo-svg{height:42px}
   #splash .logo-svg{height:64px}
 
   /* rund hovedknap med hjerteslag-ringe */
