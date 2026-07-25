@@ -760,6 +760,22 @@ function startForberedelse(){
   s.forberedelse = nyForberedelse();
   gem(); gåTil('turdato');
 }
+/* Ét datofelt-sæt til begge flows. Manuel tur og spontan tur stiller det
+   samme spørgsmål — de skal også svare på det samme sted, med de samme
+   felter. Kun rammen om kortet er forskellig. */
+function datoFelter(){
+  const f = s.forberedelse;
+  const seg = (v,tekst)=>`<button class="seg-knap ${f.retur===v?'valgt':''}" style="flex-direction:row;padding:12px 8px" onclick="sætRetur('${v}')"><span>${tekst}</span></button>`;
+  return `<div class="kort">
+    <label class="felt-etiket" style="margin-top:0">Dato</label>
+    <input type="date" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
+    <label class="felt-etiket">Ca. afgangstid <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
+    <input type="time" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
+    <label class="felt-etiket">Hjem igen? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
+    <div class="seg-valg">${seg('samme','Samme dag')}${seg('næste','Næste dag')}${seg('dato','Vælg dato')}</div>
+    ${f.retur==='dato'?`<input type="date" style="margin-top:10px" value="${f.returDato||''}" onchange="s.forberedelse.returDato=this.value;gem()">`:''}
+  </div>`;
+}
 /* Datoen er det første, man vælger — før kortet. Den er ikke et af de tre
    punkter i planen, men forudsætningen for dem: solnedgang, nedtælling og
    invitationen hænger alle på den. */
@@ -773,12 +789,7 @@ function skærmTurDato(){
         <h1 style="font-size:22px">Hvornår vil I afsted?</h1></div>
     </div>
     <p class="dæmpet" style="margin-bottom:14px">Sæt datoen først — så ved vi, hvornår solen går ned det sted, I vælger bagefter.</p>
-    <div class="kort">
-      <label class="felt-etiket" style="margin-top:0">Dato</label>
-      <input type="date" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
-      <label class="felt-etiket">Ca. afgangstid <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-      <input type="time" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
-    </div>
+    ${datoFelter()}
     <div style="margin-top:24px">
       <button class="knap primær bred" ${f.dato?`onclick="gåTil('destination')"`:'disabled'}>Videre til kortet ${ik('pil')}</button>
     </div>
@@ -829,18 +840,9 @@ function spontanBund(label, aktion, aktiv){
 function skærmSpontanTid(){
   const f = s.forberedelse;
   const færdig = spontanFærdig();
-  const seg = (v,tekst)=>`<button class="seg-knap ${f.retur===v?'valgt':''}" style="flex-direction:row;padding:12px 8px" onclick="sætRetur('${v}')"><span>${tekst}</span></button>`;
   $('indhold').innerHTML = `<div class="side anim">
     ${wizardTop(0,'Hvornår vil I afsted?','Vælg en dato og cirka-tidspunkt — så finder vi et sted, der passer til jeres tur.')}
-    <div class="kort">
-      <label class="felt-etiket" style="margin-top:0">Dato</label>
-      <input type="date" id="spDato" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value;gem();tegn()">
-      <label class="felt-etiket">Ca. afgangstid</label>
-      <input type="time" id="spTid" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
-      <label class="felt-etiket">Hjem igen? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-      <div class="seg-valg">${seg('samme','Samme dag')}${seg('næste','Næste dag')}${seg('dato','Vælg dato')}</div>
-      ${f.retur==='dato'?`<input type="date" style="margin-top:10px" value="${f.returDato||''}" onchange="s.forberedelse.returDato=this.value;gem()">`:''}
-    </div>
+    ${datoFelter()}
     ${spontanBund(færdig?'Gem ændringer':'Videre', færdig?"gåTil('hjem')":"gåTil('spontan-start')", !!f.dato)}
   </div>`;
 }

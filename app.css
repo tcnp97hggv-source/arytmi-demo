@@ -1,5 +1,11 @@
+@charset "UTF-8";
   /* =========================================================
      ARYTMI · v4 — tur-forberedelses-flowet
+     VIGTIGT: @charset-linjen SKAL stå allerførst. Klassenavne som
+     .knap.primær og .dæmpet indeholder æ/ø/å, og servere der sender
+     text/css uden charset (fx python -m http.server) får browseren til
+     at læse filen som latin-1 — så matcher de selektorer ingenting,
+     og halvdelen af designet forsvinder lydløst.
      Palette fra logoet: kobber, bark, oliven, sølvgrå, creme
      ========================================================= */
   :root{
