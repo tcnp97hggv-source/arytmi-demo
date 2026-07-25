@@ -760,6 +760,7 @@ function datoFelter(){
     ${f.retur==='dato'?`<input type="date" style="margin-top:10px" value="${f.returDato||''}" onchange="s.forberedelse.returDato=this.value;gem()">`:''}
   </div>`;
 }
+function sætRetur(v){ s.forberedelse.retur=v; gem(); tegn(); }
 /* Datoen er det første, man vælger — før kortet. Den er ikke et af de tre
    punkter i planen, men forudsætningen for dem: solnedgang, nedtælling og
    invitationen hænger alle på den. */
@@ -787,183 +788,13 @@ function hjemmeIgen(){
   flash('Velkommen hjem. Vi har lagt en lille anmeldelse klar til jer.', 'klokke');
 }
 
-/* =============================================================
-   SPONTAN TUR — den guidede matcher: hvornår → hvorfra →
-   hvor langt → hvad → tre steder. Ender i en planlagt tur med
-   dato, så forsiden bliver til en nedtælling + tjekliste.
-   ============================================================= */
-const RADIUS_TEKST = ['Under 30 min','30–60 min','1–2 timer','2–4 timer'];
+/* Spontan tur — parkeret 25/7 (se parkeret/spontan-tur-modul.md).
+   Appen skal ikke have to forskellige flows, mens spontan-turen stadig
+   tænkes færdig. Knappen starter derfor det samme flow som Start, men
+   markerer turen som spontan, så vejene kan skilles ad igen senere. */
 function startSpontan(){
   s.forberedelse = nyForberedelse({ spontan:true });
-  gem(); gåTil('spontan-tid');
-}
-function spontanFærdig(){ return !!(s.forberedelse && s.forberedelse.destination); }
-function spontanTilbage(trin){
-  gåTil(['hjem','spontan-tid','spontan-start','spontan-radius'][trin] || 'hjem');
-}
-/* Fælles wizard-top: etiket, prikker, spørgsmål */
-function wizardTop(trin, spm, under){
-  const prikker = [0,1,2,3].map(i=>`<span class="wiz-prik ${i===trin?'aktiv':''} ${i<trin?'klaret':''}"></span>`).join('');
-  return `<div class="wizard-top">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <button class="tilbage" onclick="spontanTilbage(${trin})">${ik('tilbage')}</button>
-      <div class="wiz-etiket">Spontan tur · trin ${trin+1} af 4</div>
-    </div>
-    <div class="wiz-prik-række">${prikker}</div>
-    <h1 class="wiz-spm">${spm}</h1>
-    ${under?`<p class="wiz-under">${under}</p>`:''}
-  </div>`;
-}
-function spontanBund(label, aktion, aktiv){
-  return `<div style="margin-top:24px">
-    <button class="knap primær bred" ${aktiv?`onclick="${aktion}"`:'disabled'}>${label} ${ik('pil')}</button>
-  </div>`;
-}
-
-/* Trin 1 — hvornår */
-function skærmSpontanTid(){
-  const f = s.forberedelse;
-  const færdig = spontanFærdig();
-  $('indhold').innerHTML = `<div class="side anim">
-    ${wizardTop(0,'Hvornår vil I afsted?','Vælg en dato og cirka-tidspunkt — så finder vi et sted, der passer til jeres tur.')}
-    ${datoFelter()}
-    ${spontanBund(færdig?'Gem ændringer':'Videre', færdig?"gåTil('hjem')":"gåTil('spontan-start')", !!f.dato)}
-  </div>`;
-}
-function sætRetur(v){ s.forberedelse.retur=v; gem(); tegn(); }
-
-/* Trin 2 — hvorfra */
-function skærmSpontanStart(){
-  const f = s.forberedelse;
-  $('indhold').innerHTML = `<div class="side anim">
-    ${wizardTop(1,'Hvor starter I fra?','Vi bruger jeres startpunkt til at måle, hvor langt der er til hvert sted.')}
-    <div class="kort">
-      <button class="knap primær bred" onclick="spontanGPS()">${ik('gps')} Brug min placering</button>
-      <p class="dæmpet" style="text-align:center;font-size:12.5px;margin:12px 0">— eller vælg en anden adresse —</p>
-      <div style="display:flex;gap:10px">
-        <input type="text" id="spAdr" placeholder="Søg by eller adresse …" value="${esc(f.startSøg||'')}" onkeydown="if(event.key==='Enter')spontanAdresse()">
-        <button class="knap kontur lille" onclick="spontanAdresse()">Vælg</button>
-      </div>
-      ${f.startNavn?`<div class="sted-chips" style="margin-top:14px"><span class="sted-chip valgt">${ik('nål')} ${esc(f.startNavn)}</span></div>`:''}
-    </div>
-    ${spontanBund('Videre',"gåTil('spontan-radius')", !!f.startNavn)}
-  </div>`;
-}
-function spontanGPS(){
-  const sæt = (navn,xy)=>{ s.forberedelse.startNavn=navn; s.forberedelse.startXY=xy; gem(); tegn(); flash(navn+' sat som startpunkt.','gps'); };
-  if(!navigator.geolocation){ sæt('Din placering (demo — Aarhus)', {x:92,y:120}); return; }
-  flash('Finder din placering …','gps');
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const xy = geoTilXY(pos.coords.latitude, pos.coords.longitude);
-    sæt('Din placering', {x:Math.round(xy.x), y:Math.round(xy.y)});
-  }, ()=>sæt('Din placering (demo — Aarhus)', {x:92,y:120}), {timeout:6000});
-}
-function spontanAdresse(){
-  const q = ($('spAdr').value||'').trim(); s.forberedelse.startSøg=q;
-  if(!q){ gem(); return; }
-  const hit = BYER.find(b=>b.n.toLowerCase().startsWith(q.toLowerCase())) || BYER.find(b=>b.n.toLowerCase().includes(q.toLowerCase()));
-  if(hit){ s.forberedelse.startNavn=hit.n; s.forberedelse.startXY={x:hit.x,y:hit.y}; gem(); tegn(); }
-  else flash('Byen er ikke i prototypens liste endnu — brug din placering i stedet.');
-}
-
-/* Trin 3 — hvor langt */
-function skærmSpontanRadius(){
-  const f = s.forberedelse;
-  $('indhold').innerHTML = `<div class="side anim">
-    ${wizardTop(2,'Hvor langt vil I køre?','Hvor langt har I lyst til at køre for at komme væk?')}
-    <div class="kort">
-      <div class="radius-vis">
-        <div class="radius-tal">${RADIUS_TEKST[f.radius]}</div>
-        <div class="radius-under">kørsel fra ${esc(f.startNavn||'jeres startpunkt')}</div>
-      </div>
-      <input type="range" class="radius" min="0" max="3" step="1" value="${f.radius}" oninput="s.forberedelse.radius=+this.value;gem();opdaterRadius(this.value)">
-      <div class="radius-mærker"><span>30 min</span><span>1 t</span><span>2 t</span><span>4 t</span></div>
-    </div>
-    ${spontanBund('Videre',"gåTil('spontan-onske')", true)}
-  </div>`;
-}
-function opdaterRadius(v){ const el = document.querySelector('.radius-tal'); if(el) el.textContent = RADIUS_TEKST[+v]; }
-
-/* Trin 4 — hvad vil I opleve */
-function skærmSpontanOnske(){
-  const o = s.forberedelse.oplevelser;
-  const seg = (gruppe, a, b) => `
-    <div class="seg-række">
-      <div class="seg-titel">${a.titel} eller ${b.titel.toLowerCase()}?</div>
-      <div class="seg-valg">
-        <button class="seg-knap ${o[gruppe]===a.v?'valgt':''}" onclick="sætØnske('${gruppe}','${a.v}')">${ik(a.ik)}<span>${a.titel}</span></button>
-        <button class="seg-knap ${o[gruppe]===b.v?'valgt':''}" onclick="sætØnske('${gruppe}','${b.v}')">${ik(b.ik)}<span>${b.titel}</span></button>
-      </div>
-    </div>`;
-  const alle = o.lys && o.natur && o.stemning;
-  $('indhold').innerHTML = `<div class="side anim">
-    ${wizardTop(3,'Hvad vil I opleve?','Vælg det, der frister — eller lad os overraske jer.')}
-    ${seg('lys', {titel:'Solopgang',v:'solopgang',ik:'solop'}, {titel:'Solnedgang',v:'solnedgang',ik:'sol'})}
-    ${seg('natur', {titel:'Vand',v:'vand',ik:'vand'}, {titel:'Skov',v:'skov',ik:'skov'})}
-    ${seg('stemning', {titel:'Isoleret',v:'isoleret',ik:'måne'}, {titel:'Livligt',v:'livligt',ik:'folk'})}
-    <button class="knap kontur bred" style="margin-top:8px" onclick="overrasker()">${ik('gnist')} Eller overrask mig</button>
-    ${spontanBund('Find tre steder',"visResultater()", !!alle)}
-  </div>`;
-}
-function sætØnske(gruppe,v){ s.forberedelse.oplevelser[gruppe]=v; gem(); tegn(); }
-function overrasker(){
-  const r = a => a[Math.floor(Math.random()*a.length)];
-  s.forberedelse.oplevelser = { lys:r(['solopgang','solnedgang']), natur:r(['vand','skov']), stemning:r(['isoleret','livligt']) };
-  gem(); visResultater();
-}
-function visResultater(){ gåTil('spontan-resultat'); }
-
-/* Matcher — tre steder. Det testede sted vises som ægte, når det
-   passer; resten er tydeligt markerede pladsholdere (OD kuraterer). */
-function spontanMatch(){
-  const f = s.forberedelse, o = f.oplevelser;
-  const radiusTekst = RADIUS_TEKST[f.radius];
-  const startNavn = f.startNavn || 'jeres startpunkt';
-  const naturOrd = o.natur==='skov' ? 'skov' : 'kyst';
-  const lysOrd = o.lys==='solopgang' ? 'morgenlys' : 'aftenlys';
-  const stemningOrd = o.stemning==='livligt' ? 'med liv omkring' : 'helt for jer selv';
-  const res = [];
-  const t1 = TESTEDE[0];
-  if(o.natur!=='skov'){
-    res.push({ ægte:true, navn:t1.navn, testetId:t1.id, x:t1.x, y:t1.y, ikon:'stjerne',
-      meta:`${t1.kort} · ${radiusTekst} herfra` });
-  }
-  const forslag = [
-    { navn:`${naturOrd[0].toUpperCase()+naturOrd.slice(1)}plads mod nord`, ikon:o.natur==='skov'?'skov':'vand' },
-    { navn:`Stille sted — ${stemningOrd}`, ikon:o.stemning==='livligt'?'folk':'telt' },
-    { navn:`Udsigt til ${lysOrd}`, ikon:o.lys==='solopgang'?'solop':'sol' }
-  ];
-  for(const g of forslag){
-    if(res.length>=3) break;
-    res.push({ ægte:false, navn:g.navn, x:null, y:null, ikon:g.ikon,
-      meta:`${radiusTekst} fra ${startNavn}` });
-  }
-  return res.slice(0,3);
-}
-function vælgSpontanSted(i){
-  const f = s.forberedelse, r = spontanMatch()[i];
-  const fx = f.startXY ? f.startXY.x : 100, fy = f.startXY ? f.startXY.y : 120;
-  f.destination = { navn:r.navn, x: r.x!=null?r.x:fx, y: r.y!=null?r.y:fy };
-  if(r.testetId) f.destination.testetId = r.testetId;
-  gem(); gåTil('hjem');
-  flash(`${r.navn} er valgt. Nu tæller vi ned.`, 'tjek');
-}
-function skærmSpontanResultat(){
-  const f = s.forberedelse, res = spontanMatch();
-  $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop('Tre steder til jer','spontan-onske','Vi fandt et match')}
-    <p class="dæmpet" style="margin:-4px 0 16px">Ud fra jeres ønsker og ${RADIUS_TEKST[f.radius].toLowerCase()} fra ${esc(f.startNavn||'jeres startpunkt')}. Vælg det, der kalder — så tæller vi ned til turen.</p>
-    ${res.map((r,i)=>`
-      <button class="res-kort" onclick="vælgSpontanSted(${i})">
-        <span class="res-ikon">${ik(r.ikon)}</span>
-        <span class="res-krop">
-          <span class="res-navn">${esc(r.navn)}</span>
-          <span class="res-meta">${esc(r.meta)}</span>
-          <span class="res-mærke ${r.ægte?'ægte':''}">${r.ægte?'★ Testet af Arytmi':'Foreslået · OD kuraterer'}</span>
-        </span>
-        <span class="tjek-pil">${ik('pil')}</span>
-      </button>`).join('')}
-  </div>`;
+  gem(); gåTil('turdato');
 }
 
 /* =============================================================
@@ -977,7 +808,7 @@ function dageTil(iso){
 function tjeklisteData(){
   const f = s.forberedelse;
   return [
-    { navn:'Dato',          under: f.dato?pænDato(f.dato):'Vælg afrejsedato',      klar:!!f.dato,        aktion:f.spontan?"gåTil('spontan-tid')":"gåTil('turdato')" },
+    { navn:'Dato',          under: f.dato?pænDato(f.dato):'Vælg afrejsedato',      klar:!!f.dato,        aktion:"gåTil('turdato')" },
     { navn:'Destination',   under: f.destination?esc(f.destination.navn):'Find et sted', klar:!!f.destination, aktion:"gåTil('destination')" },
     { navn:'Invitation',    under: invUnderTekst(f),                               klar: invErKlar(f),   aktion:"gåTil('invitation')" },
     { navn:'Forplejning',   under: forplejningKlar()?valgtMad().length+' valgt':'Mad og drikke til turen', klar: forplejningKlar(), aktion:"gåTil('mad')" },
@@ -1849,11 +1680,6 @@ function tegn(){
     case aktivSkærm==='anmeld':       skærmAnmeld(); break;
     case aktivSkærm==='log':          skærmLog(); break;
     case aktivSkærm==='profil':       skærmProfil(); break;
-    case aktivSkærm==='spontan-tid':     skærmSpontanTid(); break;
-    case aktivSkærm==='spontan-start':   skærmSpontanStart(); break;
-    case aktivSkærm==='spontan-radius':  skærmSpontanRadius(); break;
-    case aktivSkærm==='spontan-onske':   skærmSpontanOnske(); break;
-    case aktivSkærm==='spontan-resultat':skærmSpontanResultat(); break;
     case aktivSkærm==='invitation':      skærmInvitation(); break;
     case aktivSkærm==='turplan':         skærmTurplan(); break;
     case aktivSkærm.startsWith('testet-'): skærmTestet(aktivSkærm.slice(7)); break;
