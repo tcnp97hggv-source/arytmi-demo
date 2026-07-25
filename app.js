@@ -177,7 +177,7 @@ const MAD_INDLÆG = {
 function friskState(){
   return {
     onboarded:false,
-    profil:{ email:'kennet@justsecure.dk', kode:'', notifikationer:null },
+    profil:{ email:'kennet@justsecure.dk', kode:'', notifikationer:true },
     forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{aktivitet,mad,øjeblikke}, startet}
     påTur:null,          // {sted, startet}
     anmeldAfventer:null, // {sted, dato}
@@ -188,7 +188,12 @@ let s = indlæs();
 function indlæs(){
   try{
     const gemt = localStorage.getItem(GEM);
-    if(gemt) return JSON.parse(gemt);
+    if(gemt){
+      const g = JSON.parse(gemt);
+      // beskeder er slået til fra start — gamle gemte tilstande havde intet valg
+      if(g.profil && g.profil.notifikationer == null) g.profil.notifikationer = true;
+      return g;
+    }
     // migration: tag gamle ture med over fra v2/v3
     const v2 = localStorage.getItem('klar-app-v2');
     if(v2){
@@ -620,9 +625,8 @@ function skærmOnboarding(){
         <h2>Beskeder</h2>
       </div>
       <p style="font-size:14.5px">OBS: For at vi kan hjælpe jer med at planlægge turen, sender Arytmi beskeder til din telefon. Vi sender aldrig beskeder, der ikke er med til at gøre din oplevelse bedre.</p>
-      <p class="dæmpet" style="font-size:13.5px;margin-top:8px">Du kan altid slå beskederne fra i dine indstillinger.</p>
-      <button class="knap primær bred" onclick="vælgNotif(true)" style="margin-top:16px;margin-bottom:10px">Slå beskeder til</button>
-      <button class="knap kontur bred" onclick="vælgNotif(false)">Ikke nu</button>
+      <p class="dæmpet" style="font-size:13.5px;margin-top:8px">Beskederne er slået til fra start. Du kan altid slå dem fra under Profil &amp; indstillinger.</p>
+      <button class="knap primær bred" onclick="vælgNotif(true)" style="margin-top:16px">Det er forstået</button>
     </div>
   </div>`;
 }
@@ -637,7 +641,7 @@ function vælgNotif(til){
   s.profil.notifikationer = til;
   s.onboarded = true; gem();
   gåTil('hjem');
-  flash(til ? 'Beskeder er slået til. Velkommen til Arytmi.' : 'Okay — du kan altid slå dem til under Profil.', 'klokke');
+  flash('Velkommen til Arytmi.', 'klokke');
 }
 
 /* =============================================================
