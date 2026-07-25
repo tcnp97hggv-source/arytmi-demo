@@ -710,21 +710,25 @@ function skærmHjem(){
     underoverskrift='Fra idé til afsted.';
     under='Jeg hjælper dig med at komme ud – vælg mindre, oplev mere. Appen er designet til at eliminere friktion, så du skal bruge mindst mulig kapacitet til planlægning og mest muligt på at nyde og opleve. Den hjælper dig direkte fra idé til afsted, da alt for mange idéer drukner i et ocean af planlægning.';
     knap={ tekst:'Start', aria:'Forbered tur', ikon:'bil', aktion:'startForberedelse()' };
-    ekstraForside = `<button class="spontan-link" onclick="startSpontan()">${ik('gnist')} Eller lad os finde et sted — spontan tur</button>`;
+    ekstraForside = `<button class="spontan-link" onclick="startSpontan()">${ik('gnist')} Eller start spontan arytme her</button>`;
   }
 
   // Rund hovedknap til fuldskærms-forsiden — med pulserende hjerteslag-ringe.
   // Ved turens to store greb (start / gør klar) står pulsen fra logoet i cirklen.
   // Bilen stod her før, men den står allerede i landskabet lige ved siden af.
   const visPuls = knap.ikon === 'bil';
+  // Startknappen bærer selv sit ord — pulsen ovenover, "Start" nedenunder, inde i
+  // cirklen. De øvrige greb har for lange labels til at kunne stå derinde.
+  const ordIKnappen = knap.tekst === 'Start';
   const rundKnap = `
     <div class="rund-start">
-      <button class="rund-knap" onclick="${knap.aktion}" aria-label="${knap.aria || knap.tekst}">
+      <button class="rund-knap${ordIKnappen?' med-ord':''}" onclick="${knap.aktion}" aria-label="${knap.aria || knap.tekst}">
         <span class="rk-ring"></span><span class="rk-ring r2"></span>
         ${knap.ring!==undefined?`<svg class="rk-bue" viewBox="0 0 120 120"><circle class="rk-spor" cx="60" cy="60" r="55"/><circle class="rk-fyld" cx="60" cy="60" r="55" pathLength="100" style="stroke-dashoffset:${100-knap.ring}"/></svg>`:''}
         ${visPuls ? pulsIKnap() : ik(knap.ikon)}
+        ${ordIKnappen?`<span class="rk-ord">${knap.tekst}</span>`:''}
       </button>
-      <div class="rk-label${knap.forklaring?' sætning':''}">${knap.forklaring || knap.tekst}</div>
+      ${ordIKnappen?'':`<div class="rk-label${knap.forklaring?' sætning':''}">${knap.forklaring || knap.tekst}</div>`}
       ${knap.note?`<div class="rk-note">${knap.note}</div>`:''}
       ${ekstraForside}
     </div>`;

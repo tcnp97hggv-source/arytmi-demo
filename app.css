@@ -114,6 +114,11 @@
   /* pulsen fra logoet, midt i knappen */
   .rk-puls{width:58px;height:20px;position:relative;z-index:2}
   .rk-puls path{vector-effect:non-scaling-stroke;stroke-width:1.8}
+  /* startknappen bærer ordet inde i cirklen: puls over, ord under */
+  .rund-knap.med-ord{flex-direction:column;gap:2px}
+  .rund-knap.med-ord .rk-puls{width:48px;height:17px}
+  .rk-ord{position:relative;z-index:2;font-size:13px;font-weight:700;letter-spacing:2.4px;
+    text-transform:uppercase;color:var(--gran)}
   .rk-billede{width:76px;height:76px;border-radius:50%;border:2px solid var(--gran);overflow:hidden;
     display:flex;align-items:center;justify-content:center;position:relative;z-index:2;background:#fff}
   .rk-billede img{width:84%;height:auto;display:block}
