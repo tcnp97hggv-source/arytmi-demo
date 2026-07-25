@@ -617,12 +617,12 @@ function skærmOnboarding(){
     <div class="kort">
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
         <span style="color:var(--rav)">${ik('klokke','stor')}</span>
-        <h2>Notifikationer</h2>
+        <h2>Beskeder</h2>
       </div>
-      <p style="font-size:14.5px">Vi sender kun notifikationer, der forbedrer oplevelsen med appen og madrassen — aldrig støj, aldrig salg.</p>
-      <div class="advarsel">${ik('klokke')} Slår du notifikationer fra, virker appen ikke optimalt, og oplevelsen kan blive kompromitteret.</div>
-      <button class="knap primær bred" onclick="vælgNotif(true)" style="margin-bottom:10px">Slå notifikationer til</button>
-      <button class="knap kontur bred" onclick="vælgNotif(false)">Nej tak — jeg forstår risikoen</button>
+      <p style="font-size:14.5px">OBS: For at vi kan hjælpe jer med at planlægge turen, sender Arytmi beskeder til din telefon. Vi sender aldrig beskeder, der ikke er med til at gøre din oplevelse bedre.</p>
+      <p class="dæmpet" style="font-size:13.5px;margin-top:8px">Du kan altid slå beskederne fra i dine indstillinger.</p>
+      <button class="knap primær bred" onclick="vælgNotif(true)" style="margin-top:16px;margin-bottom:10px">Slå beskeder til</button>
+      <button class="knap kontur bred" onclick="vælgNotif(false)">Ikke nu</button>
     </div>
   </div>`;
 }
@@ -637,7 +637,7 @@ function vælgNotif(til){
   s.profil.notifikationer = til;
   s.onboarded = true; gem();
   gåTil('hjem');
-  flash(til ? 'Notifikationer er slået til. Velkommen til Arytmi.' : 'Okay — du kan altid slå dem til under Profil.', 'klokke');
+  flash(til ? 'Beskeder er slået til. Velkommen til Arytmi.' : 'Okay — du kan altid slå dem til under Profil.', 'klokke');
 }
 
 /* =============================================================
@@ -1954,13 +1954,15 @@ function skærmProfil(){
     </div>
     <div class="kort">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-        <span style="color:var(--rav)">${ik('klokke')}</span><h3>Notifikationer</h3>
-        <span style="margin-left:auto" class="serif" style="color:var(--gran)">${p.notifikationer?'Til':'Fra'}</span>
+        <span style="color:var(--rav)">${ik('klokke')}</span><h3>Beskeder</h3>
+        <span style="margin-left:auto" class="serif">${p.notifikationer?'Til':'Fra'}</span>
       </div>
-      <p class="dæmpet" style="font-size:13.5px">Vi sender kun notifikationer, der forbedrer oplevelsen med appen og madrassen.</p>
-      ${!p.notifikationer?`<div class="advarsel" style="margin-top:12px">Uden notifikationer virker appen ikke optimalt, og oplevelsen kan blive kompromitteret.</div>`:''}
+      <p class="dæmpet" style="font-size:13.5px">OBS: For at vi kan hjælpe jer med at planlægge turen, sender Arytmi beskeder til din telefon. Vi sender aldrig beskeder, der ikke er med til at gøre din oplevelse bedre.</p>
+      ${p.notifikationer
+        ? `<p class="dæmpet" style="font-size:13.5px;margin-top:8px">Fylder beskederne for meget, kan du altid slå dem fra her.</p>`
+        : `<div class="advarsel" style="margin-top:12px">Beskederne er slået fra. Det gør oplevelsen med appen dårligere — vi kan ikke minde jer om turen undervejs.</div>`}
       <button class="knap ${p.notifikationer?'kontur':'primær'} bred" style="margin-top:12px" onclick="s.profil.notifikationer=!s.profil.notifikationer;gem();tegn()">
-        ${p.notifikationer?'Slå notifikationer fra':'Slå notifikationer til'}
+        ${p.notifikationer?'Slå beskeder fra':'Slå beskeder til'}
       </button>
     </div>
     <div class="liste" style="margin-top:4px">
