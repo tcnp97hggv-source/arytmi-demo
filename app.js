@@ -351,7 +351,7 @@ function nutidigSektion(){
 function sektionHeader(id){
   const {sek, liste, idx} = sektionPos(id);
   // fase 1 begynder ikke på forsiden, men på datovalget lige før kortet
-  const forrige = idx>0 ? liste[idx-1].id : (sek.fase===1 ? 'turdato' : 'hjem');
+  const forrige = idx>0 ? liste[idx-1].id : (sek.fase===1 ? 'onsker' : 'hjem');
   const F = FASER[sek.fase];
   const prikker = liste.map((x,i)=>`<span class="sek-prik ${i===idx?'aktiv':''} ${sektionKlar(x.id)?'klaret':''}"></span>`).join('');
   return `<div class="skærm-top">
@@ -744,9 +744,38 @@ function startForberedelse(){
   s.forberedelse = nyForberedelse();
   gem(); gåTil('turdato');
 }
-/* Ét datofelt-sæt til begge flows. Manuel tur og spontan tur stiller det
-   samme spørgsmål — de skal også svare på det samme sted, med de samme
-   felter. Kun rammen om kortet er forskellig. */
+/* =============================================================
+   FORBEREDELSEN — fire trin før kortet: hvornår · hvorfra ·
+   hvor langt · hvad vil I opleve. Ét flow, uanset om man trykker
+   Start eller den spontane knap.
+   ============================================================= */
+const RADIUS_TEKST = ['Under 30 min','30–60 min','1–2 timer','2–4 timer'];
+function turTilbage(trin){
+  gåTil(['hjem','turdato','hvorfra','hvorlangt'][trin] || 'hjem');
+}
+/* Fælles trin-top: etiket, prikker, spørgsmål */
+function wizardTop(trin, spm, under){
+  const prikker = [0,1,2,3].map(i=>`<span class="wiz-prik ${i===trin?'aktiv':''} ${i<trin?'klaret':''}"></span>`).join('');
+  return `<div class="wizard-top">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <button class="tilbage" onclick="turTilbage(${trin})">${ik('tilbage')}</button>
+      <div class="wiz-etiket">Planlæg turen · trin ${trin+1} af 4</div>
+    </div>
+    <div class="wiz-prik-række">${prikker}</div>
+    <h1 class="wiz-spm">${spm}</h1>
+    ${under?`<p class="wiz-under">${under}</p>`:''}
+  </div>`;
+}
+function wizardBund(label, aktion, aktiv){
+  return `<div style="margin-top:24px">
+    <button class="knap primær bred" ${aktiv?`onclick="${aktion}"`:'disabled'}>${label} ${ik('pil')}</button>
+  </div>`;
+}
+function annullérLinje(){
+  return `<div style="text-align:center;margin-top:16px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>`;
+}
+
+/* Trin 1 — hvornår */
 function datoFelter(){
   const f = s.forberedelse;
   const seg = (v,tekst)=>`<button class="seg-knap ${f.retur===v?'valgt':''}" style="flex-direction:row;padding:12px 8px" onclick="sætRetur('${v}')"><span>${tekst}</span></button>`;
@@ -761,25 +790,102 @@ function datoFelter(){
   </div>`;
 }
 function sætRetur(v){ s.forberedelse.retur=v; gem(); tegn(); }
-/* Datoen er det første, man vælger — før kortet. Den er ikke et af de tre
-   punkter i planen, men forudsætningen for dem: solnedgang, nedtælling og
-   invitationen hænger alle på den. */
 function skærmTurDato(){
   const f = s.forberedelse;
   if(!f){ gåTil('hjem'); return; }
   $('indhold').innerHTML = `<div class="side anim">
-    <div class="skærm-top">
-      <button class="tilbage" onclick="gåTil('hjem')">${ik('tilbage')}</button>
-      <div><div class="etiket">Planlæg turen · først en dato</div>
-        <h1 style="font-size:22px">Hvornår vil I afsted?</h1></div>
-    </div>
-    <p class="dæmpet" style="margin-bottom:14px">Sæt datoen først — så ved vi, hvornår solen går ned det sted, I vælger bagefter.</p>
+    ${wizardTop(0,'Hvornår vil I afsted?','Datoen først — så ved vi, hvornår solen går ned det sted, I vælger til sidst.')}
     ${datoFelter()}
-    <div style="margin-top:24px">
-      <button class="knap primær bred" ${f.dato?`onclick="gåTil('destination')"`:'disabled'}>Videre til kortet ${ik('pil')}</button>
-    </div>
-    <div style="text-align:center;margin-top:16px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>
+    ${wizardBund('Videre',"gåTil('hvorfra')", !!f.dato)}
+    ${annullérLinje()}
   </div>`;
+}
+
+/* Trin 2 — hvorfra */
+function skærmHvorfra(){
+  const f = s.forberedelse;
+  if(!f){ gåTil('hjem'); return; }
+  $('indhold').innerHTML = `<div class="side anim">
+    ${wizardTop(1,'Hvor starter I fra?','Vi bruger jeres startpunkt til at måle, hvor langt der er til hvert sted.')}
+    <div class="kort">
+      <button class="knap primær bred" onclick="startGPS()">${ik('gps')} Brug min placering</button>
+      <p class="dæmpet" style="text-align:center;font-size:12.5px;margin:12px 0">— eller vælg en anden adresse —</p>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="spAdr" placeholder="Søg by eller adresse …" value="${esc(f.startSøg||'')}" onkeydown="if(event.key==='Enter')startAdresse()">
+        <button class="knap kontur lille" onclick="startAdresse()">Vælg</button>
+      </div>
+      ${f.startNavn?`<div class="sted-chips" style="margin-top:14px"><span class="sted-chip valgt">${ik('nål')} ${esc(f.startNavn)}</span></div>`:''}
+    </div>
+    ${wizardBund('Videre',"gåTil('hvorlangt')", !!f.startNavn)}
+    ${annullérLinje()}
+  </div>`;
+}
+function startGPS(){
+  const sæt = (navn,xy)=>{ s.forberedelse.startNavn=navn; s.forberedelse.startXY=xy; gem(); tegn(); flash(navn+' sat som startpunkt.','gps'); };
+  if(!navigator.geolocation){ sæt('Din placering (demo — Aarhus)', {x:92,y:120}); return; }
+  flash('Finder din placering …','gps');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const xy = geoTilXY(pos.coords.latitude, pos.coords.longitude);
+    sæt('Din placering', {x:Math.round(xy.x), y:Math.round(xy.y)});
+  }, ()=>sæt('Din placering (demo — Aarhus)', {x:92,y:120}), {timeout:6000});
+}
+function startAdresse(){
+  const q = ($('spAdr').value||'').trim(); s.forberedelse.startSøg=q;
+  if(!q){ gem(); return; }
+  const hit = BYER.find(b=>b.n.toLowerCase().startsWith(q.toLowerCase())) || BYER.find(b=>b.n.toLowerCase().includes(q.toLowerCase()));
+  if(hit){ s.forberedelse.startNavn=hit.n; s.forberedelse.startXY={x:hit.x,y:hit.y}; gem(); tegn(); }
+  else flash('Byen er ikke i prototypens liste endnu — brug din placering i stedet.');
+}
+
+/* Trin 3 — hvor langt */
+function skærmHvorLangt(){
+  const f = s.forberedelse;
+  if(!f){ gåTil('hjem'); return; }
+  $('indhold').innerHTML = `<div class="side anim">
+    ${wizardTop(2,'Hvor langt vil I køre?','Hvor langt har I lyst til at køre for at komme væk?')}
+    <div class="kort">
+      <div class="radius-vis">
+        <div class="radius-tal">${RADIUS_TEKST[f.radius]}</div>
+        <div class="radius-under">kørsel fra ${esc(f.startNavn||'jeres startpunkt')}</div>
+      </div>
+      <input type="range" class="radius" min="0" max="3" step="1" value="${f.radius}" oninput="s.forberedelse.radius=+this.value;gem();opdaterRadius(this.value)">
+      <div class="radius-mærker"><span>30 min</span><span>1 t</span><span>2 t</span><span>4 t</span></div>
+    </div>
+    ${wizardBund('Videre',"gåTil('onsker')", true)}
+    ${annullérLinje()}
+  </div>`;
+}
+function opdaterRadius(v){ const el = document.querySelector('.radius-tal'); if(el) el.textContent = RADIUS_TEKST[+v]; }
+
+/* Trin 4 — hvad vil I opleve. Herfra går man videre til kortet. */
+function skærmØnsker(){
+  const f = s.forberedelse;
+  if(!f){ gåTil('hjem'); return; }
+  const o = f.oplevelser;
+  const seg = (gruppe, a, b) => `
+    <div class="seg-række">
+      <div class="seg-titel">${a.titel} eller ${b.titel.toLowerCase()}?</div>
+      <div class="seg-valg">
+        <button class="seg-knap ${o[gruppe]===a.v?'valgt':''}" onclick="sætØnske('${gruppe}','${a.v}')">${ik(a.ik)}<span>${a.titel}</span></button>
+        <button class="seg-knap ${o[gruppe]===b.v?'valgt':''}" onclick="sætØnske('${gruppe}','${b.v}')">${ik(b.ik)}<span>${b.titel}</span></button>
+      </div>
+    </div>`;
+  const alle = o.lys && o.natur && o.stemning;
+  $('indhold').innerHTML = `<div class="side anim">
+    ${wizardTop(3,'Hvad vil I opleve?','Vælg det, der frister — eller lad os overraske jer.')}
+    ${seg('lys', {titel:'Solopgang',v:'solopgang',ik:'solop'}, {titel:'Solnedgang',v:'solnedgang',ik:'sol'})}
+    ${seg('natur', {titel:'Vand',v:'vand',ik:'vand'}, {titel:'Skov',v:'skov',ik:'skov'})}
+    ${seg('stemning', {titel:'Isoleret',v:'isoleret',ik:'måne'}, {titel:'Livligt',v:'livligt',ik:'folk'})}
+    <button class="knap kontur bred" style="margin-top:8px" onclick="overrasker()">${ik('gnist')} Eller overrask mig</button>
+    ${wizardBund('Videre til kortet',"gåTil('destination')", !!alle)}
+    ${annullérLinje()}
+  </div>`;
+}
+function sætØnske(gruppe,v){ s.forberedelse.oplevelser[gruppe]=v; gem(); tegn(); }
+function overrasker(){
+  const r = a => a[Math.floor(Math.random()*a.length)];
+  s.forberedelse.oplevelser = { lys:r(['solopgang','solnedgang']), natur:r(['vand','skov']), stemning:r(['isoleret','livligt']) };
+  gem(); gåTil('destination');
 }
 function hjemmeIgen(){
   s.anmeldAfventer = { sted: s.påTur.sted, dato: s.påTur.startet };
@@ -1672,6 +1778,9 @@ function tegn(){
   switch(true){
     case aktivSkærm==='hjem':         skærmHjem(); break;
     case aktivSkærm==='turdato':      skærmTurDato(); break;
+    case aktivSkærm==='hvorfra':      skærmHvorfra(); break;
+    case aktivSkærm==='hvorlangt':    skærmHvorLangt(); break;
+    case aktivSkærm==='onsker':       skærmØnsker(); break;
     case aktivSkærm==='destination':  skærmDestination(); break;
     case aktivSkærm==='bilen':        skærmBilen(); break;
     case aktivSkærm==='mad':          skærmMad(); break;
