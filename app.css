@@ -254,29 +254,6 @@
   .liste-punkt .navn{flex:1;font-size:15px;transition:color .2s}
   .liste-punkt.strøget .navn{color:var(--dæmpet);text-decoration:line-through;text-decoration-color:var(--rav)}
 
-  /* ---------- idé-punkt: to greb i én række ----------
-     Venstre side åbner beskrivelsen. Den runde knap til højre lægger idéen
-     til turen med det samme — man skal ikke ind i beskrivelsen for at vælge. */
-  .idé-punkt{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--linje)}
-  .idé-punkt:last-child{border-bottom:none}
-  .idé-åbn{flex:1;min-width:0;display:flex;align-items:center;gap:9px;background:none;border:none;
-    padding:6px 0;font-family:inherit;font-size:14.5px;line-height:1.35;color:var(--tekst);
-    text-align:left;cursor:pointer;transition:color .2s}
-  .idé-åbn .ik{width:15px;height:15px;color:#c9c2b0;flex-shrink:0;transition:transform .22s,color .22s}
-  .idé-åbn:active{opacity:.55}
-  @media(hover:hover){.idé-åbn:hover{color:var(--gran)}.idé-åbn:hover .ik{transform:translateX(2px);color:var(--rav)}}
-  .idé-tilføj{position:relative;width:34px;height:34px;border-radius:50%;flex-shrink:0;cursor:pointer;font-family:inherit;
-    border:1.5px solid #d8d1c0;background:transparent;color:#9a9384;
-    display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,color .2s,transform .2s}
-  /* tommelfinger-venligt trykfelt uden at gøre selve cirklen større */
-  .idé-tilføj::after{content:'';position:absolute;inset:-6px;border-radius:50%}
-  .idé-tilføj .ik{width:17px;height:17px;stroke-width:2}
-  .idé-tilføj:active{transform:scale(.88)}
-  @media(hover:hover){.idé-tilføj:hover{border-color:var(--rav);color:var(--rav)}}
-  .idé-tilføj.valgt{background:#6d7d5e;border-color:#6d7d5e;color:#f2efe6;animation:pop .3s}
-  @media(hover:hover){.idé-tilføj.valgt:hover{border-color:#6d7d5e;color:#f2efe6}}
-  .idé-gruppe{display:block;font-size:12px;color:var(--dæmpet);margin-top:2px}
-
   /* ---------- skærm-top ---------- */
   .skærm-top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
   .tilbage{border:none;background:var(--flade);box-shadow:0 4px 14px rgba(58,50,39,.08);width:40px;height:40px;border-radius:50%;cursor:pointer;color:var(--gran);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .2s}

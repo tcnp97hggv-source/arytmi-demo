@@ -117,22 +117,6 @@ const TESTEDE = [
   { id:'t10', navn:'Destination 10', x:165, y:195, klar:false }
 ];
 
-/* -- 50 aktiviteter (Køreklar basispakke). 5 eksempler — resten OD -- */
-const AKTIVITET_GRUPPER = [
-  { navn:'Ved ankomst', under:'Når I lige er kommet frem', ikon:'sol', eksempler:[
-    { id:'solnedgang', navn:'Se solen gå ned — telefoner i handskerummet', type:'solnedgang' },
-    { id:'kaffebar',   navn:'Byg jeres kaffebar på bagklappen',            type:'guide' }
-  ], antalOD:8 },
-  { navn:'Om aftenen', under:'Når mørket falder på', ikon:'måne', eksempler:[
-    { id:'hoejtlaesning', navn:'Læs højt for hinanden — ét kapitel hver',        type:'guide' },
-    { id:'spoergsmaal',   navn:'20 spørgsmål: ting, I aldrig har fået spurgt om', type:'guide' }
-  ], antalOD:14 },
-  { navn:'Om morgenen', under:'Den langsomme morgen', ikon:'kop', eksempler:[
-    { id:'morgenbad', navn:'Morgenbad — uanset temperatur. I fortryder det aldrig', type:'guide' }
-  ], antalOD:11 },
-  { navn:'Undervejs', under:'På køreturen derhen', ikon:'bil', eksempler:[], antalOD:12 }
-];
-
 /* -- Bilen: forberedelsesliste -- */
 const BILEN_PUNKTER = [
   { id:'lade',   tekst:'Du skal lade', tip:'Planlæg så I ankommer med mindst 40 % — natten koster typisk 5–10 %.' },
@@ -178,7 +162,7 @@ function friskState(){
   return {
     onboarded:false,
     profil:{ email:'kennet@justsecure.dk', kode:'', notifikationer:true },
-    forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{aktivitet,mad,øjeblikke}, startet}
+    forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{mad,øjeblikke}, startet}
     påTur:null,          // {sted, startet}
     anmeldAfventer:null, // {sted, dato}
     ture:[]              // {sted,dato,score:{destination,app,hygge},kommentar}
@@ -314,15 +298,15 @@ function nyForberedelse(ekstra){
     dato:null, afgangstid:'', retur:'samme', returDato:null,
     startNavn:'', startXY:null, radius:2, oplevelser:{lys:null, natur:null, stemning:null},
     destination:null,
-    aktiviteter:[], madValg:[],
+    madValg:[],
     invType:null, invModtager:'', invAfsender:'', invStatus:null,
     invForslag:[], invForslagFra:null, invEnigDato:null,
     bilTjek:[], pakkeTjek:[],
-    set:{aktivitet:false, mad:false, øjeblikke:false},
+    set:{mad:false, øjeblikke:false},
     startet:new Date().toISOString().slice(0,10)
   }, ekstra||{});
 }
-/* Fremdrift pr. fase: fase 1 = 4 planlægningspunkter, fase 2 = 12 ting at pakke */
+/* Fremdrift pr. fase: fase 1 = 2 planlægningspunkter, fase 2 = 12 ting at pakke */
 function fremdrift(fase){
   const f = s.forberedelse;
   fase = fase || (f ? f.fase||1 : 1);
@@ -330,7 +314,7 @@ function fremdrift(fase){
     const total = SEKTIONER.filter(x=>x.fase===1).length; // 3
     if(!f) return { total, klaret:0, mangler:total, pct:0 };
     let klaret = f.destination ? 1 : 0;
-    klaret += ['aktivitet','mad'].filter(k=>f.set[k]).length;
+    klaret += ['mad'].filter(k=>f.set[k]).length;
     return { total, klaret, mangler:total-klaret, pct:Math.round(klaret/total*100) };
   }
   const total = BILEN_PUNKTER.length + PAKKE_PUNKTER.length; // 12
@@ -347,7 +331,7 @@ function sektionKlar(id){
     default: return !!f.set[id];
   }
 }
-/* Guidet flow: hver fase er en RÆKKE af sider (destination→aktivitet→mad→øjeblikke,
+/* Guidet flow: hver fase er en RÆKKE af sider (destination→mad,
    siden bilen→pakke) i stedet for en oversigt med bokse — man bladrer ligesom i en bog. */
 function sektionListe(fase){ return SEKTIONER.filter(x=>x.fase===fase); }
 function sektionPos(id){
@@ -664,7 +648,7 @@ function arytmiTæller(){
 function turIGang(){
   const f = s.forberedelse; if(!f) return false;
   return !!(f.destination || f.dato || f.invType
-    || f.set.aktivitet || f.set.mad || f.set.øjeblikke
+    || f.set.mad || f.set.øjeblikke
     || (f.bilTjek && f.bilTjek.length) || (f.pakkeTjek && f.pakkeTjek.length));
 }
 function skærmHjem(){
@@ -1036,11 +1020,10 @@ function skærmHjemNedtælling(){
     <div style="text-align:center;margin:14px 0 4px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>
   </div>`;
 }
-/* Samlet, rolig oversigt over turen: destination, aktiviteter, forplejning, øjeblikke. */
+/* Samlet, rolig oversigt over turen: destination, forplejning, øjeblikke. */
 function skærmTurplan(){
   const f = s.forberedelse;
   if(!f){ gåTil('hjem'); return; }
-  const akt = valgteAktiviteter();
   const mad = valgtMad();
   const dest = f.destination;
   const dage = f.dato ? dageTil(f.dato) : null;
@@ -1057,11 +1040,6 @@ function skærmTurplan(){
       <div class="etiket">Turen</div>
       ${dest ? rad('nål','var(--rav)', esc(dest.navn), f.dato?pænDato(f.dato)+(f.afgangstid?' · afgang ca. '+f.afgangstid:''):'Dato ikke sat endnu', "gåTil('destination')")
              : rad('nål','var(--rav)','Vælg et sted','Ingen destination endnu',"gåTil('destination')")}
-    </div>
-    <div class="sektion"><h3>${ik('gnist')} Aktiviteter</h3></div>
-    <div class="liste">
-      ${akt.length ? akt.map(({gruppe,akt:a})=>rad('tjek','#6d7d5e', a.navn, gruppe.navn, `gåTil('aktivitet-${a.id}')`)).join('')
-                   : rad('plus','var(--rav)','Ingen valgt endnu','Vælg nogle idéer til turen',"gåTil('aktivitet')")}
     </div>
     <div class="sektion"><h3>${ik('kop')} Forplejning</h3></div>
     <div class="liste">
@@ -1305,8 +1283,6 @@ function gaveSend(){
 const SEKTIONER = [
   { id:'destination', fase:1, navn:'Destination',      under:'Hvor tager I hen?',        ikon:'nål',    farve:'#eadfcd', ifarve:'#8a5f3e',
     spørg:'Hvor skal turen gå hen?',      forklar:'Sæt en pin på kortet, søg en by — eller vælg et af vores testede steder.' },
-  { id:'aktivitet',   fase:1, navn:'Aktivitet',        under:'Oplevelser på turen',      ikon:'gnist',  farve:'#efe6d8', ifarve:'#996f3d',
-    spørg:'Hvad vil I lave på turen?',    forklar:'50 idéer til jer to i og omkring bilen.' },
   { id:'mad',         fase:1, navn:'Mad/drikke',       under:'Tips fra vores egne ture', ikon:'kop',    farve:'#ece8dd', ifarve:'#6b705c',
     spørg:'Hvad skal I spise og drikke?', forklar:'Vores egne tips til aftensmad, morgenkaffe og det søde undervejs.' },
   { id:'bilen',       fase:2, navn:'Bilen',            under:'Lade, Camp Mode, tasken',  ikon:'bil',    farve:'#e6e6d9', ifarve:'#5f6353',
@@ -1507,140 +1483,6 @@ function vælgTestetSted(id){
   gåTil(liste[idx+1].id);
 }
 
-/* =============================================================
-   2 · AKTIVITET
-   ============================================================= */
-/* ---------- valg af aktiviteter til turen ---------- */
-function findAktivitet(id){
-  for(const g of AKTIVITET_GRUPPER){
-    const akt = g.eksempler.find(e=>e.id===id);
-    if(akt) return { gruppe:g, akt };
-  }
-  return null;
-}
-function aktivitetValgt(id){ const f=s.forberedelse; return !!(f && f.aktiviteter && f.aktiviteter.includes(id)); }
-function valgteAktiviteter(){
-  const f=s.forberedelse; if(!f || !f.aktiviteter) return [];
-  return f.aktiviteter.map(findAktivitet).filter(Boolean);
-}
-function kortNavn(akt){ return akt.navn.split(' — ')[0]; }
-function toggleAktivitetValg(id){
-  if(!s.forberedelse) s.forberedelse = nyForberedelse();
-  const arr = s.forberedelse.aktiviteter || (s.forberedelse.aktiviteter=[]);
-  const i = arr.indexOf(id);
-  if(i>=0){ arr.splice(i,1); flash('Fjernet fra turen.'); }
-  else { arr.push(id); const fund=findAktivitet(id); flash((fund?kortNavn(fund.akt):'Aktivitet')+' er tilføjet turen.','tjek'); }
-  gem(); tegn();
-}
-
-/* Rolig harmonika: kun én kategori åben ad gangen, alt foldet sammen til at begynde med. */
-let aktivAktivitetGruppe = null;
-function toggleAktivitetGruppe(i){
-  aktivAktivitetGruppe = (aktivAktivitetGruppe===i) ? null : i;
-  tegn();
-}
-function skærmAktivitet(){
-  if(s.forberedelse && !s.forberedelse.set.aktivitet){ s.forberedelse.set.aktivitet = true; gem(); }
-  const valgte = valgteAktiviteter();
-  const tilTuren = valgte.length ? `
-    <div class="sektion" style="margin-top:2px"><h3>${ik('hjerte')} Til turen · ${valgte.length}</h3></div>
-    <div class="liste" style="margin-bottom:22px">
-      ${valgte.map(({gruppe,akt})=>`
-        <div class="idé-punkt">
-          <button class="idé-åbn" onclick="gåTil('aktivitet-${akt.id}')">
-            <span style="flex:1;min-width:0">${akt.navn}<span class="idé-gruppe">${gruppe.navn}</span></span>
-            ${ik('pil')}
-          </button>
-          <button class="idé-tilføj valgt" onclick="toggleAktivitetValg('${akt.id}')"
-            aria-pressed="true" aria-label="Fjern fra turen" title="Fjern fra turen">${ik('tjek')}</button>
-        </div>`).join('')}
-    </div>` : '';
-  $('indhold').innerHTML = `<div class="side anim">
-    ${sektionHeader('aktivitet')}
-    <p class="dæmpet" style="margin-bottom:16px">Idéer til jer to — i og omkring bilen. Tryk på <b style="color:var(--gran)">+</b> for at lægge en idé til turen, eller på selve idéen for at læse mere først.</p>
-    ${tilTuren}
-    <div class="forslag">
-      ${AKTIVITET_GRUPPER.map((g,i)=>{
-        const åben = aktivAktivitetGruppe===i;
-        return `
-        <button class="forslag-knap" onclick="toggleAktivitetGruppe(${i})"${åben?' style="border-color:var(--rav)"':''}>
-          <span class="f-ikon">${ik(g.ikon)}</span>
-          <span style="flex:1"><b>${g.navn}</b><br><span class="dæmpet" style="font-size:12.5px">${g.under}</span></span>
-          <span class="pil" style="transform:rotate(${åben?90:0}deg);transition:transform .25s">${ik('pil')}</span>
-        </button>
-        ${åben ? `
-        <div class="liste" style="margin:2px 0 4px">
-          ${g.eksempler.map(a=>{
-            const v = aktivitetValgt(a.id);
-            return `<div class="idé-punkt">
-              <button class="idé-åbn" onclick="gåTil('aktivitet-${a.id}')">
-                <span style="flex:1;min-width:0">${a.navn}</span>${ik('pil')}
-              </button>
-              <button class="idé-tilføj${v?' valgt':''}" onclick="toggleAktivitetValg('${a.id}')"
-                aria-pressed="${v}" aria-label="${v?'Fjern fra turen':'Læg til turen'}"
-                title="${v?'Fjern fra turen':'Læg til turen'}">${ik(v?'tjek':'plus')}</button>
-            </div>`;
-          }).join('')}
-          ${g.antalOD>0?`<div class="liste-punkt"><div class="navn dæmpet" style="font-size:13px">+ ${g.antalOD} flere idéer på vej</div></div>`:''}
-        </div>` : ''}`;
-      }).join('')}
-    </div>
-    ${sektionFod('aktivitet')}
-  </div>`;
-}
-/* Detaljeside for en aktivitet: guide/video (OD) eller ægte solnedgangstid,
-   plus en knap til at lægge den til / fjerne den fra turen. */
-function aktivitetSolnedgangKort(){
-  const f = s.forberedelse, dest = f && f.destination;
-  const dato = (f && f.dato) ? new Date(f.dato+'T18:00:00') : new Date();
-  let linje;
-  if(dest){
-    const geo = xyTilGeo(dest.x, dest.y);
-    const ned = solnedgang(geo.lat, geo.lon, dato);
-    if(ned){
-      const tid = ned.toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
-      linje = `Ved <b>${esc(dest.navn)}</b> går solen ned kl. <b>${tid}</b>${f.dato?' d. '+pænDato(f.dato).replace(/^\S+ d\. /,''):''}. Vær fremme en halv time før — så når I en god plads.`;
-    } else linje = 'Solnedgangstidspunktet kan ikke beregnes for stedet.';
-  } else linje = 'Vælg først en destination, så viser vi det præcise tidspunkt.';
-  return `
-    <div class="guide-hero" style="background:linear-gradient(150deg,#6b5433,#241f18)">
-      <div class="vandmærke">${ik('sol')}</div>
-      <h1 style="font-size:20px">Solen ned</h1>
-      <div class="g-under">Læg telefonerne i handskerummet</div>
-    </div>
-    <div class="kort">
-      <div class="vært-række">${ik('sol')}<div class="v-tekst">${linje}</div></div>
-      <div class="vært-række">${ik('kop')}<div class="v-tekst">Bryg kaffen bagefter, mens farverne forsvinder.</div></div>
-    </div>`;
-}
-function skærmAktivitetDetalje(id){
-  const fund = findAktivitet(id);
-  if(!fund){ gåTil('aktivitet'); return; }
-  const { gruppe, akt } = fund;
-  const valgt = aktivitetValgt(id);
-  const indhold = akt.type==='solnedgang' ? aktivitetSolnedgangKort() : `
-    <div class="kort guide-brød">
-      <p>En lille guide til <b>${esc(kortNavn(akt).toLowerCase())}</b> — så I ved præcis, hvad I gør.</p>
-      <div class="od-plads" style="margin-top:12px"><span class="od-mærke">OD skriver</span><br>Trin-for-trin-guiden skrives af OD og indsættes her.</div>
-    </div>
-    <div class="mørk-kort klik" onclick="flash('Video på vej — OD optager.','gnist')" style="cursor:pointer">
-      <div class="glød"></div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <span style="color:var(--rav-lys)">${ik('gnist','stor')}</span>
-        <div style="flex:1"><div class="etiket" style="color:rgba(246,243,234,.6)">Video</div>
-        <h3 style="margin-top:3px">Se hvordan</h3>
-        <p style="margin-top:4px;font-size:13px">En kort video kommer her — OD optager.</p></div>
-        ${ik('pil')}
-      </div>
-    </div>`;
-  $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop(akt.navn, 'aktivitet', gruppe.navn)}
-    ${indhold}
-    <button class="knap ${valgt?'kontur':'primær'} bred" style="margin-top:6px" onclick="toggleAktivitetValg('${id}')">
-      ${valgt ? `${ik('tjek')} Tilføjet — fjern fra turen` : `${ik('plus')} Tilføj til turen`}
-    </button>
-  </div>`;
-}
 /* =============================================================
    3 · BILEN — liste, der kan blive tjekliste
    ============================================================= */
@@ -2000,7 +1842,6 @@ function tegn(){
     case aktivSkærm==='hjem':         skærmHjem(); break;
     case aktivSkærm==='turdato':      skærmTurDato(); break;
     case aktivSkærm==='destination':  skærmDestination(); break;
-    case aktivSkærm==='aktivitet':    skærmAktivitet(); break;
     case aktivSkærm==='bilen':        skærmBilen(); break;
     case aktivSkærm==='mad':          skærmMad(); break;
     case aktivSkærm==='pakke':        skærmPakke(); break;
@@ -2015,7 +1856,6 @@ function tegn(){
     case aktivSkærm==='spontan-resultat':skærmSpontanResultat(); break;
     case aktivSkærm==='invitation':      skærmInvitation(); break;
     case aktivSkærm==='turplan':         skærmTurplan(); break;
-    case aktivSkærm.startsWith('aktivitet-'): skærmAktivitetDetalje(aktivSkærm.slice(10)); break;
     case aktivSkærm.startsWith('testet-'): skærmTestet(aktivSkærm.slice(7)); break;
     case aktivSkærm.startsWith('mad-'):    skærmMadIndlæg(aktivSkærm.slice(4)); break;
     default: skærmHjem();
