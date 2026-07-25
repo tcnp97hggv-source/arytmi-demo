@@ -334,8 +334,7 @@ function fremdrift(fase){
   if(fase===1){
     const total = SEKTIONER.filter(x=>x.fase===1).length; // 3
     if(!f) return { total, klaret:0, mangler:total, pct:0 };
-    let klaret = f.destination ? 1 : 0;
-    klaret += ['mad'].filter(k=>f.set[k]).length;
+    const klaret = SEKTIONER.filter(x=>x.fase===1 && sektionKlar(x.id)).length;
     return { total, klaret, mangler:total-klaret, pct:Math.round(klaret/total*100) };
   }
   const total = BILEN_PUNKTER.length + PAKKE_PUNKTER.length; // 12
@@ -347,6 +346,7 @@ function sektionKlar(id){
   const f = s.forberedelse; if(!f) return false;
   switch(id){
     case 'destination': return !!f.destination;
+    case 'invitation':  return invErKlar(f);
     case 'bilen': return f.bilTjek.length >= BILEN_PUNKTER.length;
     case 'pakke': return f.pakkeTjek.length >= PAKKE_PUNKTER.length;
     default: return !!f.set[id];
@@ -616,7 +616,8 @@ function skærmOnboarding(){
         <label class="felt-etiket">Dit navn</label>
         <input type="text" id="obNavn" placeholder="Fx Kennet" value="${esc(s.profil.navn||'')}">
         <label class="felt-etiket">Fødselsdag</label>
-        <input type="date" id="obFødsel" value="${s.profil.fødselsdag||''}">
+        <input type="date" id="obFødsel" min="1920-01-01" max="${new Date().toISOString().slice(0,10)}" value="${s.profil.fødselsdag||''}">
+        <p class="dæmpet" style="font-size:12.5px;margin-top:6px">Tryk på årstallet øverst i kalenderen for at hoppe direkte til dit fødselsår.</p>
         <label class="felt-etiket">Din kode</label>
         <input type="password" id="kode1" class="kode-cifre" maxlength="4" inputmode="numeric" placeholder="····">
         <label class="felt-etiket">Gentag koden</label>
@@ -1292,8 +1293,9 @@ function skærmInvitation(){
   else if(f.invType==='sammen')krop = invSammenKrop();
   else                        krop = invGaveKrop();
   $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop('Hvem vil du dele denne arytme med?','hjem','Invitation')}
+    ${sektionHeader('invitation')}
     ${krop}
+    ${sektionFod('invitation')}
   </div>`;
 }
 function invVælgKrop(){
@@ -1518,6 +1520,8 @@ function gaveSvar(svar){
 const SEKTIONER = [
   { id:'destination', fase:1, navn:'Destination',      under:'Hvor tager I hen?',        ikon:'nål',    farve:'#eadfcd', ifarve:'#8a5f3e',
     spørg:'Hvor skal turen gå hen?',      forklar:'Sæt en pin på kortet, søg en by — eller vælg et af vores testede steder.' },
+  { id:'invitation',  fase:1, navn:'Invitation',       under:'Hvem skal med?',           ikon:'folk',   farve:'#ece2d6', ifarve:'#8a5f3e',
+    spørg:'Hvem vil du dele denne arytme med?', forklar:'Planlæg sammen, giv den som gave — eller tag afsted alene.' },
   { id:'mad',         fase:1, navn:'Mad/drikke',       under:'Tips fra vores egne ture', ikon:'kop',    farve:'#ece8dd', ifarve:'#6b705c',
     spørg:'Hvad skal I spise og drikke?', forklar:'Vores egne tips til aftensmad, morgenkaffe og det søde undervejs.' },
   { id:'bilen',       fase:2, navn:'Bilen',            under:'Lade, Camp Mode, tasken',  ikon:'bil',    farve:'#e6e6d9', ifarve:'#5f6353',
@@ -1735,6 +1739,30 @@ function skærmDestination(){
    eller kortet, alt efter hvor man kom fra. */
 let testetRetur = 'destination';
 function åbnTestet(id, fra){ testetRetur = fra || 'destination'; gåTil('testet-'+id); }
+/* Køretid som skøn: vi har ikke rutedata i prototypen, kun fugleflugt.
+   70 km/t er et fair gennemsnit på danske landeveje inkl. de sidste
+   grusveje. Skønnet er mærket som skøn — ikke som en rutebeskrivelse. */
+function køretid(km){
+  const min = Math.round(km / 70 * 60 / 5) * 5;
+  if(min < 60) return min+' min';
+  const t = Math.floor(min/60), r = min%60;
+  return r ? `${t} t ${r} min` : `${t} time${t>1?'r':''}`;
+}
+/* De fire parametre står altid — også når OD ikke har skrevet dem endnu.
+   Så ved man, hvad man får at vide om hvert sted. */
+function faciliteterKort(t){
+  const fa = t.faciliteter || {};
+  const række = (ikon,navn,værdi)=>`
+    <div class="vært-række">${ik(ikon)}<div class="v-tekst"><b>${navn}:</b> ${
+      værdi ? esc(værdi) : '<span class="dæmpet">OD udfylder efter test-turen</span>'}</div></div>`;
+  return `<div class="kort">
+    <div class="etiket">Praktisk på stedet</div>
+    ${række('toilet','Toilet',fa.toilet)}
+    ${række('kurv','Indkøb',fa.handel)}
+    ${række('gaffel','Aftensmad',fa.aftensmad)}
+    ${række('croissant','Morgenkaffe',fa.morgen)}
+  </div>`;
+}
 function skærmTestet(id){
   const t = TESTEDE.find(x=>x.id===id);
   if(!t){ gåTil('destination'); return; }
@@ -1745,6 +1773,7 @@ function skærmTestet(id){
   if(km!=null){
     const kmMax = RADIUS_KM[(s.forberedelse.radius)|0];
     linjer.push(`<div class="vært-række">${ik('gps')}<div class="v-tekst">Ca. ${km} km fra ${esc(s.forberedelse.startNavn)}${km>kmMax?' — <b>længere væk, end I valgte</b>':''}</div></div>`);
+    linjer.push(`<div class="vært-række">${ik('bil')}<div class="v-tekst">Ca. <b>${køretid(km)}</b> i bil <span class="dæmpet" style="font-size:12.5px">(skøn — fugleflugt ved 70 km/t)</span></div></div>`);
   }
   if(m) linjer.push(`<div class="vært-række">${ik('stjerne')}<div class="v-tekst">Passer på ${m.træf} af jeres ${m.ud_af} ønsker${m.træf?': '+['lys','natur','stemning'].filter(k=>t.ønsker[k]===s.forberedelse.oplevelser[k]).map(k=>ØNSKE_ORD[t.ønsker[k]].toLowerCase()).join(' · '):''}</div></div>`);
   $('indhold').innerHTML = `<div class="side anim">
@@ -1759,17 +1788,12 @@ function skærmTestet(id){
     <div class="kort guide-brød"><p>${esc(t.beskrivelse)}</p>
       <div class="od-plads" style="margin-top:14px"><span class="od-mærke">Billede-plads</span><br>Foto fra stedet indsættes her (OD).</div>
     </div>
-    <div class="kort">
-      <div class="etiket">Praktisk på stedet</div>
-      <div class="vært-række">${ik('toilet')}<div class="v-tekst"><b>Toilet:</b> ${esc(t.faciliteter.toilet)}</div></div>
-      <div class="vært-række">${ik('kurv')}<div class="v-tekst"><b>Indkøb:</b> ${esc(t.faciliteter.handel)}</div></div>
-      <div class="vært-række">${ik('gaffel')}<div class="v-tekst"><b>Aftensmad:</b> ${esc(t.faciliteter.aftensmad)}</div></div>
-      <div class="vært-række">${ik('croissant')}<div class="v-tekst"><b>Morgenkaffe:</b> ${esc(t.faciliteter.morgen)}</div></div>
-    </div>` : `
+    ${faciliteterKort(t)}` : `
     <div class="kort">
       <div class="od-plads"><span class="od-mærke">OD skriver her</span><br>
-      Beskrivelse af stedet, billede og de fire facilitetsfelter (toilet · indkøb · aftensmad · morgenkaffe) udfyldes efter test-turen. Formatet ses på "${esc(TESTEDE[0].navn)}".</div>
-    </div>`}
+      Beskrivelse af stedet og billede udfyldes efter test-turen. Formatet ses på "${esc(TESTEDE[0].navn)}".</div>
+    </div>
+    ${faciliteterKort(t)}`}
     <button class="knap primær bred" onclick="vælgTestetSted('${t.id}')">Vælg dette sted ${ik('pil')}</button>
     <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="gåTil('${testetRetur}')">${ik('tilbage')} ${testetRetur==='forslag'?'Se de andre to':'Gå tilbage'}</button></div>
   </div>`;
