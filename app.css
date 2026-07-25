@@ -324,29 +324,6 @@
   .od-plads{border:1.6px dashed #cdc6b3;border-radius:16px;padding:14px 16px;color:var(--dæmpet);font-size:13.5px;background:rgba(255,255,255,.35);margin:10px 0}
   .od-mærke{display:inline-block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:#8a6320;background:#f0e2cb;border-radius:100px;padding:3px 10px;margin-bottom:6px}
 
-  /* ---------- kommende pakker (utydelige) ---------- */
-  .kommende{display:flex;align-items:center;gap:14px;background:rgba(252,250,245,.45);border:1px solid rgba(255,255,255,.5);
-    border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;position:relative}
-  .kommende .k-indhold{flex:1;filter:blur(1.6px);opacity:.55;pointer-events:none}
-  .kommende .k-lås{color:var(--dæmpet)}
-  /* afsløret pakke: samme kort, men til at åbne */
-  button.kommende{width:100%;font-family:inherit;text-align:left;color:var(--tekst)}
-  .kommende.afsløret{cursor:pointer;background:rgba(252,250,245,.6);border-color:rgba(255,255,255,.66);
-    box-shadow:0 8px 24px rgba(58,50,39,.06);transition:transform .2s,box-shadow .2s}
-  .kommende.afsløret .k-indhold{filter:none;opacity:1;pointer-events:auto}
-  .kommende.afsløret .k-lås{color:#c9c2b0}
-  .kommende.afsløret:active{transform:scale(.98)}
-  @media(hover:hover){.kommende.afsløret:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(58,50,39,.12)}}
-
-  /* ---------- dagens rytme (tidslinje i mørkt kort) ---------- */
-  .rytme{margin-top:14px;position:relative;padding-left:17px}
-  .rytme::before{content:'';position:absolute;left:3px;top:8px;bottom:8px;width:1px;background:rgba(210,169,126,.32)}
-  .rytme-punkt{position:relative;padding-bottom:16px}
-  .rytme-punkt:last-child{padding-bottom:0}
-  .rytme-punkt::before{content:'';position:absolute;left:-17px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--rav-lys)}
-  .r-tid{display:block;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;font-weight:700;color:rgba(246,243,234,.62)}
-  .r-tekst{display:block;font-size:14px;line-height:1.55;color:rgba(242,239,230,.84);margin-top:3px}
-
   /* ---------- sælg-kort (upsell af fysiske pakker) ---------- */
   .sælg-kort{background:linear-gradient(155deg,rgba(210,169,126,.20),rgba(210,169,126,.06));
     border:1px solid rgba(210,169,126,.4);border-radius:var(--radius);padding:20px 20px 18px;margin:6px 0 18px;position:relative;overflow:hidden}

@@ -171,64 +171,6 @@ const MAD_INDLÆG = {
     <div class="od-plads"><span class="od-mærke">Rabatkode-plads</span><br>Muligt nationalt pizzeria-samarbejde (rabatkode) indsættes her.</div>` }
 };
 
-/* -- Kommende pakker. To er foldet ud som eksempel på, hvordan en pakke kan
-   se ud indefra; resten er stadig utydelige (ikke købt / ikke afsløret).
-   VIGTIGT: teksten i de to er et UDKAST — et forslag til formatet, ikke
-   endeligt indhold. Æskens indhold er en produktbeslutning, ikke min. -- */
-const KOMMENDE_PAKKER = [
-  { id:'datenight', navn:'Datenight', ikon:'hjerte', klar:true,
-    under:'Når aftenen kun er jeres',
-    farve:'linear-gradient(150deg,#5c4348,#1c1813)',
-    intro:`<p>En datenight går sjældent skævt, fordi I mangler idéer. Den går skævt, fordi aftenen kommer til at ligne alle de andre aftener — samme sofa, samme lys, samme telefoner.</p>
-      <p style="margin-top:10px">Datenight-pakken flytter aftenen ud af stuen og ned i bagagerummet. Samme par, ny ramme. I skal ikke finde på noget; I skal bare køre derhen.</p>`,
-    æske:[
-      'To glas i håndfast akryl — ser ud som glas, tåler bagagerummet',
-      'Linnedservietter og et lille træbræt til det, I har med',
-      'En lanterne med varmt lys, der ikke blæser ud',
-      '30 samtalekort — spørgsmål I aldrig er nået til',
-      'Et uldplaid, der er stort nok til to'
-    ],
-    app:[
-      'Aftenens rytme — hvad der sker fra en time før solnedgang',
-      '12 datenight-øjeblikke, der kun ligger i denne pakke',
-      'En playliste, der følger lyset udenfor',
-      'Telefonerne i handskerummet — en timer, I sætter sammen'
-    ],
-    rytme:[
-      ['En time før solnedgang','Ankomst. Bagklappen op, plaidet ud, glassene frem. Ingenting skal nås.'],
-      ['Solnedgang','Telefonerne bliver liggende. I ser bare på det, som da I var yngre.'],
-      ['Når det bliver mørkt','Lanternen tændes. Samtalekortene kommer op af æsken.'],
-      ['Sidst på aftenen','Madrassen ud. Bagklappen står åben, så I kan se opad.']
-    ] },
-  { id:'spa', navn:'Spa', ikon:'vand', klar:true,
-    under:'Ro nok til at mærke skuldrene falde',
-    farve:'linear-gradient(150deg,#3f5158,#161d20)',
-    intro:`<p>Spa-pakken handler ikke om at finde et wellnesshotel. Den handler om koldt vand, varm damp og en eftermiddag, hvor ingen kan få fat i jer.</p>
-      <p style="margin-top:10px">Danmark har flere gode badebroer, saunaer og varme kar, end de fleste tror. Pakken finder dem — og fortæller jer, i hvilken rækkefølge kroppen har bedst af dem.</p>`,
-    æske:[
-      'To lette badekåber, der kan pakkes små',
-      'Et hurtigtørrende håndklæde til hver',
-      'Kropsolie og to ansigtsmasker',
-      'En varmedunk, der holder på varmen bagefter',
-      'Tøfler, så I slipper for at gå på grus'
-    ],
-    app:[
-      'Kort over saunaer, badebroer og varme kar tæt på jeres destination',
-      'Rytmen: koldt, varmt, hvile — i den rækkefølge der virker',
-      'En rolig vejrtrækningsøvelse til bagefter, mens varmen kommer tilbage',
-      '10 spa-øjeblikke, der kun ligger i denne pakke'
-    ],
-    rytme:[
-      ['Eftermiddag','Ankomst og ned i det kolde. Kort tid — men helt ned.'],
-      ['Lige efter','Varmen tilbage: damp eller varmedunk, tørt tøj, ingen snak.'],
-      ['Aften','Maske, olie og ingenting. Ingenting er hele pointen.'],
-      ['Næste morgen','Én tur mere i vandet, mens der stadig ligger tåge over det.']
-    ] },
-  { navn:'På eventyr med dit barn', ikon:'telt' },
-  { navn:'Festival-pakken', ikon:'gnist' }
-];
-function findPakke(id){ return KOMMENDE_PAKKER.find(p=>p.id===id); }
-
 /* =============================================================
    STATE
    ============================================================= */
@@ -239,7 +181,6 @@ function friskState(){
     forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{aktivitet,mad,øjeblikke}, startet}
     påTur:null,          // {sted, startet}
     anmeldAfventer:null, // {sted, dato}
-    pakkeInteresse:[],   // id'er på kommende pakker, man vil have besked om
     ture:[]              // {sted,dato,score:{destination,app,hygge},kommentar}
   };
 }
@@ -604,7 +545,6 @@ let aktivSkærm = 'hjem';
 const NAV = [
   {id:'profil', ikon:'person', navn:'Profil'},
   {id:'hjem',   ikon:'hjem',   navn:'Forside'},
-  {id:'pakker', ikon:'gave',   navn:'Pakker'},
   {id:'log',    ikon:'bog',    navn:'Log'}
 ];
 let sidsteSkærm = 'hjem';
@@ -1894,94 +1834,6 @@ function skærmØjeblikke(){
 }
 
 /* =============================================================
-   PAKKER — butikken. Eget sted i bundnavet, så den kan findes
-   uden at man først skal i gang med at planlægge en tur.
-   ============================================================= */
-function skærmPakker(){
-  $('indhold').innerHTML = `<div class="side anim">
-    <div class="skærm-top"><div><div class="etiket">Arytmi</div><h1 style="font-size:22px">Pakker</h1></div></div>
-    <p class="dæmpet" style="margin-bottom:16px">Døsige Dølle-tasken er grundpakken — den I allerede har. Herunder er dem, der er på vej.</p>
-    <div class="sælg-kort">
-      <div class="sælg-etiket">Grundpakken</div>
-      <h3>Døsige Dølle-tasken</h3>
-      <p>Madras, forlænger, lagen, dyner og afskærmning — samlet, så I ikke skal ud og finde det hele hver for sig.</p>
-      <button class="knap primær bred" onclick="gåTilKøb()">Køb Døsige Dølle-tasken ${ik('pil')}</button>
-    </div>
-    <div class="sektion"><h3>På vej</h3></div>
-    ${KOMMENDE_PAKKER.map(p=>p.klar ? `
-    <button class="kommende afsløret" onclick="gåTil('bonuspakke-${p.id}')">
-      <div class="k-indhold" style="display:flex;align-items:center;gap:14px">
-        <span style="color:var(--rav)">${ik(p.ikon,'stor')}</span>
-        <div><h3>${p.navn}</h3><div class="dæmpet" style="font-size:12.5px">${p.under}</div></div>
-      </div>
-      <span class="k-lås">${ik('pil')}</span>
-    </button>` : `
-    <div class="kommende">
-      <div class="k-indhold" style="display:flex;align-items:center;gap:14px">
-        <span style="color:var(--rav)">${ik(p.ikon,'stor')}</span>
-        <div><h3>${p.navn}</h3><div class="dæmpet" style="font-size:12.5px">Indhold afsløres ved lancering</div></div>
-      </div>
-      <span class="k-lås">${ik('lås')}</span>
-    </div>`).join('')}
-  </div>`;
-}
-
-/* ---------- kommende pakke, foldet ud ----------
-   Ingen priser og ingen købsknap: prisen og funnel'en er ikke besluttet.
-   I stedet kan man sige til, at man gerne vil vide, når den lander. */
-function pakkeInteresse(id){
-  const arr = s.pakkeInteresse || (s.pakkeInteresse = []);
-  const i = arr.indexOf(id);
-  if(i>=0){ arr.splice(i,1); flash('Fjernet igen.'); }
-  else { arr.push(id); flash('Vi siger til, når den lander.','klokke'); }
-  gem(); tegn();
-}
-function skærmBonuspakke(id){
-  const p = findPakke(id);
-  if(!p){ gåTil('pakker'); return; }
-  const påListen = (s.pakkeInteresse||[]).includes(id);
-  $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop(p.navn,'pakker','Kommende pakke')}
-    <div class="guide-hero" style="background:${p.farve}">
-      <div class="vandmærke">${ik(p.ikon)}</div>
-      ${ekgSVG('rgba(246,243,234,.42)')}
-      <h1>${p.navn}</h1>
-      <div class="g-under">${p.under}</div>
-    </div>
-    <div class="od-plads"><span class="od-mærke">Udkast</span><br>
-      Teksten herunder er et forslag til, hvordan en pakke kan se ud indefra.
-      Indholdet er ikke besluttet endnu.</div>
-    <div class="kort guide-brød">${p.intro}</div>
-    <div class="sektion"><h3>I æsken</h3></div>
-    <div class="liste">
-      ${p.æske.map(t=>`<div class="liste-punkt">
-        <span style="color:var(--rav);flex-shrink:0">${ik('gave')}</span>
-        <div class="navn" style="font-size:14.5px">${t}</div>
-      </div>`).join('')}
-    </div>
-    <div class="sektion"><h3>I appen</h3></div>
-    <div class="liste">
-      ${p.app.map(t=>`<div class="liste-punkt">
-        <span style="color:#6d7d5e;flex-shrink:0">${ik('tjek')}</span>
-        <div class="navn" style="font-size:14.5px">${t}</div>
-      </div>`).join('')}
-    </div>
-    <div class="mørk-kort" style="margin-top:22px">
-      <div class="glød"></div>
-      <div class="etiket" style="color:rgba(246,243,234,.6)">Sådan falder dagen</div>
-      <div class="rytme">
-        ${p.rytme.map(([tid,tekst])=>`<div class="rytme-punkt">
-          <span class="r-tid">${tid}</span><span class="r-tekst">${tekst}</span>
-        </div>`).join('')}
-      </div>
-    </div>
-    <button class="knap ${påListen?'kontur':'primær'} bred" onclick="pakkeInteresse('${id}')">
-      ${påListen ? `${ik('tjek')} Vi siger til — fjern mig igen` : `${ik('klokke')} Sig til, når den lander`}
-    </button>
-  </div>`;
-}
-
-/* =============================================================
    ANMELD TUR — 3 spørgsmål + kommentar
    ============================================================= */
 let anmeldKladde = null;
@@ -2138,7 +1990,6 @@ function tegn(){
     case aktivSkærm==='mad':          skærmMad(); break;
     case aktivSkærm==='pakke':        skærmPakke(); break;
     case aktivSkærm==='øjeblikke':    skærmØjeblikke(); break;
-    case aktivSkærm==='pakker':       skærmPakker(); break;
     case aktivSkærm==='anmeld':       skærmAnmeld(); break;
     case aktivSkærm==='log':          skærmLog(); break;
     case aktivSkærm==='profil':       skærmProfil(); break;
@@ -2152,7 +2003,6 @@ function tegn(){
     case aktivSkærm.startsWith('aktivitet-'): skærmAktivitetDetalje(aktivSkærm.slice(10)); break;
     case aktivSkærm.startsWith('testet-'): skærmTestet(aktivSkærm.slice(7)); break;
     case aktivSkærm.startsWith('mad-'):    skærmMadIndlæg(aktivSkærm.slice(4)); break;
-    case aktivSkærm.startsWith('bonuspakke-'): skærmBonuspakke(aktivSkærm.slice(11)); break;
     default: skærmHjem();
   }
   // fuldskærms-forsiden skal ikke kunne scrolle på et tomt felt — men
