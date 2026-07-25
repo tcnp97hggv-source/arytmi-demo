@@ -208,6 +208,12 @@
   .app-baggrund::after{content:'';position:absolute;top:-70px;right:-80px;width:300px;height:300px;border-radius:50%;
     background:radial-gradient(circle,rgba(232,207,163,.45),transparent 68%)}
   .app-baggrund .bg-bund,.app-baggrund .bg-traeer{position:absolute;bottom:0;left:0;width:100%;height:170px}
+  /* Signaturillustrationen som en del af landskabet: den ægte stregtegning
+     (brand/lav-stregtegning.py på bil.png), visket ud til samme grå som
+     bakkerne. Bakkerne tegnes ovenpå, så den står bag landskabet. */
+  .app-baggrund .bg-signatur{position:absolute;bottom:38px;right:-24px;width:228px;height:auto;
+    opacity:.14;filter:grayscale(1) contrast(.7)}
+  @media(max-height:700px){ .app-baggrund .bg-signatur{width:190px;bottom:30px} }
 
   /* lys der følger musen */
   .kort::after,.liste::after,.forslag-knap::after{
@@ -254,6 +260,20 @@
   .liste-punkt .navn{flex:1;font-size:15px;transition:color .2s}
   .liste-punkt.strøget .navn{color:var(--dæmpet);text-decoration:line-through;text-decoration-color:var(--rav)}
 
+  /* beskrivelsen på forslagskortet — så man kan vælge ud fra andet end afstand */
+  .res-tekst{display:block;font-size:13.5px;line-height:1.5;color:var(--tekst);margin:4px 0 6px}
+
+  /* tekstknap midt i en sætning — bruges i den hurtige arytme */
+  .som-link{background:none;border:none;padding:0;font:inherit;color:var(--rav);
+    text-decoration:underline;cursor:pointer}
+
+  /* ---------- mail-kladde: brugeren retter selv i invitationen ---------- */
+  .mail-felt{width:100%;min-height:340px;border:1px solid var(--linje);border-radius:16px;
+    padding:14px 16px;font-family:inherit;font-size:13.5px;line-height:1.6;color:var(--tekst);
+    background:var(--flade);resize:vertical}
+  .mail-felt:focus{outline:none;border-color:var(--rav)}
+  .mail-vis{white-space:pre-wrap;font-family:inherit;font-size:13.5px;line-height:1.6;color:var(--tekst)}
+
   /* ---------- skærm-top ---------- */
   .skærm-top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
   .tilbage{border:none;background:var(--flade);box-shadow:0 4px 14px rgba(58,50,39,.08);width:40px;height:40px;border-radius:50%;cursor:pointer;color:var(--gran);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .2s}
@@ -274,9 +294,20 @@
   .lkort-testet{width:28px;height:28px;border-radius:50%;background:var(--rav-lys);border:1.5px solid #8a5f3e;
     display:flex;align-items:center;justify-content:center;color:#5c4022;box-shadow:0 3px 10px rgba(58,50,39,.35)}
   .lkort-testet .ik{width:15px;height:15px;stroke-width:1.9}
+  .lkort-testet.udenfor{background:var(--flade);border-color:var(--linje);color:var(--dæmpet);box-shadow:none}
+  .lkort-start{width:16px;height:16px;border-radius:50%;background:var(--rav);
+    border:2.5px solid #f2efe6;box-shadow:0 3px 10px rgba(58,50,39,.3)}
+  .lkort-tip-km{color:var(--fjord);font-size:11px}
+  .lkort-tip-uden{color:var(--dæmpet);font-size:11px;font-style:italic}
   .lkort-bruger{position:relative;width:16px;height:16px}
   .lkort-bruger .prik{position:absolute;inset:0;border-radius:50%;background:var(--gran);border:2.5px solid #f2efe6;box-shadow:0 3px 10px rgba(58,50,39,.35)}
   .lkort-bruger .puls{position:absolute;inset:-9px;border-radius:50%;background:var(--gran);opacity:.18;animation:pulsprik 3s ease-in-out infinite}
+  /* Rolig opsummering af trin 3+4 over kortet — én linje, ingen pille-række */
+  .valg-linje{display:flex;align-items:baseline;gap:7px;margin:0 0 10px;font-size:12.5px;color:var(--fjord)}
+  .valg-linje .ik{width:13px;height:13px;flex:none;color:var(--rav);align-self:center}
+  .valg-linje span{flex:1;line-height:1.5}
+  .valg-linje button{border:0;background:none;font-family:inherit;font-size:12.5px;font-weight:600;
+    color:var(--gran);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}
   .sted-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
   .sted-chip{display:inline-flex;align-items:center;gap:6px;border:1.3px solid var(--linje);background:var(--flade);
     border-radius:100px;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--tekst);cursor:pointer;font-family:inherit;transition:all .2s}

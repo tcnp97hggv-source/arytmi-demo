@@ -99,6 +99,7 @@ const BYER = [
       format-eksemplet — resten udfyldes af OD -- */
 const TESTEDE = [
   { id:'t1', navn:'Vesterhavet — Hvide Sande Sydstrand', x:44, y:122, lat:55.905, lon:8.117, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'isoleret' },
     kort:'Klitrækken syd for slusen. P-plads 40 m fra vandkanten.',
     beskrivelse:'Kør helt ud, hvor vejen ender. I parkerer med fronten mod vest, og solen går ned lige dér, hvor I sidder. Klitterne giver læ, og lyden af havet følger jer hele natten. Testet af os i både sommerstille og oktoberblæst — bilen står roligt begge dele.',
     faciliteter:{
@@ -161,7 +162,7 @@ const MAD_INDLÆG = {
 function friskState(){
   return {
     onboarded:false,
-    profil:{ email:'kennet@justsecure.dk', kode:'', notifikationer:true },
+    profil:{ email:'kennet@justsecure.dk', navn:'', fødselsdag:'', kode:'', notifikationer:true },
     forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{mad,øjeblikke}, startet}
     påTur:null,          // {sted, startet}
     anmeldAfventer:null, // {sted, dato}
@@ -249,6 +250,24 @@ function geoTilXY(lat,lon){
   const y = (GEO.latTop-lat)/(GEO.latTop-GEO.latBund)*GEO.h;
   return { x: Math.max(8,Math.min(202,x)), y: Math.max(10,Math.min(236,y)) };
 }
+/* Fugleflugt i km mellem to {lat,lon} — bruges til at måle testede steder
+   op mod den radius, brugeren valgte i trin 3. */
+function afstandKm(a, b){
+  const rad = Math.PI/180, R = 6371;
+  const dLat = (b.lat-a.lat)*rad, dLon = (b.lon-a.lon)*rad;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+/* Geo for et testet sted — rigtige koordinater hvis vi har dem, ellers
+   den omtrentlige omregning fra kortets x/y (gælder t2-t10, se status). */
+function testetGeo(t){
+  return (t.lat!=null && t.lon!=null) ? { lat:t.lat, lon:t.lon } : xyTilGeo(t.x, t.y);
+}
+function startGeo(){
+  const f = s.forberedelse;
+  if(!f || !f.startXY) return null;
+  return xyTilGeo(f.startXY.x, f.startXY.y);
+}
 
 /* ---------- ægte solnedgangsberegning (NOAA-forenklet) ---------- */
 function solnedgang(lat, lon, dato){
@@ -295,7 +314,9 @@ function demoVejr(x,y){
 function nyForberedelse(ekstra){
   return Object.assign({
     fase:1, spontan:false,
-    dato:null, afgangstid:'', retur:'samme', returDato:null,
+    // Standard: i dag kl. 15 — de fleste arytmer bliver til samme dag, og
+    // eftermiddagen er det tidspunkt, man reelt kommer afsted på.
+    dato:new Date().toISOString().slice(0,10), afgangstid:'15:00', retur:'samme', returDato:null,
     startNavn:'', startXY:null, radius:2, oplevelser:{lys:null, natur:null, stemning:null},
     destination:null,
     madValg:[],
@@ -590,8 +611,12 @@ function skærmOnboarding(){
       <div style="display:flex;justify-content:center;margin-bottom:22px">${logoSVG(false)}</div>
       <div class="kort">
         <div class="etiket">Første login</div>
-        <h2 style="margin-top:6px">Lav din personlige kode</h2>
-        <p class="dæmpet" style="margin-top:6px">Engangskoden fra mailen er brugt. Vælg nu din egen 4-cifrede kode.</p>
+        <h2 style="margin-top:6px">Lidt om dig</h2>
+        <p class="dæmpet" style="margin-top:6px">Engangskoden fra mailen er brugt. Fortæl os, hvem du er, og vælg din egen 4-cifrede kode.</p>
+        <label class="felt-etiket">Dit navn</label>
+        <input type="text" id="obNavn" placeholder="Fx Kennet" value="${esc(s.profil.navn||'')}">
+        <label class="felt-etiket">Fødselsdag</label>
+        <input type="date" id="obFødsel" value="${s.profil.fødselsdag||''}">
         <label class="felt-etiket">Din kode</label>
         <input type="password" id="kode1" class="kode-cifre" maxlength="4" inputmode="numeric" placeholder="····">
         <label class="felt-etiket">Gentag koden</label>
@@ -616,9 +641,13 @@ function skærmOnboarding(){
   </div>`;
 }
 function gemKode(){
+  const navn = ($('obNavn').value||'').trim();
   const k1 = $('kode1').value.trim(), k2 = $('kode2').value.trim();
+  if(!navn){ flash('Skriv dit navn — invitationerne bliver sendt i dit navn.'); return; }
   if(k1.length<4){ flash('Koden skal være 4 cifre.'); return; }
   if(k1!==k2){ flash('De to koder er ikke ens — prøv igen.'); return; }
+  s.profil.navn = navn;
+  s.profil.fødselsdag = $('obFødsel').value || '';
   s.profil.kode = k1; gem();
   obTrin = 3; tegn();
 }
@@ -750,6 +779,9 @@ function startForberedelse(){
    Start eller den spontane knap.
    ============================================================= */
 const RADIUS_TEKST = ['Under 30 min','30–60 min','1–2 timer','2–4 timer'];
+/* Køretid → fugleflugt. Landevejsfart ca. 65 km/t, og vejen er sjældent lige —
+   derfor ca. 80 % af den kørte afstand. Bruges til cirklen på kortet. */
+const RADIUS_KM = [25, 50, 100, 200];
 function turTilbage(trin){
   gåTil(['hjem','turdato','hvorfra','hvorlangt'][trin] || 'hjem');
 }
@@ -782,8 +814,8 @@ function datoFelter(){
   return `<div class="kort">
     <label class="felt-etiket" style="margin-top:0">Dato</label>
     <input type="date" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
-    <label class="felt-etiket">Ca. afgangstid <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-    <input type="time" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
+    <label class="felt-etiket">Ca. afgangstid</label>
+    <input type="time" step="900" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
     <label class="felt-etiket">Hjem igen? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
     <div class="seg-valg">${seg('samme','Samme dag')}${seg('næste','Næste dag')}${seg('dato','Vælg dato')}</div>
     ${f.retur==='dato'?`<input type="date" style="margin-top:10px" value="${f.returDato||''}" onchange="s.forberedelse.returDato=this.value;gem()">`:''}
@@ -874,18 +906,72 @@ function skærmØnsker(){
   $('indhold').innerHTML = `<div class="side anim">
     ${wizardTop(3,'Hvad vil I opleve?','Vælg det, der frister — eller lad os overraske jer.')}
     ${seg('lys', {titel:'Solopgang',v:'solopgang',ik:'solop'}, {titel:'Solnedgang',v:'solnedgang',ik:'sol'})}
-    ${seg('natur', {titel:'Vand',v:'vand',ik:'vand'}, {titel:'Skov',v:'skov',ik:'skov'})}
+    ${seg('natur', {titel:'Vand',v:'vand',ik:'vand'}, {titel:'Land',v:'land',ik:'skov'})}
     ${seg('stemning', {titel:'Isoleret',v:'isoleret',ik:'måne'}, {titel:'Livligt',v:'livligt',ik:'folk'})}
     <button class="knap kontur bred" style="margin-top:8px" onclick="overrasker()">${ik('gnist')} Eller overrask mig</button>
-    ${wizardBund('Videre til kortet',"gåTil('destination')", !!alle)}
+    ${wizardBund('Se tre steder til jer',"gåTil('forslag')", !!alle)}
     ${annullérLinje()}
   </div>`;
 }
 function sætØnske(gruppe,v){ s.forberedelse.oplevelser[gruppe]=v; gem(); tegn(); }
 function overrasker(){
   const r = a => a[Math.floor(Math.random()*a.length)];
-  s.forberedelse.oplevelser = { lys:r(['solopgang','solnedgang']), natur:r(['vand','skov']), stemning:r(['isoleret','livligt']) };
-  gem(); gåTil('destination');
+  s.forberedelse.oplevelser = { lys:r(['solopgang','solnedgang']), natur:r(['vand','land']), stemning:r(['isoleret','livligt']) };
+  gem(); gåTil('forslag');
+}
+
+/* =============================================================
+   TRE STEDER — resultatet af de fire trin. Ingen opfundne steder:
+   vi rangerer vores egne testede destinationer efter radius,
+   ønsker og afstand og viser de tre bedste. Man kan trykke ind på
+   hver enkelt, læse det praktiske, og først dér vælge.
+   ============================================================= */
+function forslagSteder(){
+  const start = startGeo();
+  const kmMax = start ? RADIUS_KM[(s.forberedelse.radius)|0] : null;
+  return TESTEDE.map(t=>{
+    const km = start ? Math.round(afstandKm(start, testetGeo(t))) : null;
+    const m = ønskeMatch(t);
+    return { t, km, match:m, indenfor: km==null || km<=kmMax };
+  }).sort((a,b)=>{
+    /* Steder inden for radius kommer altid først, og dér afgør ønskerne.
+       Skal vi ud over radius for at fylde tre pladser op, er det den
+       korteste vej der tæller — ellers foreslår vi 126 km, fordi et sted
+       på papiret rammer tre ønsker. */
+    if(a.indenfor !== b.indenfor) return b.indenfor - a.indenfor;
+    if(!a.indenfor) return (a.km||0) - (b.km||0);
+    return ((b.match?b.match.træf:0)-(a.match?a.match.træf:0))
+        || (b.t.klar-a.t.klar)
+        || ((a.km||0)-(b.km||0));
+  }).slice(0,3);
+}
+function skærmForslag(){
+  const f = s.forberedelse;
+  if(!f){ gåTil('hjem'); return; }
+  const res = forslagSteder();
+  const udenfor = res.filter(r=>!r.indenfor).length;
+  $('indhold').innerHTML = `<div class="side anim">
+    ${skærmTop('Tre steder til jer','onsker','Ud fra jeres svar')}
+    ${valgChips()}
+    <p class="dæmpet" style="margin:0 0 16px">Tryk ind på hvert sted og læs, hvor det ligger, og hvor I finder toilet, aftensmad og morgenkaffe. Vælg først, når I har set dem.</p>
+    ${res.map(r=>`
+      <button class="res-kort" onclick="åbnTestet('${r.t.id}','forslag')">
+        <span class="res-ikon">${ik('stjerne')}</span>
+        <span class="res-krop">
+          <span class="res-navn">${esc(r.t.navn)}</span>
+          <span class="res-tekst">${r.t.klar ? esc(r.t.kort) : 'Beskrivelsen skrives af OD — stedet er ikke klar endnu.'}</span>
+          <span class="res-meta">${r.km!=null?`ca. ${r.km} km herfra${r.indenfor?'':' — længere, end I valgte'}`:'afstand vises, når startpunktet er sat'}${
+            r.match&&r.match.træf?` · passer på ${r.match.træf} af ${r.match.ud_af} ønsker`:''}</span>
+          <span class="res-mærke ${r.t.klar?'ægte':''}">${r.t.klar?'★ Testet af Arytmi':'OD skriver indholdet'}</span>
+        </span>
+        <span class="tjek-pil">${ik('pil')}</span>
+      </button>`).join('')}
+    ${udenfor?`<p class="dæmpet" style="font-size:12.5px;margin-top:4px">Vi har kun ${res.length-udenfor} testet sted inden for jeres radius lige nu — de øvrige ligger længere væk, men er taget med.</p>`:''}
+    <div style="text-align:center;margin-top:18px">
+      <button class="knap kontur lille" onclick="gåTil('destination')">${ik('nål')} Ingen af dem? Se hele kortet</button>
+    </div>
+    ${annullérLinje()}
+  </div>`;
 }
 function hjemmeIgen(){
   s.anmeldAfventer = { sted: s.påTur.sted, dato: s.påTur.startet };
@@ -894,13 +980,59 @@ function hjemmeIgen(){
   flash('Velkommen hjem. Vi har lagt en lille anmeldelse klar til jer.', 'klokke');
 }
 
-/* Spontan tur — parkeret 25/7 (se parkeret/spontan-tur-modul.md).
-   Appen skal ikke have to forskellige flows, mens spontan-turen stadig
-   tænkes færdig. Knappen starter derfor det samme flow som Start, men
-   markerer turen som spontan, så vejene kan skilles ad igen senere. */
+/* =============================================================
+   SPONTAN ARYTME — den hurtige vej for dem, der har prøvet det før.
+   Ingen fire trin, intet kort: dato og tid sættes til i dag kl. 15,
+   og man får kun huskelisten, så intet bliver glemt. Turen lander
+   i loggen som en hvilken som helst anden arytme.
+   ============================================================= */
 function startSpontan(){
   s.forberedelse = nyForberedelse({ spontan:true });
-  gem(); gåTil('turdato');
+  gem(); gåTil('hurtig');
+}
+function hurtigListe(){
+  const f = s.forberedelse;
+  const bil   = f.bilTjek.length;
+  const pakke = f.pakkeTjek.length;
+  return [
+    { navn:'Bilen',       under:`${bil} af ${BILEN_PUNKTER.length} klaret — ladning, Camp Mode, tasken`, klar:bil>=BILEN_PUNKTER.length,   mål:'bilen' },
+    { navn:'Pakkeliste',  under:`${pakke} af ${PAKKE_PUNKTER.length} klaret — de personlige ting`,        klar:pakke>=PAKKE_PUNKTER.length, mål:'pakke' },
+    { navn:'Mad og drikke', under: forplejningKlar()? valgtMad().length+' valgt' : 'Så I ikke skal handle på vejen', klar:forplejningKlar(), mål:'mad' }
+  ];
+}
+function skærmHurtig(){
+  const f = s.forberedelse;
+  if(!f){ gåTil('hjem'); return; }
+  const items = hurtigListe();
+  const mangler = items.filter(i=>!i.klar).length;
+  $('indhold').innerHTML = `<div class="side anim">
+    <div class="skærm-top">
+      <button class="tilbage" onclick="gåTil('hjem')">${ik('tilbage')}</button>
+      <div><div class="etiket">Spontan arytme</div>
+        <h1 style="font-size:22px">Kom afsted nu</h1></div>
+    </div>
+    <p class="dæmpet" style="margin-bottom:14px">Ingen planlægning — bare huskelisten, så I ikke står uden dyner ved vandet.
+      ${mangler? `Der er <b style="color:var(--gran)">${mangler}</b> ting tilbage.` : 'Alt er klaret. I kan køre.'}</p>
+    <div class="kort" style="padding:14px 16px">
+      <div class="etiket">Afgang</div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <input type="date" style="flex:1" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
+        <input type="time" step="900" style="flex:1" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
+      </div>
+      <p class="dæmpet" style="font-size:12.5px;margin-top:8px">Sat til i dag. Skal I et bestemt sted hen, kan I stadig
+        <button class="som-link" onclick="gåTil('destination')">vælge en destination</button>.</p>
+      ${f.destination?`<div class="sted-chips" style="margin-top:10px"><span class="sted-chip valgt">${ik('nål')} ${esc(f.destination.navn)}</span></div>`:''}
+    </div>
+    <div class="sektion"><h3>Huskeliste</h3></div>
+    ${items.map(i=>`
+      <button class="tjek-punkt ${i.klar?'klar':''}" onclick="gåTil('${i.mål}')">
+        <span class="tjek-boks">${ik('tjek')}</span>
+        <span class="tjek-krop"><span class="tjek-navn">${i.navn}</span><span class="tjek-under">${i.under}</span></span>
+        <span class="tjek-pil">${ik('pil')}</span>
+      </button>`).join('')}
+    <button class="knap primær bred ånde" style="margin-top:20px" onclick="afSted()">${ik('bil')} Af sted nu</button>
+    ${annullérLinje()}
+  </div>`;
 }
 
 /* =============================================================
@@ -915,7 +1047,11 @@ function tjeklisteData(){
   const f = s.forberedelse;
   return [
     { navn:'Dato',          under: f.dato?pænDato(f.dato):'Vælg afrejsedato',      klar:!!f.dato,        aktion:"gåTil('turdato')" },
-    { navn:'Destination',   under: f.destination?esc(f.destination.navn):'Find et sted', klar:!!f.destination, aktion:"gåTil('destination')" },
+    /* Mangler stedet endnu, sender vi tilbage til de tre forslag —
+       men kun hvis ønskerne er svaret på, ellers giver listen ingen mening */
+    { navn:'Destination',   under: f.destination?esc(f.destination.navn):'Find et sted', klar:!!f.destination,
+      aktion: (!f.destination && f.oplevelser && f.oplevelser.lys && f.oplevelser.natur && f.oplevelser.stemning)
+        ? "gåTil('forslag')" : "gåTil('destination')" },
     { navn:'Invitation',    under: invUnderTekst(f),                               klar: invErKlar(f),   aktion:"gåTil('invitation')" },
     { navn:'Forplejning',   under: forplejningKlar()?valgtMad().length+' valgt':'Mad og drikke til turen', klar: forplejningKlar(), aktion:"gåTil('mad')" },
     { navn:'Bil klargjort', under:'Ladning, Camp Mode, tasken',                    klar: f.bilTjek.length>=BILEN_PUNKTER.length, aktion:"gåTil('bilen')" },
@@ -993,14 +1129,18 @@ function skærmTurplan(){
    ============================================================= */
 function invErKlar(f){
   if(f.invType==='selv')   return true;
-  if(f.invType==='sammen') return f.invStatus==='bekræftet';
-  if(f.invType==='gave')   return f.invStatus==='sendt';
+  // sendt tæller som klaret: brugeren har gjort sit — svaret er rejsemakkerens
+  if(f.invType==='sammen') return f.invStatus==='bekræftet' || f.invStatus==='sendt';
+  if(f.invType==='gave')   return f.invStatus==='sendt' && f.gaveSvar!=='afslået';
   return false;
 }
 function invUnderTekst(f){
   if(!f.invType)         return 'Inviter til arytmen';
   if(f.invType==='selv') return 'Kun for dig selv';
-  if(f.invType==='gave') return f.invStatus==='sendt' ? 'Overraskelse sendt' : 'Overraskelse — i det skjulte';
+  if(f.invType==='gave') return f.invStatus!=='sendt' ? 'Overraskelse — i det skjulte'
+    : f.gaveSvar==='bekræftet' ? 'Bekræftet af '+(f.invModtager||'modtageren')
+    : f.gaveSvar==='afslået'   ? 'Afvist — aftal en ny dato'
+    : 'Overraskelse sendt — afventer svar';
   const navn = f.invModtager || 'din rejsemakker';
   if(f.invStatus==='bekræftet') return 'Bekræftet med '+navn;
   if(f.invStatus==='afslået')   return 'Afslået — inviter en anden';
@@ -1018,6 +1158,132 @@ function gæsteKode(f){
   return 'GÆST-'+(1000 + h%9000);
 }
 
+/* ---------- mail-skabelonerne ----------
+   Teksterne er Kennets egne, ord for ord. De fyldes med turens data og
+   lægges i et redigerbart felt: brugeren retter selv til og trykker send. */
+function afsenderNavn(){ return (s.profil && s.profil.navn) || 'En ven'; }
+function turDatoTekst(f){ return f.dato ? pænDato(f.dato) : '(dato ikke valgt endnu)'; }
+function turTidTekst(f){ return f.afgangstid ? 'kl. '+f.afgangstid.replace(':','.') : '(tid ikke valgt endnu)'; }
+function turStedTekst(f){ return f.destination ? f.destination.navn : '(destination ikke valgt endnu)'; }
+
+function mailSammen(f){
+  const modt = f.invModtager || 'din rejsemakker';
+  const afs  = afsenderNavn();
+  return `Hej ${modt}
+
+${afs} har inviteret dig til en arytme.
+
+Dato: ${turDatoTekst(f)}
+Afgang: ${turTidTekst(f)}
+Destination: ${turStedTekst(f)}
+
+En arytme er en lille, bevidst forstyrrelse af hverdagens rytme.
+
+Et døgn eller en aften, hvor bilen og naturen bliver jeres frirum. Hvor I kan trække stikket, komme ud i naturen og nyde tiden sammen – uden at det kræver ferie eller uger med planlægning.
+
+${afs} har allerede taget det første skridt og vil gerne dele denne arytme med dig.
+
+SAMMEN GØR I TUREN KLAR
+
+Hvis du accepterer invitationen, hjælper Arytmi appen jer med at planlægge resten.
+
+Appen hjælper jer med at fordele opgaverne og huske på alt det vigtigste, så I nemt kan få styr på:
+
+• Mad og drikke
+• Pakkelisten
+• Klargøring af bilen
+
+På den måde bruger I mindre tid på planlægning og mere tid på det, der betyder noget.
+
+Er du med?
+
+[Bekræft invitation]
+
+Hvis datoen ikke passer, kan du foreslå en ny, som ${afs} kan tage stilling til.
+
+Når invitationen er bekræftet, sender vi dig en ny mail med link til Arytmi-appen og dine personlige loginoplysninger, så I sammen kan gøre jeres arytme klar.
+
+Vi glæder os til at sende jer afsted.
+
+Team Arytmi
+
+"Små forstyrrelser. Store øjeblikke."`;
+}
+
+function mailGave(f){
+  const modt = f.invModtager || 'din rejsemakker';
+  const afs  = afsenderNavn();
+  const adr  = f.invAfhentning || '(afhentningsadresse)';
+  const pak  = (f.invPakkeliste && f.invPakkeliste.length ? f.invPakkeliste : ['Nattøj','Toilettaske','Varmt tøj til aftenen']);
+  return `Hej ${modt}
+
+Nogen har planlagt noget særligt til dig.
+
+${afs} har inviteret dig til en arytme.
+
+Dato: ${turDatoTekst(f)}
+Afgang: ${turTidTekst(f)}
+
+En arytme er en lille, bevidst forstyrrelse af hverdagens rytme.
+
+Et lille afbræk, hvor der er plads til ro, nærvær og tid sammen. Ikke fordi hverdagen skal laves om, men fordi den fortjener små øjeblikke, der bryder rytmen og giver nye minder.
+
+Den her arytme er allerede planlagt specielt til dig.
+
+Du skal ikke tænke på destinationen, planlægningen eller alt det praktiske. Det har ${afs} allerede taget sig af.
+
+Det eneste, du skal gøre, er at være klar her: ${adr} og tage disse få ting med:
+
+DIN PAKKELISTE
+
+• ${pak[0]||''}
+• ${pak[1]||''}
+• ${pak[2]||''}
+
+Resten venter på dig.
+
+ER DU KLAR?
+
+[Jeg glæder mig – bekræft invitationen]
+
+Vi håber, at denne arytme bliver begyndelsen på mange flere.
+
+De bedste hilsner
+
+Team Arytmi
+
+"Livet har godt af en lille arytme."
+
+Tryk her hvis du ikke kan deltage i arytmen`;
+}
+
+/* Mail-kladden gemmes, så brugerens rettelser ikke forsvinder ved gentegning.
+   Nulstilles kun, når man selv beder om det. */
+function mailKladde(f){
+  if(f.invMailTekst == null) f.invMailTekst = (f.invType==='gave' ? mailGave(f) : mailSammen(f));
+  return f.invMailTekst;
+}
+function nulstilMail(){
+  const f = s.forberedelse;
+  f.invMailTekst = (f.invType==='gave' ? mailGave(f) : mailSammen(f));
+  gem(); tegn();
+  flash('Teksten er sat tilbage til Arytmis egen.', 'mail');
+}
+function mailFelt(sendLabel, sendAktion){
+  const f = s.forberedelse;
+  return `
+    <div class="kort">
+      <div class="etiket">Sådan ser mailen ud</div>
+      <p class="dæmpet" style="font-size:13px;margin:6px 0 10px">Ret frit i teksten, før du sender.</p>
+      <textarea class="mail-felt" oninput="s.forberedelse.invMailTekst=this.value;gem()">${esc(mailKladde(f))}</textarea>
+      <button class="knap primær bred" style="margin-top:14px" onclick="${sendAktion}">${sendLabel} ${ik('mail')}</button>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="knap kontur lille" style="flex:1" onclick="s.forberedelse.invVisMail=false;gem();tegn()">${ik('tilbage')} Ret oplysninger</button>
+        <button class="knap kontur lille" style="flex:1" onclick="nulstilMail()">Nulstil teksten</button>
+      </div>
+    </div>`;
+}
+
 function skærmInvitation(){
   const f = s.forberedelse; if(!f){ gåTil('hjem'); return; }
   let krop;
@@ -1026,7 +1292,7 @@ function skærmInvitation(){
   else if(f.invType==='sammen')krop = invSammenKrop();
   else                        krop = invGaveKrop();
   $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop('Inviter til arytmen','hjem','Invitation')}
+    ${skærmTop('Hvem vil du dele denne arytme med?','hjem','Invitation')}
     ${krop}
   </div>`;
 }
@@ -1034,10 +1300,10 @@ function invVælgKrop(){
   const valg = [
     { type:'sammen', ikon:'folk',   navn:'Planlæg sammen',   tekst:'I planlægger arytmen sammen — begge er med fra hver jeres telefon.' },
     { type:'gave',   ikon:'gave',   navn:'Giv som gave',     tekst:'Planlæg alt i det skjulte og send en færdig overraskelse, når du er klar.' },
-    { type:'selv',   ikon:'hjerte', navn:'Kun for mig selv', tekst:'Denne arytme er for dig alene. Ingen invitation.' }
+    { type:'selv',   ikon:'hjerte', navn:'Denne arytme er for mig', tekst:'Du tager afsted alene.' }
   ];
   return `
-    <div class="kort guide-brød"><p>Hvem er denne arytme for? Vælg, hvordan I skal afsted.</p></div>
+    <div class="kort guide-brød"><p>Vælg, hvordan I skal afsted.</p></div>
     ${valg.map(v=>`
       <button class="res-kort" onclick="vælgInvType('${v.type}')">
         <span class="res-ikon">${ik(v.ikon)}</span>
@@ -1068,11 +1334,10 @@ function invSelvKrop(){
 function gæstePreview(f){
   return `
   <div class="ob-mail">
-    <div class="m-top">${ik('mail')} Til: ${esc(f.invModtager||'din rejsemakker')}</div>
+    <div class="m-top">${ik('mail')} Til: ${esc(f.invEmail||f.invModtager||'din rejsemakker')}</div>
     <div class="m-krop">
-      <h3 style="margin-bottom:8px">${esc(f.invAfsender||'En ven')} vil planlægge en arytme sammen med dig.</h3>
-      <div class="od-plads"><span class="od-mærke">OD skriver</span><br>Den forklarende mail om, hvad en arytme er, skrives af OD og indsættes her.</div>
-      <p class="dæmpet" style="font-size:13px;margin-top:14px">Hent Arytmi-appen og log ind som gæst:</p>
+      <pre class="mail-vis">${esc(mailKladde(f))}</pre>
+      <p class="dæmpet" style="font-size:13px;margin-top:14px">Ved bekræftelse får ${esc(f.invModtager||'rejsemakkeren')} en mail med login:</p>
       <div class="ob-kode">${gæsteKode(f)}</div>
       <p class="dæmpet" style="font-size:12px;text-align:center">Prototype — gæstelogin er simuleret.</p>
     </div>
@@ -1085,15 +1350,16 @@ function invSammenKrop(){
   if(status==='kladde'){
     return `
       <div class="kort guide-brød"><p>I planlægger arytmen sammen. Send en invitation, bliv enige om datoen — så bliver resten af planen fælles.</p></div>
+      ${f.invVisMail ? mailFelt('Send invitation','invSend()') : `
       <div class="kort">
-        <label class="felt-etiket" style="margin-top:0">Dit navn</label>
-        <input type="text" placeholder="Fx Kennet" value="${esc(f.invAfsender||'')}" oninput="s.forberedelse.invAfsender=this.value;gem()">
-        <label class="felt-etiket">Rejsemakkerens navn eller e-mail</label>
-        <input type="text" placeholder="Fx Anne eller anne@mail.dk" value="${esc(f.invModtager||'')}" oninput="s.forberedelse.invModtager=this.value;gem()">
+        <label class="felt-etiket" style="margin-top:0">Rejsemakkerens navn</label>
+        <input type="text" placeholder="Fx Anne" value="${esc(f.invModtager||'')}" oninput="s.forberedelse.invModtager=this.value;s.forberedelse.invMailTekst=null;gem()">
+        <label class="felt-etiket">Rejsemakkerens e-mail</label>
+        <input type="email" placeholder="anne@mail.dk" value="${esc(f.invEmail||'')}" oninput="s.forberedelse.invEmail=this.value;gem()">
         <label class="felt-etiket">Foreslået dato</label>
         <div class="sted-chips"><span class="sted-chip valgt">${ik('kort')} ${f.dato?pænDato(f.dato):'Ingen dato valgt endnu'}</span></div>
-        <button class="knap primær bred" style="margin-top:16px" ${f.invModtager?'':'disabled'} onclick="invSend()">Send invitation ${ik('mail')}</button>
-      </div>
+        <button class="knap primær bred" style="margin-top:16px" ${f.invModtager&&f.invEmail?'':'disabled'} onclick="s.forberedelse.invVisMail=true;gem();tegn()">Se invitation ${ik('pil')}</button>
+      </div>`}
       <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="invSkift()">${ik('tilbage')} Vælg noget andet</button></div>`;
   }
   if(status==='bekræftet'){
@@ -1139,6 +1405,7 @@ function invSammenKrop(){
   // status === 'sendt'
   return `
     <div class="advarsel">Invitation sendt til ${navn}. Nu venter I på svar.</div>
+    <div style="text-align:center;margin:14px 0"><button class="knap kontur lille" onclick="gåTil('hjem')">Til overblikket ${ik('pil')}</button></div>
     ${gæstePreview(f)}
     <div class="kort">
       <div class="etiket">Prøv gæstens svar (demo)</div>
@@ -1150,7 +1417,9 @@ function invSammenKrop(){
 }
 function invSend(){
   const f = s.forberedelse; if(!f.invModtager){ flash('Skriv hvem invitationen er til.'); return; }
-  f.invStatus='sendt'; gem(); tegn();
+  f.invStatus='sendt'; f.invVisMail=false; gem();
+  // Når mailen er afsted, hører brugeren hjemme på overblikket over resten
+  gåTil('hjem');
   flash('Invitation sendt (demo) til '+f.invModtager+'.', 'mail');
 }
 function gæstBekræft(){
@@ -1180,37 +1449,66 @@ function invNulstilSammen(){
 function invGaveKrop(){
   const f = s.forberedelse;
   if(f.invStatus==='sendt'){
+    const navn = esc(f.invModtager||'Din rejsemakker');
+    const svar = f.gaveSvar;
     return `
       <div class="mørk-kort"><div class="glød"></div>
         <div class="etiket" style="color:rgba(246,243,234,.6)">Overraskelsen er sendt</div>
-        <h3 style="margin-top:4px">${esc(f.invModtager||'Din rejsemakker')} er inviteret</h3>
-        <p style="margin-top:6px">Den færdige, flotte invitation er på vej. Nu kan I bare glæde jer.</p>
+        <h3 style="margin-top:4px">${navn} er inviteret</h3>
+        <p style="margin-top:6px">${svar==='bekræftet' ? navn+' har bekræftet. Nu kan I bare glæde jer.'
+          : svar==='afslået' ? navn+' kan ikke den dag.'
+          : 'Invitationen er på vej. Du får en besked, så snart '+navn+' svarer.'}</p>
       </div>
+      ${svar==='afslået' ? `
+      <div class="advarsel" style="margin-top:14px">${ik('klokke')} ${navn} kan ikke den dag. Aftal en ny dato direkte med hinanden — en overraskelse kan appen ikke forhandle for jer. Tidspunktet kan du rette her i appen bagefter.</div>
+      <div class="kort">
+        <button class="knap primær bred" onclick="gåTil('turdato')">${ik('kort')} Ret dato og tid</button>
+      </div>` : ''}
       <div class="ob-mail">
-        <div class="m-top">${ik('mail')} Til: ${esc(f.invModtager||'din rejsemakker')}</div>
-        <div class="m-krop"><div class="od-plads"><span class="od-mærke">OD laver</span><br>Den flotte overraskelses-invitation designes af OD og indsættes her — med dato, sted og en varm hilsen.</div></div>
+        <div class="m-top">${ik('mail')} Til: ${esc(f.invEmail||f.invModtager||'din rejsemakker')}</div>
+        <div class="m-krop"><pre class="mail-vis">${esc(mailKladde(f))}</pre></div>
       </div>
+      ${!svar ? `
+      <div class="kort">
+        <div class="etiket">Prøv modtagerens svar (demo)</div>
+        <p class="dæmpet" style="font-size:13px;margin:6px 0 12px">Sådan svarer ${navn} på overraskelsen:</p>
+        <button class="knap primær bred" onclick="gaveSvar('bekræftet')">${ik('tjek')} Jeg glæder mig — bekræft</button>
+        <button class="knap kontur bred" style="margin-top:10px" onclick="gaveSvar('afslået')">${ik('kryds')} Kan ikke deltage</button>
+      </div>` : ''}
       <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="gåTil('hjem')">Til overblikket ${ik('pil')}</button></div>`;
   }
   const mad = forplejningKlar(), bil = f.bilTjek.length>=BILEN_PUNKTER.length, pakke = f.pakkeTjek.length>=PAKKE_PUNKTER.length;
   const rk = (ok,navn,under,mål)=>`<button class="tjek-punkt ${ok?'klar':''}" onclick="gåTil('${mål}')"><span class="tjek-boks">${ik('tjek')}</span><span class="tjek-krop"><span class="tjek-navn">${navn}</span><span class="tjek-under">${under}</span></span><span class="tjek-pil">${ik('pil')}</span></button>`;
   return `
     <div class="kort guide-brød"><p><b>Planlæg turen som en overraskelse.</b> ${esc(f.invModtager||'Din rejsemakker')} ser ingenting endnu. Gør detaljerne klar, og send så den færdige invitation.</p></div>
+    ${f.invVisMail ? mailFelt('Send overraskelsen','gaveSend()') : `
     <div class="kort">
-      <label class="felt-etiket" style="margin-top:0">Hvem er overraskelsen til?</label>
-      <input type="text" placeholder="Fx Anne eller anne@mail.dk" value="${esc(f.invModtager||'')}" oninput="s.forberedelse.invModtager=this.value;gem()">
+      <label class="felt-etiket" style="margin-top:0">Modtagerens navn</label>
+      <input type="text" placeholder="Fx Anne" value="${esc(f.invModtager||'')}" oninput="s.forberedelse.invModtager=this.value;s.forberedelse.invMailTekst=null;gem()">
+      <label class="felt-etiket">Modtagerens e-mail</label>
+      <input type="email" placeholder="anne@mail.dk" value="${esc(f.invEmail||'')}" oninput="s.forberedelse.invEmail=this.value;gem()">
+      <label class="felt-etiket">Hvor skal I mødes? <span class="dæmpet" style="font-weight:400">(står i mailen)</span></label>
+      <input type="text" placeholder="Fx hjemme kl. 15" value="${esc(f.invAfhentning||'')}" oninput="s.forberedelse.invAfhentning=this.value;s.forberedelse.invMailTekst=null;gem()">
     </div>
     <div class="sektion"><h3>Gør klar i det skjulte</h3></div>
     ${rk(mad,'Mad & drikke','Forplejning til turen','mad')}
     ${rk(bil,'Bilen','Ladning, Camp Mode, tasken','bilen')}
     ${rk(pakke,'Pakkeliste','De personlige ting','pakke')}
-    <button class="knap primær bred ånde" style="margin-top:18px" ${f.invModtager?'':'disabled'} onclick="gaveSend()">${ik('gave')} Send overraskelsen</button>
+    <button class="knap primær bred ånde" style="margin-top:18px" ${f.invModtager&&f.invEmail?'':'disabled'} onclick="s.forberedelse.invVisMail=true;gem();tegn()">${ik('gave')} Se overraskelsen ${ik('pil')}</button>`}
     <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="invSkift()">${ik('tilbage')} Vælg noget andet</button></div>`;
 }
 function gaveSend(){
   const f = s.forberedelse; if(!f.invModtager){ flash('Skriv hvem overraskelsen er til.'); return; }
-  f.invStatus='sendt'; gem(); tegn();
+  f.invStatus='sendt'; f.invVisMail=false; f.gaveSvar=null; gem();
+  gåTil('hjem');
   flash('Overraskelsen er sendt (demo) til '+f.invModtager+'.', 'gave');
+}
+/* Svaret på gaven kommer som en besked i appen. Afvises den, skal brugeren
+   selv aftale en ny dato — appen kan ikke forhandle på en overraskelse. */
+function gaveSvar(svar){
+  const f = s.forberedelse; f.gaveSvar = svar; gem(); tegn();
+  if(svar==='bekræftet') flash((f.invModtager||'Din rejsemakker')+' glæder sig. I er afsted.', 'hjerte');
+  else flash((f.invModtager||'Din rejsemakker')+' kan ikke den dag — aftal en ny dato direkte med hinanden.', 'klokke');
 }
 
 /* =============================================================
@@ -1269,15 +1567,36 @@ function tegnRigtigtKort(){
     maxZoom:18, attribution:'© OpenStreetMap'
   }).addTo(map);
 
-  const testetIkon = L.divIcon({
+  /* Radius fra trin 3: cirklen viser, hvor langt de valgte at køre.
+     Steder udenfor bliver dæmpet — ikke skjult, for man må gerne
+     ombestemme sig, og de fleste af dem er OD-pladsholdere endnu. */
+  const start = startGeo();
+  const kmMax = start ? RADIUS_KM[(s.forberedelse.radius)|0] : null;
+  if(start){
+    L.circle([start.lat, start.lon], {
+      radius: kmMax*1000, className:'lkort-radius',
+      color:'#8a5f3e', weight:1.2, opacity:.55, fillColor:'#b0794e', fillOpacity:.07
+    }).addTo(map);
+    L.marker([start.lat, start.lon], { icon: L.divIcon({
+      className:'', iconSize:[16,16], iconAnchor:[8,8],
+      html:`<div class="lkort-start"></div>` }) })
+      .addTo(map).bindTooltip('Jeres startpunkt', { direction:'top', offset:[0,-10] });
+  }
+
+  const ikon = uden => L.divIcon({
     className:'', iconSize:[28,28], iconAnchor:[14,14],
-    html:`<div class="lkort-testet">${ik('stjerne')}</div>`
+    html:`<div class="lkort-testet${uden?' udenfor':''}">${ik('stjerne')}</div>`
   });
   TESTEDE.forEach(t=>{
-    const geo = (t.lat!=null && t.lon!=null) ? { lat:t.lat, lon:t.lon } : xyTilGeo(t.x, t.y);
-    L.marker([geo.lat, geo.lon], { icon:testetIkon, title:t.navn }).addTo(map)
-      .bindTooltip(t.navn, { direction:'top', offset:[0,-14] })
-      .on('click', e=>{ L.DomEvent.stopPropagation(e); åbnTestet(t.id); });
+    const geo = testetGeo(t);
+    const km = start ? Math.round(afstandKm(start, geo)) : null;
+    const uden = km!=null && km > kmMax;
+    const under = km==null ? '' : uden
+      ? `<br><span class="lkort-tip-uden">ca. ${km} km — længere væk, end I valgte</span>`
+      : `<br><span class="lkort-tip-km">ca. ${km} km herfra</span>`;
+    L.marker([geo.lat, geo.lon], { icon:ikon(uden), title:t.navn, opacity: uden?.55:1 }).addTo(map)
+      .bindTooltip(esc(t.navn)+under, { direction:'top', offset:[0,-14] })
+      .on('click', e=>{ L.DomEvent.stopPropagation(e); åbnTestet(t.id,'destination'); });
   });
 
   const f = s.forberedelse;
@@ -1292,6 +1611,9 @@ function tegnRigtigtKort(){
     });
     L.marker([geo.lat, geo.lon], { icon:brugerIkon }).addTo(map);
     map.setView([geo.lat, geo.lon], 10);
+  } else if(start){
+    /* Ingen destination endnu: vis præcis det område, de har valgt */
+    map.fitBounds(L.latLng(start.lat, start.lon).toBounds(kmMax*2200), { padding:[12,12] });
   }
 
   map.on('click', e=>{
@@ -1363,11 +1685,38 @@ function værtsKort(){
     <div class="vært-række">${ik('croissant')}<div class="v-tekst"><b>Morgenkaffe:</b> ${fac?esc(fac.morgen):'<span class="dæmpet">Nærmeste bager med åbningstid vises her</span>'}</div></div>
   </div>`;
 }
+/* Hvor godt passer et testet sted til trin 4? Kun steder med rigtigt
+   indhold har ønsker på sig — pladsholderne (t2-t10) har ingen, og skal
+   derfor ikke lade som om de matcher. */
+const ØNSKE_ORD = { solopgang:'Solopgang', solnedgang:'Solnedgang', vand:'Vand', land:'Land', isoleret:'Isoleret', livligt:'Livligt' };
+function ønskeMatch(t){
+  const o = s.forberedelse && s.forberedelse.oplevelser;
+  if(!o || !t.ønsker) return null;
+  const nøgler = ['lys','natur','stemning'].filter(k=>o[k]);
+  if(!nøgler.length) return null;
+  return { træf: nøgler.filter(k=>t.ønsker[k]===o[k]).length, ud_af: nøgler.length };
+}
+/* Opsummering af trin 3 + 4, så valgene er synlige på kortet */
+function valgChips(){
+  const f = s.forberedelse;
+  if(!f) return '';
+  const o = f.oplevelser || {};
+  const ønsker = ['lys','natur','stemning'].filter(k=>o[k]).map(k=>ØNSKE_ORD[o[k]].toLowerCase());
+  const linje = [RADIUS_TEKST[f.radius|0].toLowerCase()+(f.startNavn?' fra '+esc(f.startNavn):'')]
+    .concat(ønsker).join(' · ');
+  return `<div class="valg-linje">${ik('gps')}<span>${linje}</span>
+    <button onclick="gåTil('hvorlangt')">Ret</button></div>`;
+}
 function skærmDestination(){
-  const dest = s.forberedelse && s.forberedelse.destination;
+  const f = s.forberedelse;
+  const dest = f && f.destination;
+  const start = startGeo();
   $('indhold').innerHTML = `<div class="side anim">
     ${sektionHeader('destination')}
-    <p class="dæmpet" style="margin-bottom:14px">Tryk på kortet, søg en by, eller brug jeres position. ${ik('stjerne')} = vores køreklare, testede steder — tryk for at vælge en af dem.</p>
+    ${valgChips()}
+    <p class="dæmpet" style="margin-bottom:14px">${start
+      ? `Cirklen er jeres radius. ${ik('stjerne')} = vores testede steder; de dæmpede ligger udenfor. Tryk et sted — eller sæt jeres egen pin.`
+      : `Tryk på kortet, søg en by, eller brug jeres position. ${ik('stjerne')} = vores køreklare, testede steder — tryk for at vælge en af dem.`}</p>
     <div class="kort">
       <div class="kort-wrap"><div id="rigtigt-kort"></div></div>
       <div style="display:flex;gap:10px;margin-top:12px">
@@ -1382,12 +1731,25 @@ function skærmDestination(){
   </div>`;
   tegnRigtigtKort();
 }
-function åbnTestet(id){ gåTil('testet-'+id); }
+/* Hvor "tilbage" fører hen fra et sted: listen med tre forslag
+   eller kortet, alt efter hvor man kom fra. */
+let testetRetur = 'destination';
+function åbnTestet(id, fra){ testetRetur = fra || 'destination'; gåTil('testet-'+id); }
 function skærmTestet(id){
   const t = TESTEDE.find(x=>x.id===id);
   if(!t){ gåTil('destination'); return; }
+  const start = startGeo();
+  const km = start ? Math.round(afstandKm(start, testetGeo(t))) : null;
+  const m = ønskeMatch(t);
+  const linjer = [];
+  if(km!=null){
+    const kmMax = RADIUS_KM[(s.forberedelse.radius)|0];
+    linjer.push(`<div class="vært-række">${ik('gps')}<div class="v-tekst">Ca. ${km} km fra ${esc(s.forberedelse.startNavn)}${km>kmMax?' — <b>længere væk, end I valgte</b>':''}</div></div>`);
+  }
+  if(m) linjer.push(`<div class="vært-række">${ik('stjerne')}<div class="v-tekst">Passer på ${m.træf} af jeres ${m.ud_af} ønsker${m.træf?': '+['lys','natur','stemning'].filter(k=>t.ønsker[k]===s.forberedelse.oplevelser[k]).map(k=>ØNSKE_ORD[t.ønsker[k]].toLowerCase()).join(' · '):''}</div></div>`);
   $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop(t.navn,'destination','Testet af Arytmi ★')}
+    ${skærmTop(t.navn,testetRetur, t.klar?'Testet af Arytmi ★':'Ét af vores ti steder')}
+    ${linjer.length?`<div class="kort"><div class="etiket">For jeres tur</div>${linjer.join('')}</div>`:''}
     ${t.klar ? `
     <div class="guide-hero" style="background:linear-gradient(150deg,#4a4238,#1c1813)">
       <div class="vandmærke">${ik('stjerne')}</div>
@@ -1408,8 +1770,8 @@ function skærmTestet(id){
       <div class="od-plads"><span class="od-mærke">OD skriver her</span><br>
       Beskrivelse af stedet, billede og de fire facilitetsfelter (toilet · indkøb · aftensmad · morgenkaffe) udfyldes efter test-turen. Formatet ses på "${esc(TESTEDE[0].navn)}".</div>
     </div>`}
-    <button class="knap primær bred" onclick="vælgTestetSted('${t.id}')">Planlæg turen ${ik('pil')}</button>
-    <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="gåTil('destination')">${ik('tilbage')} Gå tilbage</button></div>
+    <button class="knap primær bred" onclick="vælgTestetSted('${t.id}')">Vælg dette sted ${ik('pil')}</button>
+    <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="gåTil('${testetRetur}')">${ik('tilbage')} ${testetRetur==='forslag'?'Se de andre to':'Gå tilbage'}</button></div>
   </div>`;
 }
 function vælgTestetSted(id){
@@ -1777,10 +2139,12 @@ function tegn(){
   if(!s.onboarded){ skærmOnboarding(); tegnNav(); return; }
   switch(true){
     case aktivSkærm==='hjem':         skærmHjem(); break;
+    case aktivSkærm==='hurtig':       skærmHurtig(); break;
     case aktivSkærm==='turdato':      skærmTurDato(); break;
     case aktivSkærm==='hvorfra':      skærmHvorfra(); break;
     case aktivSkærm==='hvorlangt':    skærmHvorLangt(); break;
     case aktivSkærm==='onsker':       skærmØnsker(); break;
+    case aktivSkærm==='forslag':      skærmForslag(); break;
     case aktivSkærm==='destination':  skærmDestination(); break;
     case aktivSkærm==='bilen':        skærmBilen(); break;
     case aktivSkærm==='mad':          skærmMad(); break;
