@@ -514,6 +514,15 @@
   .tjek-under{font-size:12.5px;color:var(--dæmpet);margin-top:2px}
   .tjek-pil{color:#c9c2b0;flex-shrink:0}
   .tjek-punkt.klar .tjek-pil{opacity:.4}
+  /* Låst: venter på at rejsemakkeren bekræfter datoen. Stadig trykbar — man
+     får en forklaring i stedet for at komme ind — men tydeligt dæmpet. */
+  .tjek-punkt.låst{opacity:.55;cursor:default}
+  .tjek-punkt.låst:active{transform:none}
+  @media(hover:hover){.tjek-punkt.låst:hover{transform:none;box-shadow:0 8px 22px rgba(58,50,39,.05)}}
+  .tjek-punkt.låst .tjek-boks{background:#e4e0d3;border-color:#e4e0d3}
+  .tjek-punkt.låst .tjek-boks .ik{opacity:1;transform:none;color:#9b917a}
+  .tjek-punkt.låst .tjek-pil{opacity:.5}
+  .knap.låst{opacity:.55}
 
   /* ---------- forsiden på lavere skærme ----------
      Forsiden skal blive ved med at være ét helt skærmbillede. På telefoner,

@@ -14,7 +14,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- ?v= skal bumpes ved hver ændring i app.css/app.js. Uden den viser browseren
      (og GitHub Pages) den gamle fil — se Arytmi-status.md om cache-fælden. -->
-<link rel="stylesheet" href="app.css?v=202607252314">
+<link rel="stylesheet" href="app.css?v=202607261738">
 </head>
 <body>
 <div class="telefon">
@@ -41,27 +41,6 @@
   <nav class="bundnav" id="bundnav"></nav>
 </div>
 
-<script src="app.js?v=202607252314"></script>
-<script>
-// Lille DOM-hook: sæt ordet i den runde startknap til "Start her".
-// Vi ved ikke præcis hvornår forsiden renderes (innerHTML), så vi lytter på ændringer.
-(function(){
-  function setStartLabel(){
-    try{
-      var el = document.querySelector('.rund-knap .rk-ord');
-      if(el && el.textContent.trim() !== 'Start her'){
-        el.textContent = 'Start her';
-      }
-    }catch(e){/* no-op */}
-  }
-  if(document.readyState !== 'loading') setStartLabel();
-  else document.addEventListener('DOMContentLoaded', setStartLabel);
-  var target = document.body || document.documentElement;
-  if(target){
-    var mo = new MutationObserver(function(){ setStartLabel(); });
-    mo.observe(target, { childList: true, subtree: true });
-  }
-})();
-</script>
+<script src="app.js?v=202607261738"></script>
 </body>
 </html>
