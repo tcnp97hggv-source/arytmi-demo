@@ -95,10 +95,12 @@ const BYER = [
   {n:'Frederikshavn',x:84,y:32}
 ];
 
-/* -- 10 testede destinationer (Køreklar basispakke). Nr. 1 er
-      format-eksemplet — resten udfyldes af OD -- */
+/* -- Testede destinationer (Køreklar basispakke). t1 er format-eksemplet;
+      t2-t19 er fra rekognosceringsturen 31/7-2/8 2026 (kilde:
+      recon/arytmi-recon-2026-08-02-19-28.json). klar:false = "måske". -- */
 const TESTEDE = [
-  { id:'t1', navn:'Vesterhavet — Hvide Sande Sydstrand', x:44, y:122, lat:55.905, lon:8.117, klar:true,
+  /* Ingen x/y her: de udledes af lat/lon længere nede (se geoTilXY-blokken) */
+  { id:'t1', navn:'Vesterhavet — Hvide Sande Sydstrand', lat:55.905, lon:8.117, klar:true,
     ønsker:{ lys:'solnedgang', natur:'vand', stemning:'isoleret' },
     kort:'Klitrækken syd for slusen. P-plads 40 m fra vandkanten.',
     beskrivelse:'Kør helt ud, hvor vejen ender. I parkerer med fronten mod vest, og solen går ned lige dér, hvor I sidder. Klitterne giver læ, og lyden af havet følger jer hele natten. Testet af os i både sommerstille og oktoberblæst — bilen står roligt begge dele.',
@@ -107,15 +109,182 @@ const TESTEDE = [
       handel:'SuperBrugsen Hvide Sande, 1,2 km (8–20)',
       aftensmad:'Fiskehuset ved havnen — stjerneskud og fiskefrikadeller (11–19:30)',
       morgen:'Hvide Sande Bageri, 900 m — åbner 6:30, kaffen er klar fra start' } },
-  { id:'t2', navn:'Destination 2', x:98, y:118, klar:false },
-  { id:'t3', navn:'Destination 3', x:70, y:80, klar:false },
-  { id:'t4', navn:'Destination 4', x:150, y:150, klar:false },
-  { id:'t5', navn:'Destination 5', x:80, y:20, klar:false },
-  { id:'t6', navn:'Destination 6', x:120, y:180, klar:false },
-  { id:'t7', navn:'Destination 7', x:180, y:145, klar:false },
-  { id:'t8', navn:'Destination 8', x:56, y:140, klar:false },
-  { id:'t9', navn:'Destination 9', x:100, y:60, klar:false },
-  { id:'t10', navn:'Destination 10', x:165, y:195, klar:false }
+  { id:'t2', navn:'Fruering Kirke', lat:56.03310, lon:9.99222, klar:false,
+    ønsker:{ lys:'solnedgang', natur:'land', stemning:'livligt' },
+    kort:'Kirkeparkering højt i landskabet — flot at holde ind, men ikke at sove.',
+    beskrivelse:'Vi kørte herop for udsigtens skyld, og den skuffer ikke: markerne folder sig ud under jer, og kirken står som et fikspunkt i det hele. Men vi vil være ærlige — det er ikke et sted at overnatte. Det er en kirkes parkeringsplads, og den følelse forsvinder ikke, selvom I holder stille. Tag den som et stop på vejen, spis jeres madpakke, og kør videre til et sted, hvor I kan lukke øjnene med god samvittighed.',
+    billeder:['billeder/t2-fruering-kirke-1.jpg','billeder/t2-fruering-kirke-2.jpg','billeder/t2-fruering-kirke-3.jpg','billeder/t2-fruering-kirke-4.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t3', navn:'Rasteplads Mossøbrå', lat:56.03144, lon:9.83892, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'isoleret' },
+    kort:'Rasteplads med Mossø gemt lige om hjørnet — og ingen skilte, der siger nej.',
+    beskrivelse:'Fra bilen ser det ud som en helt almindelig rasteplads, og det er nok grunden til, at der er så roligt. Gå de få meter ned mod vandet, og pludselig ligger Mossø der. Vi kunne ikke finde et eneste skilt mod overnatning, og pladsen er stor nok til, at I ikke ligger oven i nogen. Det her er sådan et sted, man kører forbi hundrede gange uden at opdage.',
+    billeder:['billeder/t3-rasteplads-mossbra-1.jpg','billeder/t3-rasteplads-mossbra-2.jpg','billeder/t3-rasteplads-mossbra-3.jpg','billeder/t3-rasteplads-mossbra-4.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t4', navn:'Vædebro', lat:56.04586, lon:9.85238, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'isoleret' },
+    kort:'Ved broen over Mossø — strandstemning, legeplads og plads til at trække vejret.',
+    beskrivelse:'Parkeringspladsen ligger lige over for broen, og der er noget strandagtigt over stedet, selvom I er langt fra havet. Der er en legeplads, hvis I har børn med, og borde nok til at man kan spise en madpakke uden at have nogen i nakken. Vi holdt her en aften og blev overraskede over, hvor fredeligt der var, når trafikken over broen døde ud.',
+    billeder:['billeder/t4-vdebro-1.jpg','billeder/t4-vdebro-2.jpg','billeder/t4-vdebro-3.jpg','billeder/t4-vdebro-4.jpg','billeder/t4-vdebro-5.jpg','billeder/t4-vdebro-6.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t5', navn:'Parkering Q høfterne', lat:56.47620, lon:8.12473, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'isoleret' },
+    kort:'Vesterhavet i fuld bredde — og et rigtigt toilet med bad 40 skridt væk.',
+    beskrivelse:'Det her er en af de udsigter, der får jer til at blive siddende i bilen lidt for længe, før I går ud. Havet fylder hele forruden. Der holder både autocampere og andre biler, så I er ikke alene — men brændingen er så høj, at I ikke hører dem. Vi havde regnet med, at naboerne ville ødelægge det. Det gjorde de ikke.',
+    billeder:['billeder/t5-parkering-q-hfterne-1.jpg','billeder/t5-parkering-q-hfterne-2.jpg','billeder/t5-parkering-q-hfterne-3.jpg'],
+    faciliteter:{
+      toilet:'Toilet med bad på selve pladsen',
+      handel:'Købmand ca. 400 m væk',
+      aftensmad:'',
+      morgen:'Købmanden 400 m væk har det, I skal bruge til morgenkaffen' } },
+  { id:'t6', navn:'Hygum Bakke', lat:56.58306, lon:8.20271, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'land', stemning:'isoleret' },
+    kort:'Panorama til begge sider — vand den ene vej, land den anden.',
+    beskrivelse:'Der er et udsigtspunkt, man kan gå op på, og derfra kan I se både vandet og landet i samme drej af hovedet. Det er den slags sted, hvor man bliver stående længere, end man havde tænkt. Til gengæld er der ingenting herude — intet toilet, ingen kiosk, intet. Byerne ligger tæt nok på, at I kan hente det, I mangler, men gør det, inden I kører op.',
+    faciliteter:{
+      toilet:'Nej — intet toilet på stedet',
+      handel:'Byerne tæt på — handl ind, inden I kører op',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t7', navn:'Aggerstien ved de sorte huse', lat:56.78753, lon:8.23201, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'isoleret' },
+    kort:'Bunkere, klit og Vesterhav — et lille spot, men et af turens smukkeste.',
+    beskrivelse:'Bunkerne ligger halvt begravet i sandet, og bag dem tager havet over. Der er en lille parkeringsplads, og det er vigtigt at ramme den rigtigt: I må ikke holde helt nede ved kysten, men I må gerne stille bilen ved det lille p-skilt. Gør det, så har I hele udsigten uden at træde nogen over tæerne. Pladsen er lille, så kommer I sent på en sommerdag, kan den være taget.',
+    billeder:['billeder/t7-aggerstien-ved-de-sorte-huse-1.jpg','billeder/t7-aggerstien-ved-de-sorte-huse-2.jpg','billeder/t7-aggerstien-ved-de-sorte-huse-3.jpg'],
+    faciliteter:{
+      toilet:'Nej',
+      handel:'Ca. 500 m væk',
+      aftensmad:'Spisesteder ved havnen',
+      morgen:'Der ligger caféer rundt omkring, hvis I vil have kaffen ude' } },
+  { id:'t8', navn:'Hanstholm Fyr', lat:57.11339, lon:8.58986, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'livligt' },
+    kort:'Danmarks nordvestligste hjørne — fyret, klinten og havet hele vejen rundt.',
+    beskrivelse:'Af alle de steder, vi så på turen, er det her det, vi kom længst væk fra og alligevel snakkede mest om bagefter. Fyret står som et vartegn, og landskabet falder væk mod havet. Der er højt til himlen på den måde, hvor man automatisk sænker stemmen. Vi noterede ikke meget om praktikken, da vi var her — så tjek selv skiltningen på stedet, inden I bliver natten over.',
+    billeder:['billeder/t8-hanstholm-fyr-1.jpg','billeder/t8-hanstholm-fyr-2.jpg','billeder/t8-hanstholm-fyr-3.jpg','billeder/t8-hanstholm-fyr-4.jpg','billeder/t8-hanstholm-fyr-5.jpg','billeder/t8-hanstholm-fyr-6.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t9', navn:'Rødhus strand', lat:57.21650, lon:9.52284, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'livligt' },
+    kort:'Kør bilen helt ned på stranden og find jeres eget hjørne af Vesterhavet.',
+    beskrivelse:'Her kører I helt ned på sandet, og så handler det bare om at finde et sted, hvor der er langt til den næste bil. Det er der som regel. Stranden er så bred, at selv en travl dag ikke føles trængt. På vej derned passerer I en lille kiosk, der bager brød hver morgen — læg mærke til den, for det er den, der redder jeres morgenmad, når I vågner med sand mellem tæerne.',
+    billeder:['billeder/t9-rdhus-strand-1.jpg','billeder/t9-rdhus-strand-2.jpg','billeder/t9-rdhus-strand-3.jpg','billeder/t9-rdhus-strand-4.jpg'],
+    faciliteter:{
+      toilet:'Ja',
+      handel:'Lille kiosk på vejen ned til stranden',
+      aftensmad:'',
+      morgen:'Kiosken på vejen ned bager friskt brød hver morgen' } },
+  { id:'t10', navn:'Sallingsund broen', lat:56.75225, lon:8.83706, klar:true,
+    kort:'Stop ved Sallingsundbroen — vandet på begge sider og broen som kulisse.',
+    beskrivelse:'Broen spænder over sundet, og lyset over vandet er noget for sig, når dagen er ved at være slut. Vi holdt kort ind her på vej mod Mors og tog et par billeder. Ærligt: vi nåede ikke at undersøge stedet ordentligt, så se det som et smukt stop mere end som en færdig anbefaling — tjek skiltningen, inden I slår jer ned for natten.',
+    billeder:['billeder/t10-sallingsund-broen-1.jpg','billeder/t10-sallingsund-broen-2.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t11', navn:'Dollerup bakker', lat:56.39136, lon:9.32344, klar:true,
+    ønsker:{ lys:'', natur:'land', stemning:'isoleret' },
+    kort:'En lille gryde i Dollerup Bakker — smukt, men vejen kan høres.',
+    beskrivelse:'Pladsen ligger som en skål i landskabet med bakkerne omkring sig, og stierne herfra er nogle af de flotteste i området. Vi vil ikke pakke det ind: man kan høre vejen. Ikke voldsomt, men den er der. Er I til at falde i søvn med lidt baggrundsstøj, får I til gengæld et af de smukkeste stykker natur i Midtjylland lige uden for bilen.',
+    billeder:['billeder/t11-dollerup-bakker-1.jpg','billeder/t11-dollerup-bakker-2.jpg','billeder/t11-dollerup-bakker-3.jpg','billeder/t11-dollerup-bakker-4.jpg'],
+    faciliteter:{
+      toilet:'Nej',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t12', navn:'Parkeringsplads Dollerup Bakker', lat:56.37398, lon:9.32465, klar:true,
+    ønsker:{ lys:'', natur:'land', stemning:'livligt' },
+    kort:'Rummelig plads ved bakkerne — hold nederst mod skoven, så er I i fred.',
+    beskrivelse:'Ved første øjekast ligger pladsen tæt på vejen, og det gør den også. Men kør helt ned i den nederste ende ud mod skoven, så ændrer stedet karakter: træerne lukker om jer, og vejen bliver til en fjern lyd. Der kan holde andre biler, så regn ikke med at have pladsen for jer selv. Til gengæld har I hele Dollerup Bakker med sletter og bakkedrag lige uden for døren.',
+    billeder:['billeder/t12-parkeringsplads-dollerup-bakker-1.jpg','billeder/t12-parkeringsplads-dollerup-bakker-2.jpg','billeder/t12-parkeringsplads-dollerup-bakker-3.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'Ishus tæt på pladsen',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t13', navn:'Parkering ved ishuset Dollerup Bakker', lat:56.37103, lon:9.32004, klar:true,
+    kort:'Plads til to biler ved ishuset — og så søen lige der.',
+    beskrivelse:'Det er et af de spots, man håber, der er ledigt. Der er plads til højst to biler, søen ligger lige foran, og ishuset er nabo. Netop derfor er det populært, og vi så det være optaget flere gange i løbet af dagen. Kommer I midt på eftermiddagen i højsæsonen, så hav en plan B — men rammer I det tomt, er det svært at gøre bedre.',
+    billeder:['billeder/t13-parkering-ved-ishuset-dollerup-bakker-1.jpg','billeder/t13-parkering-ved-ishuset-dollerup-bakker-2.jpg','billeder/t13-parkering-ved-ishuset-dollerup-bakker-3.jpg','billeder/t13-parkering-ved-ishuset-dollerup-bakker-4.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'Ishuset ligger lige ved pladsen',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t14', navn:'P plads dollerup bakker 3', lat:56.36780, lon:9.32971, klar:true,
+    ønsker:{ lys:'', natur:'land', stemning:'isoleret' },
+    kort:'En hule mellem træerne, med glimt af søen når løvet er væk.',
+    beskrivelse:'Der er noget hemmeligt over den her plads. Man kan nærmest kravle ind i skovkanten, og mellem stammerne dukker søen op i små glimt. Om foråret og efteråret, når der ikke er blade på træerne, er udsigten bedst. Der er stier nok til en ordentlig gåtur og flere steder at sætte sig med maden. Toilet ligger ca. 200 m derfra, hvilket er en luksus herude.',
+    billeder:['billeder/t14-p-plads-dollerup-bakker-3-1.jpg','billeder/t14-p-plads-dollerup-bakker-3-2.jpg','billeder/t14-p-plads-dollerup-bakker-3-3.jpg','billeder/t14-p-plads-dollerup-bakker-3-4.jpg','billeder/t14-p-plads-dollerup-bakker-3-5.jpg'],
+    faciliteter:{
+      toilet:'Toilet ca. 200 m fra pladsen',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t15', navn:'Haldsø 2', lat:56.36644, lon:9.33187, klar:true,
+    ønsker:{ lys:'', natur:'vand', stemning:'livligt' },
+    kort:'Åben udsigt over Hald Sø — flere mennesker, men også mere smukt.',
+    beskrivelse:'Her får I søen serveret uden forhindringer. Det er lysere og mere åbent end de andre pladser i området, og prisen for det er, at der kommer flere forbi, og at vejen er tættere på. Vi synes, det er værd at betale. Toilettet ligger lige ved, hvilket gør morgenen betydeligt nemmere.',
+    billeder:['billeder/t15-halds-2-1.jpg','billeder/t15-halds-2-2.jpg','billeder/t15-halds-2-3.jpg'],
+    faciliteter:{
+      toilet:'Toilet lige ved pladsen',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t16', navn:'Hinge', lat:56.26642, lon:9.52250, klar:true,
+    kort:'En parkeringslomme, der ikke ligner noget — indtil I går ned ad stien.',
+    beskrivelse:'Vær forberedt: fra bilen er udsigten ikke meget bevendt. I holder inde i en lille lomme, og det er det. Men går I halvtreds meter ned ad stien, åbner det hele sig op over søen, og så forstår I, hvorfor vi tog stedet med. Der er også mountainbikespor herfra, hvis I har cyklerne med. Roligt sted at sove, beskedent sted at vågne — medmindre I lige tager den gåtur igen.',
+    billeder:['billeder/t16-hinge-1.jpg','billeder/t16-hinge-2.jpg'],
+    faciliteter:{
+      toilet:'Nej',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t17', navn:'Parkeringsplads ved Sminge Sø', lat:56.21605, lon:9.66709, klar:true,
+    ønsker:{ lys:'', natur:'vand', stemning:'livligt' },
+    kort:'Ved Sminge Sø, hvor kanoerne lægger til — smukt, men del pladsen pænt.',
+    beskrivelse:'Det her er et friluftssted mere end en parkeringsplads. Der kommer folk med kanoer, og der er shelters med træstubbe omkring. Campér ikke inde på selve shelterområdet — det er ikke jeres. Men I må gerne holde tæt ved kanten ned mod søen, og derfra er det virkelig smukt. Kommer I med respekt for dem, der har booket shelteren, er der plads til jer begge.',
+    billeder:['billeder/t17-parkeringsplads-ved-sminge-s-1.jpg','billeder/t17-parkeringsplads-ved-sminge-s-2.jpg','billeder/t17-parkeringsplads-ved-sminge-s-3.jpg'],
+    faciliteter:{
+      toilet:'',
+      handel:'',
+      aftensmad:'Svostrup Kro ligger tæt på',
+      morgen:'' } },
+  { id:'t18', navn:'P-plads, Anebjerg skov, Virringvej', lat:56.03860, lon:10.00922, klar:false,
+    ønsker:{ lys:'', natur:'land', stemning:'isoleret' },
+    kort:'Stille skovplads uden udsigt — men med en rigtig god sti.',
+    beskrivelse:'Lad os være ærlige om, hvad det her er: en velfungerende p-plads i skovkanten. Der er ingen udsigt, og vejen ligger tæt på. Til gengæld er der stille, og stien ind i Anebjerg Skov er god. Det er et sted, man vælger, fordi det er praktisk og roligt — ikke fordi man vil vågne til noget storslået. Derfor har vi heller ikke sat vores stempel på det endnu.',
+    billeder:['billeder/t18-p-plads-anebjerg-skov-virringvej-1.jpg','billeder/t18-p-plads-anebjerg-skov-virringvej-2.jpg','billeder/t18-p-plads-anebjerg-skov-virringvej-3.jpg','billeder/t18-p-plads-anebjerg-skov-virringvej-4.jpg','billeder/t18-p-plads-anebjerg-skov-virringvej-5.jpg'],
+    faciliteter:{
+      toilet:'Nej',
+      handel:'',
+      aftensmad:'',
+      morgen:'' } },
+  { id:'t19', navn:'Vestermølle', lat:56.02866, lon:9.95814, klar:true,
+    ønsker:{ lys:'solnedgang', natur:'vand', stemning:'livligt' },
+    kort:'Skanderborg Sø for enden af pladsen, museet som nabo og byen inden for rækkevidde.',
+    beskrivelse:'Vestermølle er sådan en perle, hvor det hele bare er der: udsigt over Skanderborg Sø, det gamle møllemiljø og museet ved siden af, og byen tæt nok på, at I kan gå efter aftensmad. Det er ikke det mest øde sted på listen — men det er et af de nemmeste at holde af. Godt sted at slutte en tur, hvor I har sovet i vildmarken et par nætter.',
+    billeder:['billeder/t19-vestermlle-1.jpg','billeder/t19-vestermlle-2.jpg','billeder/t19-vestermlle-3.jpg','billeder/t19-vestermlle-4.jpg','billeder/t19-vestermlle-5.jpg','billeder/t19-vestermlle-6.jpg'],
+    faciliteter:{
+      toilet:'Ja',
+      handel:'Ja — byen ligger tæt på',
+      aftensmad:'Ja — flere muligheder i Skanderborg',
+      morgen:'' } }
 ];
 
 /* -- Bilen: forberedelsesliste -- */
@@ -138,23 +307,76 @@ const PAKKE_PUNKTER = [
   { id:'toilettaske', tekst:'Lille toilettaske med det basale!' }
 ];
 
-/* -- Mad/drikke: indlæg (ét eksempel, resten OD) -- */
-const MAD_INDLÆG = {
-  drikke: { titel:'Drikkevarer', ikon:'kop', klar:false },
-  morgen: { titel:'Morgenmad og kaffe', ikon:'croissant', klar:true,
-    brød:`
-    <p class="citat">Morgenkaffen med udsigt er grunden til, at man tager af sted igen.</p>
-    <h3>Kaffen</h3>
-    <p>Kværn bønnerne hjemmefra, og brug en stempelkande eller pour-over — det eneste, I skal bruge, er varmt vand fra det lille blus. Termokanden fyldes, inden den første kop er drukket, så nummer to er lige så varm.</p>
-    <h3>Opbevaring og køl</h3>
-    <p>Mælk, smør og pålæg ligger i køleren natten over — den holder temperaturen til ud på formiddagen. Læg det, I skal bruge først, øverst, så låget kun er åbent få sekunder.</p>
-    <div class="od-plads"><span class="od-mærke">Rabatkode-plads</span><br>Mulig rabatkode til køleren indsættes her (afventer aftale).</div>
-    <h3>Brødet</h3>
-    <p>Den bedste morgen starter ved den lokale bager — se "nærmeste bager" under jeres destination. Alternativt: rundstykker fra fryseren, pakket i sølvpapir aftenen før.</p>
-    <div class="od-plads"><span class="od-mærke">Rabatkode-plads</span><br>Mulig national bager-aftale (rabatkode/tilbud) indsættes her.</div>` },
-  aften: { titel:'Aftensmad', ikon:'gaffel', klar:false, ekstra:`
-    <div class="od-plads"><span class="od-mærke">Rabatkode-plads</span><br>Muligt nationalt pizzeria-samarbejde (rabatkode) indsættes her.</div>` }
-};
+/* -- Mad/drikke: valgmuligheder (erstatter de gamle OD-artikler 26/7) --
+   Mad → Snacks → (Morgenmad, kun flerdages-ture) → Drikkevarer → Udstyr.
+   "Drikke" er samtidig en selvstændig genvej direkte til Drikkevarer. */
+const MAD_VALG = [
+  { id:'pizza',        tekst:'Pizza' },
+  { id:'sandwich',     tekst:'Sandwich' },
+  { id:'tapas',        tekst:'Tapas — i boks eller købt i emballage der ikke skal anrettes' },
+  { id:'sushi',        tekst:'Sushi' },
+  { id:'pastasalat',   tekst:'Pastasalat' },
+  { id:'wraps',        tekst:'Wraps' },
+  { id:'snacktallerken', tekst:'Snacktallerken' },
+  { id:'takeaway',     tekst:'Take away' },
+  { id:'undervejs',    tekst:'Køb undervejs' },
+  { id:'andet-mad',    tekst:'Andet' }
+];
+const SNACK_VALG = [
+  { id:'slik-pose',      tekst:'Slik i pose' },
+  { id:'slik-indpakket', tekst:'Indpakket slik' },
+  { id:'chips',          tekst:'Chips', tip:'Hvis dip, lav den hjemmefra med et godt låg.' },
+  { id:'kage',           tekst:'Portionsanrettet kage' },
+  { id:'andet-snack',    tekst:'Andet' }
+];
+const DRIKKE_VALG = [
+  { id:'kaffe',        tekst:'Kaffe' },
+  { id:'vand',         tekst:'Vand', tip:'Masser af vand kan også bruges til tandbørstning.' },
+  { id:'sodavand',     tekst:'Sodavand' },
+  { id:'øl',           tekst:'Øl' },
+  { id:'vin',          tekst:'Vin' },
+  { id:'kakao',        tekst:'Kakao' },
+  { id:'te',           tekst:'Te' },
+  { id:'andet-drikke', tekst:'Andet' }
+];
+/* Udstyr: det man reelt skal bruge til det, man har valgt ovenfor. Man vælger
+   selv, hvad der er relevant — det lander som ekstra punkter på Pakkelisten. */
+const FORPLEJNING_UDSTYR = [
+  { navn:'Service og spisegrej', punkter:[
+    { id:'tallerkener', tekst:'Tallerkener' },
+    { id:'krus',        tekst:'Krus/kop' },
+    { id:'glas',        tekst:'Glas/vinglas (plast)' },
+    { id:'bestik',      tekst:'Bestik', tip:'Husk skeer — måske de skal bruges til dressinger o.l.' },
+    { id:'skærebræt',   tekst:'Skærebræt' },
+    { id:'kniv',        tekst:'Stor kniv/brødkniv', tip:'Man må gerne køre med køkkenknive, hvis de er pakket forsvarligt, og det er tydeligt, det skal bruges i forbindelse med camping.' },
+    { id:'saks',        tekst:'Saks' },
+    { id:'oplukker',    tekst:'Proptrækker/oplukker', tip:'Køb med skruelåg eller i dåse.' },
+    { id:'pizzaskærer', tekst:'Pizzaskærer', tip:'Bed om at få det skåret ud.' },
+    { id:'salt-peber',  tekst:'Salt/peber' },
+    { id:'sukker',      tekst:'Sukker/sødemiddel' },
+    { id:'kaffe-te',    tekst:'Kaffe/te/kakao' },
+    { id:'dip',         tekst:'Dyppelse', tip:'Skal du bruge ketchup, sennep, mayonnaise eller remoulade?' }
+  ]},
+  { navn:'Køl og varme', punkter:[
+    { id:'køletaske',    tekst:'Køletaske' },
+    { id:'køleelementer',tekst:'Køleelementer' },
+    { id:'varmepose',    tekst:'Varmepose / isoleret taske' },
+    { id:'termokande',   tekst:'Termokande' },
+    { id:'termoflaske',  tekst:'Termoflaske' },
+    { id:'vandflasker',  tekst:'Vandflasker' }
+  ]},
+  { navn:'Oprydning', punkter:[
+    { id:'servietter',   tekst:'Servietter' },
+    { id:'køkkenrulle',  tekst:'Køkkenrulle' },
+    { id:'affaldsposer', tekst:'Affaldsposer' },
+    { id:'vådservietter',tekst:'Vådservietter' },
+    { id:'opvaskemiddel',tekst:'Opvaskemiddel' },
+    { id:'svamp',        tekst:'Svamp' },
+    { id:'viskestykke',  tekst:'Viskestykke' },
+    { id:'håndklæde',    tekst:'Håndklæde' },
+    { id:'håndsprit',    tekst:'Håndsprit' }
+  ]}
+];
 
 /* =============================================================
    STATE
@@ -163,7 +385,7 @@ function friskState(){
   return {
     onboarded:false,
     profil:{ email:'kennet@justsecure.dk', navn:'', fødselsdag:'', kode:'', notifikationer:true },
-    forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{mad,øjeblikke}, startet}
+    forberedelse:null,   // {destination:{navn,x,y,testetId?}, bilTjek:[], pakkeTjek:[], set:{mad}, startet}
     påTur:null,          // {sted, startet}
     anmeldAfventer:null, // {sted, dato}
     ture:[]              // {sted,dato,score:{destination,app,hygge},kommentar}
@@ -177,6 +399,13 @@ function indlæs(){
       const g = JSON.parse(gemt);
       // beskeder er slået til fra start — gamle gemte tilstande havde intet valg
       if(g.profil && g.profil.notifikationer == null) g.profil.notifikationer = true;
+      // migration: ældre gemte ture kender ikke Forplejningens nye valglister
+      if(g.forberedelse){
+        const f = g.forberedelse;
+        if(!f.snackValg) f.snackValg = [];
+        if(!f.drikkeValg) f.drikkeValg = [];
+        if(!f.udstyrValg) f.udstyrValg = [];
+      }
       return g;
     }
     // migration: tag gamle ture med over fra v2/v3
@@ -269,6 +498,19 @@ function geoTilXY(lat,lon){
   const y = (GEO.latTop-lat)/(GEO.latTop-GEO.latBund)*GEO.h;
   return { x: Math.max(8,Math.min(202,x)), y: Math.max(10,Math.min(236,y)) };
 }
+/* x/y for et testet sted skrives ALDRIG i hånden — det udledes her af lat/lon,
+   så de to felter ikke kan komme ud af sync. Det gjorde de: t1 stod med x:44,
+   som er Hvide Sandes plads på det gamle stiliserede kort (se BYER), mens
+   geoTilXY giver x≈9. De 35 enheders forskel er langt over grænsen på 16 i
+   værtsKort(), så faciliteterne dukkede aldrig op, når man satte sin pin på
+   det rigtige Hvide Sande. Alle testede steder har nu lat/lon, så x/y
+   udledes for dem alle. */
+TESTEDE.forEach(t=>{
+  if(t.lat==null || t.lon==null) return;
+  const xy = geoTilXY(t.lat, t.lon);
+  t.x = xy.x; t.y = xy.y;
+});
+
 /* Fugleflugt i km mellem to {lat,lon} — bruges til at måle testede steder
    op mod den radius, brugeren valgte i trin 3. */
 function afstandKm(a, b){
@@ -286,6 +528,17 @@ function startGeo(){
   const f = s.forberedelse;
   if(!f || !f.startXY) return null;
   return xyTilGeo(f.startXY.x, f.startXY.y);
+}
+/* De nærmeste andre testede steder til ET GIVENT sted (ikke fra brugerens
+   startpunkt) — en plan B, hvis stedet man kigger på er optaget, eller man
+   bare ikke er til det. Ingen afstandsgrænse: selv et isoleret sted som
+   Hvide Sande skal vise sin nærmeste nabo, bare ærligt mærket med km. */
+function stederINærheden(t, antal=3){
+  const geo = testetGeo(t);
+  return TESTEDE.filter(x=>x.id!==t.id)
+    .map(x=>({ t:x, km: afstandKm(geo, testetGeo(x)) }))
+    .sort((a,b)=>a.km-b.km)
+    .slice(0,antal);
 }
 
 /* ---------- ægte solnedgangsberegning (NOAA-forenklet) ---------- */
@@ -335,14 +588,14 @@ function nyForberedelse(ekstra){
     fase:1, spontan:false,
     // Standard: i dag kl. 15 — de fleste arytmer bliver til samme dag, og
     // eftermiddagen er det tidspunkt, man reelt kommer afsted på.
-    dato:new Date().toISOString().slice(0,10), afgangstid:'15:00', retur:'samme', returDato:null, hjemkomsttid:null,
+    dato:new Date().toISOString().slice(0,10), afgangstid:'15:00', retur:'samme', returDato:null,
     startNavn:'', startXY:null, radius:2, oplevelser:{lys:null, natur:null, stemning:null},
     destination:null,
-    madValg:[],
+    madValg:[], snackValg:[], drikkeValg:[], udstyrValg:[],
     invType:null, invModtager:'', invAfsender:'', invStatus:null,
     invForslag:[], invForslagFra:null, invEnigDato:null,
     bilTjek:[], pakkeTjek:[],
-    set:{mad:false, øjeblikke:false},
+    set:{mad:false},
     startet:new Date().toISOString().slice(0,10)
   }, ekstra||{});
 }
@@ -356,7 +609,10 @@ function fremdrift(fase){
     const klaret = SEKTIONER.filter(x=>x.fase===1 && sektionKlar(x.id)).length;
     return { total, klaret, mangler:total-klaret, pct:Math.round(klaret/total*100) };
   }
-  const total = BILEN_PUNKTER.length + PAKKE_PUNKTER.length; // 12
+  // Pakke-tallet vokser med de udstyrsting, man selv har markeret som relevante
+  // på Forplejningens udstyrs-trin — de skal jo også pakkes.
+  const pakkeTotal = f ? PAKKE_PUNKTER.length + (f.udstyrValg?f.udstyrValg.length:0) : PAKKE_PUNKTER.length;
+  const total = BILEN_PUNKTER.length + pakkeTotal; // 12 + valgt udstyr
   if(!f) return { total, klaret:0, mangler:total, pct:0 };
   const klaret = f.bilTjek.length + f.pakkeTjek.length;
   return { total, klaret, mangler:total-klaret, pct:Math.round(klaret/total*100) };
@@ -367,7 +623,7 @@ function sektionKlar(id){
     case 'destination': return !!f.destination;
     case 'invitation':  return invErKlar(f);
     case 'bilen': return f.bilTjek.length >= BILEN_PUNKTER.length;
-    case 'pakke': return f.pakkeTjek.length >= PAKKE_PUNKTER.length;
+    case 'pakke': return f.pakkeTjek.length >= PAKKE_PUNKTER.length + (f.udstyrValg?f.udstyrValg.length:0);
     default: return !!f.set[id];
   }
 }
@@ -386,27 +642,33 @@ function nutidigSektion(){
   const uafsluttet = liste.find(x=>!sektionKlar(x.id));
   return (uafsluttet || liste[liste.length-1]).id;
 }
+/* Genvejen ud til overblikket. Samme knap, samme plads, på hvert eneste trin i
+   flowet — så Tilbage/Næste kun betyder ét skridt, og vejen hjem aldrig er
+   gemt væk i en knap midt på siden. */
+function overblikKnap(){
+  return `<button class="overblik-knap" onclick="tilbageTil('hjem')">${ik('hjem')} Overblik</button>`;
+}
 /* Top af hver sektionsside: overskrift som et spørgsmål, og prikker der viser
-   hvor i rækken man er. Ingen tilbage-pil her — Forrige/Næste i bunden
+   hvor i rækken man er. Ingen tilbage-pil her — Tilbage/Næste i bunden
    (sektionFod) er den ene, konsekvente vej at navigere frem og tilbage på. */
 function sektionHeader(id){
   const {sek, liste, idx} = sektionPos(id);
   const F = FASER[sek.fase];
   const prikker = liste.map((x,i)=>`<span class="sek-prik ${i===idx?'aktiv':''} ${sektionKlar(x.id)?'klaret':''}"></span>`).join('');
-  return `<div class="skærm-top">
-    <div><div class="etiket">${F.navn} · punkt ${idx+1} af ${liste.length}</div><h1 style="font-size:22px">${sek.spørg}</h1></div>
+  return `<div class="trin-top">
+    <div class="etiket-række"><div class="etiket">${F.navn} · ${idx+1}/${liste.length}</div>${overblikKnap()}</div>
+    <h1 style="font-size:22px">${sek.spørg}</h1>
   </div>
   <div class="sek-prikker">${prikker}</div>`;
 }
-/* Bund af hver sektionsside: to ens småknapper — Forrige og Næste — side om
+/* Bund af hver sektionsside: to ens småknapper — Tilbage og Næste — side om
    side, plus Annullér. Ensartet i hele flowet (ingen store "næste"-kort).
-   Forrige findes altid (fase 1 starter ved 'onsker'-trinnet, fase 2 ved forsiden). */
+   Tilbage følger den ægte historik, ikke rækkefølgen: kommer man ind i
+   Forplejningen fra tjeklisten på forsiden, går Tilbage til forsiden. */
 function sektionFod(id){
   const {sek, liste, idx} = sektionPos(id);
-  const forrige = idx>0 ? liste[idx-1] : null;
-  const forrigeId   = forrige ? forrige.id   : (sek.fase===1 ? 'onsker' : 'hjem');
-  const forrigeNavn = forrige ? forrige.navn : (sek.fase===1 ? 'Ønsker'  : 'Forsiden');
-  const forrigeKnap = `<button class="knap kontur lille" onclick="gåTil('${forrigeId}')">${ik('tilbage')} Forrige: ${forrigeNavn}</button>`;
+  const fald = idx>0 ? liste[idx-1].id : (sek.fase===1 ? 'onsker' : 'hjem');
+  const forrigeKnap = `<button class="knap kontur lille" onclick="tilbage('${fald}')">${ik('tilbage')} Tilbage</button>`;
 
   // Destinationssiden har kun ét formål: vælg et sted (på kortet eller en køreklar tur).
   // Før et sted er valgt, giver "Næste" ingen mening — kun Forrige vises.
@@ -425,10 +687,10 @@ function sektionFod(id){
   let næsteLabel, næsteAktion, næsteLåst = false;
   if(næste){
     næsteLåst = ['mad','bilen','pakke'].includes(næste.id) && afventerFællesPlan(s.forberedelse);
-    næsteLabel = `Næste: ${næste.navn}`;
+    næsteLabel = 'Næste';
     næsteAktion = næsteLåst ? 'venterPåBekræftelse()' : `gåTil('${næste.id}')`;
   }
-  else if(sek.fase===1){ næsteLabel = 'Planen er klar';        næsteAktion = "gåTil('øjeblikke')"; }
+  else if(sek.fase===1){ næsteLabel = 'Planen er klar';        næsteAktion = "gåTil('hjem')"; }
   else {                 næsteLabel = 'Af sted';               næsteAktion = 'afSted()'; }
 
   const næsteKnap = `<button class="knap kontur lille${næsteLåst?' låst':''}" onclick="${næsteAktion}">${næsteLabel} ${ik(næsteLåst?'lås':'pil')}</button>`;
@@ -586,51 +848,122 @@ const NAV = [
   {id:'hjem',   ikon:'hjem',   navn:'Forside'},
   {id:'log',    ikon:'bog',    navn:'Log'}
 ];
-let sidsteSkærm = 'hjem';
+/* ÉN ægte historik i stedet for gæt. Tilbage fører altid derhen, hvor man
+   lige kom fra — kommer man ind i Forplejningen fra tjeklisten, går tilbage
+   til tjeklisten, ikke til "punktet før i rækken".
+
+   En VISNING er ikke bare et skærmnavn: det er skærmen PLUS de undertilstande,
+   der afgør, hvad skærmen viser. Trykker man "Planlæg sammen" inde på
+   invitationssiden, skifter siden jo indhold uden at skifte skærm — det er et
+   skridt, brugeren kan se, og derfor et skridt, Tilbage skal kunne tage igen.
+   Reglen i hele appen: ét synligt skift = ét skridt i historikken.
+
+   Undertilstande der er FREMDRIFT (invStatus: sendt, bekræftet, afslået) hører
+   ikke med — man kan ikke fortryde en afsendt invitation med en tilbage-knap. */
+let historik = [];
+function visning(){
+  const f = s.forberedelse;
+  return {
+    skærm: aktivSkærm,
+    invType:    f ? (f.invType || null) : null,
+    invVisMail: f ? !!f.invVisMail : false,
+    bilTjekliste: bilenTjekliste
+  };
+}
+function sætVisning(v){
+  aktivSkærm = v.skærm;
+  const f = s.forberedelse;
+  if(f){ f.invType = v.invType; f.invVisMail = v.invVisMail; gem(); }
+  bilenTjekliste = v.bilTjekliste;
+  tegn();
+  $('indhold').scrollTop = 0;
+}
+function læg(v){
+  historik.push(v);
+  if(historik.length > 40) historik.shift();
+}
 function gåTil(skærm){
-  if(skærm !== aktivSkærm) sidsteSkærm = aktivSkærm;
+  if(skærm !== aktivSkærm) læg(visning());
   aktivSkærm = skærm;
   tegn();
   $('indhold').scrollTop = 0;
 }
+/* Kaldes FØR en ændring, der skifter hvad skærmen viser uden at skifte skærm.
+   Uden den ville Tilbage springe hele skærmen over og lande et skridt for langt. */
+function gemUnderTrin(){ læg(visning()); }
+/* Skærme, der er "brugt op" når man går videre (fx et sted man netop har valgt),
+   skal ikke ligge i vejen på vej tilbage. */
+function gåTilErstat(skærm){
+  aktivSkærm = skærm;
+  tegn();
+  $('indhold').scrollTop = 0;
+}
+/* Ét skridt tilbage. Er historikken tom (frisk start), bruges fallback. */
+function tilbage(fallback){
+  if(historik.length){ sætVisning(historik.pop()); return; }
+  aktivSkærm = fallback || 'hjem';
+  tegn();
+  $('indhold').scrollTop = 0;
+}
+/* Hop ud af et helt forløb (Overblik-genvejen, bundnavigationen, "Færdig" i
+   Udstyr): rul historikken tilbage til den skærm i stedet for at lægge endnu
+   et skridt oveni. Så peger Tilbage dér ikke ind i det, man lige har forladt.
+
+   Til forskel fra tilbage() gendannes undertilstandene IKKE. Et spring ud til
+   overblikket er ikke en fortrydelse — har man valgt "Planlæg sammen", skal
+   valget stadig stå, når man kigger forbi forsiden og kommer tilbage. */
+function tilbageTil(skærm){
+  for(let i = historik.length-1; i >= 0; i--){
+    if(historik[i].skærm === skærm){
+      historik.length = i;
+      aktivSkærm = skærm;
+      tegn();
+      $('indhold').scrollTop = 0;
+      return;
+    }
+  }
+  gåTil(skærm);
+}
+/* Nulstilles når turen begynder eller slutter — så tilbage aldrig lander på
+   en skærm, der ikke findes mere. */
+function nulstilHistorik(){ historik = []; }
 function tegnNav(){
   if(!s.onboarded){ $('bundnav').style.display='none'; return; }
   $('bundnav').style.display='flex';
   const rod = NAV.some(n=>n.id===aktivSkærm) ? aktivSkærm : (aktivSkærm==='log'||aktivSkærm==='profil') ? aktivSkærm : 'hjem';
   $('bundnav').innerHTML = NAV.map(n=>`
-    <button class="navpunkt ${n.id===rod?'aktiv':''}" onclick="gåTil('${n.id}')" aria-label="${n.navn}">${ik(n.ikon)}</button>`).join('');
+    <button class="navpunkt ${n.id===rod?'aktiv':''}" onclick="tilbageTil('${n.id}')" aria-label="${n.navn}">${ik(n.ikon)}</button>`).join('');
 }
 function skærmTop(titel, tilbageTil, etiket){
   return `<div class="skærm-top">
-    <button class="tilbage" onclick="gåTil('${tilbageTil}')">${ik('tilbage')}</button>
+    <button class="tilbage" onclick="tilbage('${tilbageTil}')">${ik('tilbage')}</button>
     <div>${etiket?`<div class="etiket">${etiket}</div>`:''}<h1 style="font-size:22px">${titel}</h1></div>
   </div>`;
 }
 
 /* =============================================================
-   ONBOARDING — mail → personlig kode → notifikationer
+   ONBOARDING — velkomst → personlig kode → notifikationer
    ============================================================= */
 let obTrin = 1;
 function skærmOnboarding(){
   if(obTrin===1){
-    $('indhold').innerHTML = `<div class="side anim" style="padding-top:34px">
-      <div style="display:flex;justify-content:center;margin-bottom:18px">${logoSVG(false)}</div>
-      <p class="dæmpet" style="text-align:center;margin-bottom:18px">Sådan ser bekræftelsesmailen ud, når kunden har købt madrassen:</p>
-      <div class="ob-mail">
-        <div class="m-top">${ik('mail')} <b>Arytmi</b> &lt;velkommen@arytmi.dk&gt;<br>Til: ${esc(s.profil.email)}</div>
-        <div class="m-krop">
-          <h3>Velkommen til Arytmi.</h3>
-          <p class="dæmpet" style="margin-top:8px">Din bruger er oprettet. Log ind med din e-mail og engangskoden herunder — så vælger du din egen kode første gang.</p>
-          <div class="ob-kode">ARYTMI-2496</div>
-          <p class="dæmpet" style="font-size:13px">Hent appen, og kom i gang:</p>
-          <div class="store-badges">
-            <div class="store-badge">${ik('måne')}<span>Hent i<br><b>App Store</b></span></div>
-            <div class="store-badge">${ik('gnist')}<span>Hent på<br><b>Google Play</b></span></div>
+    $('indhold').innerHTML = `
+    <div class="hero fuld">
+      ${heroScene('klar', skærmHøjde())}
+      <div class="overlay">
+        <div class="h-top">
+          <div class="h-logo">${logoSVG(true)}</div>
+          <div class="ht-side"></div>
+          <div class="ht-side højre"></div>
+        </div>
+        <div class="h-bund">
+          <h1>Vælg mindre.<br>Oplev mere.</h1>
+          <p>Fra idé til afsted — mindst mulig planlægning, mest mulig oplevelse.</p>
+          <div class="handling">
+            <button class="knap lys ånde kør-knap bred" onclick="obTrin=2;tegn()">Login i appen og start din Arytmi ${ik('pil')}</button>
           </div>
         </div>
       </div>
-      <button class="knap primær bred" onclick="obTrin=2;tegn()">Åbn appen og log ind ${ik('pil')}</button>
-      <p class="dæmpet" style="text-align:center;font-size:12px;margin-top:12px">Prototype — mailen er simuleret.</p>
     </div>`;
     return;
   }
@@ -640,7 +973,7 @@ function skærmOnboarding(){
       <div class="kort">
         <div class="etiket">Første login</div>
         <h2 style="margin-top:6px">Lidt om dig</h2>
-        <p class="dæmpet" style="margin-top:6px">Engangskoden fra mailen er brugt. Fortæl os, hvem du er, og vælg din egen 4-cifrede kode.</p>
+        <p class="dæmpet" style="margin-top:6px">Fortæl os, hvem du er, og vælg din egen 4-cifrede kode.</p>
         <label class="felt-etiket">Dit navn</label>
         <input type="text" id="obNavn" placeholder="Fx Kennet" value="${esc(s.profil.navn||'')}">
         <label class="felt-etiket">Fødselsdag</label>
@@ -683,7 +1016,7 @@ function gemKode(){
 function vælgNotif(til){
   s.profil.notifikationer = til;
   s.onboarded = true; gem();
-  gåTil('hjem');
+  nulstilHistorik(); gåTil('hjem');
   flash('Velkommen til Arytmi.', 'klokke');
 }
 
@@ -706,7 +1039,7 @@ function arytmiTæller(){
 function turIGang(){
   const f = s.forberedelse; if(!f) return false;
   return !!(f.destination || f.dato || f.invType
-    || f.set.mad || f.set.øjeblikke
+    || f.set.mad
     || (f.bilTjek && f.bilTjek.length) || (f.pakkeTjek && f.pakkeTjek.length));
 }
 function skærmHjem(){
@@ -800,7 +1133,7 @@ function skærmHjem(){
 }
 function startForberedelse(){
   s.forberedelse = nyForberedelse();
-  gem(); gåTil('turdato');
+  gem(); nulstilHistorik(); gåTil('turdato');
 }
 /* =============================================================
    FORBEREDELSEN — fire trin før kortet: hvornår · hvorfra ·
@@ -812,7 +1145,7 @@ const RADIUS_TEKST = ['Under 30 min','30–60 min','1–2 timer','2–4 timer'];
    derfor ca. 80 % af den kørte afstand. Bruges til cirklen på kortet. */
 const RADIUS_KM = [25, 50, 100, 200];
 function turTilbage(trin){
-  gåTil(['hjem','turdato','hvorfra','hvorlangt'][trin] || 'hjem');
+  tilbage(['hjem','turdato','hvorfra','hvorlangt'][trin] || 'hjem');
 }
 /* Fælles trin-top: etiket, prikker, spørgsmål */
 function wizardTop(trin, spm, under){
@@ -841,15 +1174,11 @@ function datoFelter(){
   const f = s.forberedelse;
   const seg = (v,tekst)=>`<button class="seg-knap ${f.retur===v?'valgt':''}" style="flex-direction:row;padding:12px 8px" onclick="sætRetur('${v}')"><span>${tekst}</span></button>`;
   return `<div class="kort">
-    <label class="felt-etiket" style="margin-top:0">Dato</label>
+    <label class="felt-etiket" style="margin-top:0">Afgangsdato</label>
     <input type="date" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
-    <label class="felt-etiket">Ca. afgangstid</label>
-    <input type="time" step="900" value="${f.afgangstid||''}" onchange="s.forberedelse.afgangstid=this.value;gem()">
     <label class="felt-etiket">Hjem igen? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
     <div class="seg-valg">${seg('samme','Samme dag')}${seg('næste','Næste dag')}${seg('dato','Vælg dato')}</div>
     ${f.retur==='dato'?`<input type="date" style="margin-top:10px" value="${f.returDato||''}" onchange="s.forberedelse.returDato=this.value;gem()">`:''}
-    <label class="felt-etiket">Ca. hjemkomsttid <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-    <input type="time" step="900" value="${f.hjemkomsttid||''}" onchange="s.forberedelse.hjemkomsttid=this.value;gem()">
   </div>`;
 }
 function sætRetur(v){ s.forberedelse.retur=v; gem(); tegn(); }
@@ -990,10 +1319,10 @@ function skærmForslag(){
         <span class="res-ikon">${ik('stjerne')}</span>
         <span class="res-krop">
           <span class="res-navn">${esc(r.t.navn)}</span>
-          <span class="res-tekst">${r.t.klar ? esc(r.t.kort) : 'Beskrivelsen skrives af OD — stedet er ikke klar endnu.'}</span>
+          <span class="res-tekst">${esc(r.t.kort||'')}</span>
           <span class="res-meta">${r.km!=null?`ca. ${r.km} km herfra${r.indenfor?'':' — længere, end I valgte'}`:'afstand vises, når startpunktet er sat'}${
             r.match&&r.match.træf?` · passer på ${r.match.træf} af ${r.match.ud_af} ønsker`:''}</span>
-          <span class="res-mærke ${r.t.klar?'ægte':''}">${r.t.klar?'★ Testet af Arytmi':'OD skriver indholdet'}</span>
+          <span class="res-mærke ${r.t.klar?'ægte':''}">${r.t.klar?'★ Testet af Arytmi':'Måske — vi tester igen'}</span>
         </span>
         <span class="tjek-pil">${ik('pil')}</span>
       </button>`).join('')}
@@ -1007,7 +1336,7 @@ function skærmForslag(){
 function hjemmeIgen(){
   s.anmeldAfventer = { sted: s.påTur.sted, dato: s.påTur.startet };
   s.påTur = null; gem();
-  gåTil('hjem');
+  nulstilHistorik(); gåTil('hjem');
   flash('Velkommen hjem. Vi har lagt en lille anmeldelse klar til jer.', 'klokke');
 }
 
@@ -1019,7 +1348,7 @@ function hjemmeIgen(){
    ============================================================= */
 function startSpontan(){
   s.forberedelse = nyForberedelse({ spontan:true });
-  gem(); gåTil('hurtig');
+  gem(); nulstilHistorik(); gåTil('hurtig');
 }
 function hurtigListe(){
   const f = s.forberedelse;
@@ -1028,7 +1357,7 @@ function hurtigListe(){
   return [
     { navn:'Bilen',       under:`${bil} af ${BILEN_PUNKTER.length} klaret — ladning, Camp Mode, tasken`, klar:bil>=BILEN_PUNKTER.length,   mål:'bilen' },
     { navn:'Pakkeliste',  under:`${pakke} af ${PAKKE_PUNKTER.length} klaret — de personlige ting`,        klar:pakke>=PAKKE_PUNKTER.length, mål:'pakke' },
-    { navn:'Mad og drikke', under: forplejningKlar()? valgtMad().length+' valgt' : 'Så I ikke skal handle på vejen', klar:forplejningKlar(), mål:'mad' }
+    { navn:'Mad og drikke', under: forplejningKlar()? valgtForplejning().length+' valgt' : 'Så I ikke skal handle på vejen', klar:forplejningKlar(), mål:'mad' }
   ];
 }
 function skærmHurtig(){
@@ -1038,7 +1367,7 @@ function skærmHurtig(){
   const mangler = items.filter(i=>!i.klar).length;
   $('indhold').innerHTML = `<div class="side anim">
     <div class="skærm-top">
-      <button class="tilbage" onclick="gåTil('hjem')">${ik('tilbage')}</button>
+      <button class="tilbage" onclick="tilbage('hjem')">${ik('tilbage')}</button>
       <div><div class="etiket">Spontan arytme</div>
         <h1 style="font-size:22px">Kom afsted nu</h1></div>
     </div>
@@ -1094,7 +1423,7 @@ function tjeklisteData(){
       aktion: (!f.destination && f.oplevelser && f.oplevelser.lys && f.oplevelser.natur && f.oplevelser.stemning)
         ? "gåTil('forslag')" : "gåTil('destination')" },
     { navn:'Invitation',    under: invUnderTekst(f),                               klar: invErKlar(f),   aktion:"gåTil('invitation')" },
-    { navn:'Forplejning',   under: låst?'Låst indtil invitationen er bekræftet':(forplejningKlar()?valgtMad().length+' valgt':'Mad og drikke til turen'), klar: forplejningKlar(), aktion: låst?låstAktion:"gåTil('mad')", låst },
+    { navn:'Forplejning',   under: låst?'Låst indtil invitationen er bekræftet':(forplejningKlar()?valgtForplejning().length+' valgt':'Mad og drikke til turen'), klar: forplejningKlar(), aktion: låst?låstAktion:"gåTil('mad')", låst },
     { navn:'Bil klargjort', under: låst?'Låst indtil invitationen er bekræftet':'Ladning, Camp Mode, tasken', klar: f.bilTjek.length>=BILEN_PUNKTER.length, aktion: låst?låstAktion:"gåTil('bilen')", låst },
     { navn:'Pakkeliste',    under: låst?'Låst indtil invitationen er bekræftet':'De personlige ting', klar: f.pakkeTjek.length>=PAKKE_PUNKTER.length, aktion: låst?låstAktion:"gåTil('pakke')", låst }
   ];
@@ -1134,11 +1463,11 @@ function skærmHjemNedtælling(){
     <div style="text-align:center;margin:14px 0 4px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>
   </div>`;
 }
-/* Samlet, rolig oversigt over turen: destination, forplejning, øjeblikke. */
+/* Samlet, rolig oversigt over turen: destination og forplejning. */
 function skærmTurplan(){
   const f = s.forberedelse;
   if(!f){ gåTil('hjem'); return; }
-  const mad = valgtMad();
+  const mad = valgtForplejning();
   const dest = f.destination;
   const dage = f.dato ? dageTil(f.dato) : null;
   const etiket = dage!=null ? (dage>1?dage+' dage til afgang':dage===1?'I morgen':dage===0?'I dag':'Turplan') : 'Turplan';
@@ -1157,7 +1486,7 @@ function skærmTurplan(){
     </div>
     <div class="sektion"><h3>${ik('kop')} Forplejning</h3></div>
     <div class="liste">
-      ${mad.length ? mad.map(({id,m})=>rad('tjek','#6d7d5e', m.titel, null, `gåTil('mad-${id}')`)).join('')
+      ${mad.length ? mad.map(p=>rad('tjek','#6d7d5e', p.tekst)).join('')
                    : rad('plus','var(--rav)','Ingen valgt endnu','Vælg mad og drikke',"gåTil('mad')")}
     </div>
   </div>`;
@@ -1212,19 +1541,17 @@ function gæsteKode(f){
    lægges i et redigerbart felt: brugeren retter selv til og trykker send. */
 function afsenderNavn(){ return (s.profil && s.profil.navn) || 'En ven'; }
 function turDatoTekst(f){ return f.dato ? pænDato(f.dato) : '(dato ikke valgt endnu)'; }
-function turTidTekst(f){ return f.afgangstid ? 'kl. '+f.afgangstid.replace(':','.') : '(tid ikke valgt endnu)'; }
 function turStedTekst(f){ return f.destination ? f.destination.navn : '(destination ikke valgt endnu)'; }
-/* Hjemkomst bruger allerede-givne svar fra trin 1 (samme dag / næste dag / anden
-   dato) til at afgøre, om hjemkomsttidspunktet skal have en dato på sig. */
+/* Hjemkomst er en dato, ikke et klokkeslæt — udledt af trin 1's svar
+   (samme dag / næste dag / anden dato). */
 function turHjemkomstTekst(f){
-  if(!f.hjemkomsttid) return '(tid ikke valgt endnu)';
-  const tid = 'kl. '+f.hjemkomsttid.replace(':','.');
   if(f.retur==='næste' && f.dato){
     const d = new Date(f.dato+'T12:00:00'); d.setDate(d.getDate()+1);
-    return pænDato(d.toISOString().slice(0,10))+' '+tid;
+    return pænDato(d.toISOString().slice(0,10));
   }
-  if(f.retur==='dato' && f.returDato) return pænDato(f.returDato)+' '+tid;
-  return tid;
+  if(f.retur==='dato' && f.returDato) return pænDato(f.returDato);
+  if(f.dato) return pænDato(f.dato);
+  return '(dato ikke valgt endnu)';
 }
 
 function mailSammen(f){
@@ -1235,7 +1562,6 @@ function mailSammen(f){
 ${afs} har inviteret dig til en arytme.
 
 Dato: ${turDatoTekst(f)}
-Afgang: ${turTidTekst(f)}
 Hjemkomst: ${turHjemkomstTekst(f)}
 Destination: ${turStedTekst(f)}
 
@@ -1280,7 +1606,6 @@ Nogen har planlagt noget særligt til dig.
 ${afs} har inviteret dig til en arytme.
 
 Dato: ${turDatoTekst(f)}
-Afgang: ${turTidTekst(f)}
 Hjemkomst: ${turHjemkomstTekst(f)}
 
 En arytme er en lille, bevidst forstyrrelse af hverdagens rytme.
@@ -1337,7 +1662,7 @@ function mailFelt(sendLabel, sendAktion){
       <textarea class="mail-felt" oninput="s.forberedelse.invMailTekst=this.value;gem()">${esc(mailKladde(f))}</textarea>
       <button class="knap primær bred" style="margin-top:14px" onclick="${sendAktion}">${sendLabel} ${ik('mail')}</button>
       <div style="display:flex;gap:10px;margin-top:10px">
-        <button class="knap kontur lille" style="flex:1" onclick="s.forberedelse.invVisMail=false;gem();tegn()">${ik('tilbage')} Ret oplysninger</button>
+        <button class="knap kontur lille" style="flex:1" onclick="gemUnderTrin();s.forberedelse.invVisMail=false;gem();tegn()">Ret oplysninger</button>
         <button class="knap kontur lille" style="flex:1" onclick="nulstilMail()">Nulstil teksten</button>
       </div>
     </div>`;
@@ -1373,6 +1698,7 @@ function invVælgKrop(){
 }
 function vælgInvType(type){
   const f = s.forberedelse;
+  gemUnderTrin();
   f.invType = type;
   if(type==='selv')      f.invStatus = 'alene';
   else if(type==='gave') f.invStatus = (f.invStatus==='sendt') ? 'sendt' : 'planlægger';
@@ -1381,13 +1707,14 @@ function vælgInvType(type){
 }
 function invSkift(){
   const f = s.forberedelse;
+  gemUnderTrin();
   f.invType=null; f.invStatus=null; f.invForslag=[]; f.invForslagFra=null; f.invEnigDato=null;
   gem(); tegn();
 }
 function invSelvKrop(){
   return `
     <div class="advarsel" style="background:#e2ead2;border-color:#c3d3a8;color:#4d5c3a">${ik('tjek')} Denne arytme er for dig selv. Nyd den — resten af planen er klar til dig alene.</div>
-    <div style="text-align:center;margin-top:16px"><button class="knap kontur lille" onclick="invSkift()">${ik('tilbage')} Vælg noget andet</button></div>`;
+    <div style="text-align:center;margin-top:16px"><button class="knap kontur lille" onclick="invSkift()">${ik('folk')} Vælg en anden måde</button></div>`;
 }
 
 /* ---------- Planlæg sammen ---------- */
@@ -1418,9 +1745,9 @@ function invSammenKrop(){
         <input type="email" placeholder="anne@mail.dk" value="${esc(f.invEmail||'')}" oninput="s.forberedelse.invEmail=this.value;gem();opdaterInvKnap('invSeKnap')">
         <label class="felt-etiket">Foreslået dato</label>
         <div class="sted-chips"><span class="sted-chip valgt">${ik('kort')} ${f.dato?pænDato(f.dato):'Ingen dato valgt endnu'}</span></div>
-        <button class="knap primær bred" id="invSeKnap" style="margin-top:16px" ${f.invModtager&&f.invEmail?'':'disabled'} onclick="s.forberedelse.invVisMail=true;gem();tegn()">Se invitation ${ik('pil')}</button>
+        <button class="knap primær bred" id="invSeKnap" style="margin-top:16px" ${f.invModtager&&f.invEmail?'':'disabled'} onclick="gemUnderTrin();s.forberedelse.invVisMail=true;gem();tegn()">Se invitation ${ik('pil')}</button>
       </div>`}
-      <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="invSkift()">${ik('tilbage')} Vælg noget andet</button></div>`;
+      <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="invSkift()">${ik('folk')} Vælg en anden måde</button></div>`;
   }
   if(status==='bekræftet'){
     return `
@@ -1428,8 +1755,7 @@ function invSammenKrop(){
         <div class="etiket" style="color:rgba(246,243,234,.6)">I er enige</div>
         <h3 style="margin-top:4px">Turen er oprettet</h3>
         <p style="margin-top:6px">Du og ${navn} er enige om <b>${pænDato(f.invEnigDato||f.dato)}</b>. Nu er resten af planen fælles — I fylder tjeklisten ud sammen.</p>
-      </div>
-      <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="gåTil('hjem')">Til overblikket ${ik('pil')}</button></div>`;
+      </div>`;
   }
   if(status==='afslået'){
     return `
@@ -1465,7 +1791,6 @@ function invSammenKrop(){
   // status === 'sendt'
   return `
     <div class="advarsel">Invitation sendt til ${navn}. Nu venter I på svar.</div>
-    <div style="text-align:center;margin:14px 0"><button class="knap kontur lille" onclick="gåTil('hjem')">Til overblikket ${ik('pil')}</button></div>
     ${gæstePreview(f)}
     <div class="kort">
       <div class="etiket">Prøv gæstens svar (demo)</div>
@@ -1480,7 +1805,7 @@ function invSend(){
   const navn = esc(f.invModtager);
   f.invStatus='sendt'; f.invVisMail=false; gem();
   // Når mailen er afsted, hører brugeren hjemme på overblikket over resten
-  gåTil('hjem');
+  tilbageTil('hjem');
   infoModal(`Invitation sendt til <b>${navn}</b>. Du får besked, når ${navn} bekræfter datoen — så kan I sammen planlægge resten af arytmen.`);
 }
 function gæstBekræft(){
@@ -1535,8 +1860,7 @@ function invGaveKrop(){
         <p class="dæmpet" style="font-size:13px;margin:6px 0 12px">Sådan svarer ${navn} på overraskelsen:</p>
         <button class="knap primær bred" onclick="gaveSvar('bekræftet')">${ik('tjek')} Jeg glæder mig — bekræft</button>
         <button class="knap kontur bred" style="margin-top:10px" onclick="gaveSvar('afslået')">${ik('kryds')} Kan ikke deltage</button>
-      </div>` : ''}
-      <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="gåTil('hjem')">Til overblikket ${ik('pil')}</button></div>`;
+      </div>` : ''}`;
   }
   const mad = forplejningKlar(), bil = f.bilTjek.length>=BILEN_PUNKTER.length, pakke = f.pakkeTjek.length>=PAKKE_PUNKTER.length;
   const rk = (ok,navn,under,mål)=>`<button class="tjek-punkt ${ok?'klar':''}" onclick="gåTil('${mål}')"><span class="tjek-boks">${ik('tjek')}</span><span class="tjek-krop"><span class="tjek-navn">${navn}</span><span class="tjek-under">${under}</span></span><span class="tjek-pil">${ik('pil')}</span></button>`;
@@ -1555,13 +1879,13 @@ function invGaveKrop(){
     ${rk(mad,'Mad & drikke','Forplejning til turen','mad')}
     ${rk(bil,'Bilen','Ladning, Camp Mode, tasken','bilen')}
     ${rk(pakke,'Pakkeliste','De personlige ting','pakke')}
-    <button class="knap primær bred ånde" id="invGaveKnap" style="margin-top:18px" ${f.invModtager&&f.invEmail?'':'disabled'} onclick="s.forberedelse.invVisMail=true;gem();tegn()">${ik('gave')} Se overraskelsen ${ik('pil')}</button>`}
-    <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="invSkift()">${ik('tilbage')} Vælg noget andet</button></div>`;
+    <button class="knap primær bred ånde" id="invGaveKnap" style="margin-top:18px" ${f.invModtager&&f.invEmail?'':'disabled'} onclick="gemUnderTrin();s.forberedelse.invVisMail=true;gem();tegn()">${ik('gave')} Se overraskelsen ${ik('pil')}</button>`}
+    <div style="text-align:center;margin-top:14px"><button class="knap kontur lille" onclick="invSkift()">${ik('folk')} Vælg en anden måde</button></div>`;
 }
 function gaveSend(){
   const f = s.forberedelse; if(!f.invModtager){ flash('Skriv hvem overraskelsen er til.'); return; }
   f.invStatus='sendt'; f.invVisMail=false; f.gaveSvar=null; gem();
-  gåTil('hjem');
+  tilbageTil('hjem');
   flash('Overraskelsen er sendt (demo) til '+f.invModtager+'.', 'gave');
 }
 /* Svaret på gaven kommer som en besked i appen. Afvises den, skal brugeren
@@ -1598,18 +1922,18 @@ function tilFase(n){
   s.forberedelse.fase = n;
   gem();
   if(heltFærdig) flash('Planen er klar. Godt gået — nu gør vi klar til afgang.', 'tjek');
-  gåTil(sektionListe(n)[0].id);
+  nulstilHistorik(); gåTil(sektionListe(n)[0].id);
 }
 function afSted(){
   const dest = s.forberedelse.destination;
   s.påTur = { sted: dest ? dest.navn : '', startet: new Date().toISOString().slice(0,10) };
   s.forberedelse = null;
-  gem(); gåTil('hjem');
+  gem(); nulstilHistorik(); gåTil('hjem');
   flash('Af sted. God tur — og godt gået.');
 }
 function annullerForberedelse(){
   bekræft('Annullér turen? Både planen og afkrydsningerne nulstilles.', ()=>{
-    s.forberedelse = null; gem(); gåTil('hjem');
+    s.forberedelse = null; gem(); nulstilHistorik(); gåTil('hjem');
   });
 }
 
@@ -1811,16 +2135,38 @@ function køretid(km){
    Så ved man, hvad man får at vide om hvert sted. */
 function faciliteterKort(t){
   const fa = t.faciliteter || {};
-  const række = (ikon,navn,værdi)=>`
-    <div class="vært-række">${ik(ikon)}<div class="v-tekst"><b>${navn}:</b> ${
-      værdi ? esc(værdi) : '<span class="dæmpet">OD udfylder efter test-turen</span>'}</div></div>`;
+  /* Tomme felter vises ikke længere som "OD udfylder" — vi lover ikke noget, vi
+     ikke har set. Har vi ingenting noteret, siger vi det ærligt i én linje. */
+  const række = (ikon,navn,værdi)=> værdi ? `
+    <div class="vært-række">${ik(ikon)}<div class="v-tekst"><b>${navn}:</b> ${esc(værdi)}</div></div>` : '';
+  const rækker = række('toilet','Toilet',fa.toilet) + række('kurv','Indkøb',fa.handel)
+    + række('gaffel','Aftensmad',fa.aftensmad) + række('croissant','Morgenkaffe',fa.morgen);
   return `<div class="kort">
     <div class="etiket">Praktisk på stedet</div>
-    ${række('toilet','Toilet',fa.toilet)}
-    ${række('kurv','Indkøb',fa.handel)}
-    ${række('gaffel','Aftensmad',fa.aftensmad)}
-    ${række('croissant','Morgenkaffe',fa.morgen)}
+    ${rækker || `<div class="v-tekst dæmpet">Vi noterede ikke faciliteterne her — regn med, at I selv skal have det nødvendige med.</div>`}
   </div>`;
+}
+/* Billeder fra rekognosceringsturen. Første billede bruges som hero ovenfor,
+   resten ligger i en stribe man kan swipe i. Lazy loading, fordi et sted kan
+   have seks fotos, og de skal ikke hentes, før man er på siden. */
+function billedstribe(t){
+  const b = t.billeder || [];
+  if(!b.length) return `<div class="ingen-foto">Vi nåede ikke at få billeder med hjem herfra — de kommer.</div>`;
+  if(b.length === 1) return '';   // det ene billede er allerede hero
+  return `<div class="foto-stribe">${b.map((f,i)=>
+    `<img src="${f}" alt="${esc(t.navn)} — foto ${i+1}" loading="lazy" onclick="visFoto('${t.id}',${i})">`
+  ).join('')}</div>
+  <div class="foto-tekst">${b.length} billeder fra vores egen tur — tryk for at se dem stort</div>`;
+}
+function visFoto(id, i){
+  const t = TESTEDE.find(x=>x.id===id); if(!t) return;
+  const b = t.billeder || []; if(!b[i]) return;
+  const el = document.createElement('div');
+  el.className = 'foto-lup';
+  el.innerHTML = `<img src="${b[i]}" alt="${esc(t.navn)}">
+    <div class="lup-tæl">${i+1} / ${b.length}</div>`;
+  el.onclick = () => el.remove();
+  document.body.appendChild(el);
 }
 function skærmTestet(id){
   const t = TESTEDE.find(x=>x.id===id);
@@ -1828,6 +2174,8 @@ function skærmTestet(id){
   const start = startGeo();
   const km = start ? Math.round(afstandKm(start, testetGeo(t))) : null;
   const m = ønskeMatch(t);
+  const nær = stederINærheden(t);
+  const bill = t.billeder || [];
   const linjer = [];
   if(km!=null){
     const kmMax = RADIUS_KM[(s.forberedelse.radius)|0];
@@ -1836,25 +2184,36 @@ function skærmTestet(id){
   }
   if(m) linjer.push(`<div class="vært-række">${ik('stjerne')}<div class="v-tekst">Passer på ${m.træf} af jeres ${m.ud_af} ønsker${m.træf?': '+['lys','natur','stemning'].filter(k=>t.ønsker[k]===s.forberedelse.oplevelser[k]).map(k=>ØNSKE_ORD[t.ønsker[k]].toLowerCase()).join(' · '):''}</div></div>`);
   $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop(t.navn,testetRetur, t.klar?'Testet af Arytmi ★':'Ét af vores ti steder')}
+    ${skærmTop(t.navn,testetRetur, t.klar?'Testet af Arytmi ★':'Måske — vi tester igen')}
     ${linjer.length?`<div class="kort"><div class="etiket">For jeres tur</div>${linjer.join('')}</div>`:''}
-    ${t.klar ? `
-    <div class="guide-hero" style="background:linear-gradient(150deg,#4a4238,#1c1813)">
+    <div class="guide-hero${bill.length?' m-foto':''}" style="${bill.length
+        ? `background-image:linear-gradient(180deg,rgba(20,17,13,.15) 0%,rgba(20,17,13,.85) 100%),url('${bill[0]}')`
+        : 'background:linear-gradient(150deg,#4a4238,#1c1813)'}">
       <div class="vandmærke">${ik('stjerne')}</div>
       <h1 style="font-size:20px">${esc(t.navn)}</h1>
-      <div class="g-under">${esc(t.kort)}</div>
+      <div class="g-under">${esc(t.kort||'')}</div>
+      ${t.klar?'':'<div class="hero-mærkat">Måske — vi tester igen</div>'}
     </div>
-    <div class="kort guide-brød"><p>${esc(t.beskrivelse)}</p>
-      <div class="od-plads" style="margin-top:14px"><span class="od-mærke">Billede-plads</span><br>Foto fra stedet indsættes her (OD).</div>
+    <div class="kort guide-brød"><p>${esc(t.beskrivelse||'')}</p>
+      ${billedstribe(t)}
     </div>
-    ${faciliteterKort(t)}` : `
-    <div class="kort">
-      <div class="od-plads"><span class="od-mærke">OD skriver her</span><br>
-      Beskrivelse af stedet og billede udfyldes efter test-turen. Formatet ses på "${esc(TESTEDE[0].navn)}".</div>
-    </div>
-    ${faciliteterKort(t)}`}
+    ${faciliteterKort(t)}
     <button class="knap primær bred" onclick="vælgTestetSted('${t.id}')">Vælg dette sted ${ik('pil')}</button>
-    <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="gåTil('${testetRetur}')">${ik('tilbage')} ${testetRetur==='forslag'?'Se de andre to':'Gå tilbage'}</button></div>
+    ${nær.length?`
+    <div class="sektion" style="margin-top:22px"><h3>${ik('nål')} Optaget, eller ikke helt til jer?</h3></div>
+    <p class="dæmpet" style="margin:0 0 10px">De nærmeste andre testede steder — som en plan B.</p>
+    ${nær.map(n=>`
+      <button class="res-kort" onclick="åbnTestet('${n.t.id}','testet-${t.id}')">
+        <span class="res-ikon">${ik('stjerne')}</span>
+        <span class="res-krop">
+          <span class="res-navn">${esc(n.t.navn)}</span>
+          <span class="res-meta">Ca. ${Math.round(n.km)} km herfra</span>
+          <span class="res-mærke ${n.t.klar?'ægte':''}">${n.t.klar?'★ Testet af Arytmi':'Måske — vi tester igen'}</span>
+        </span>
+        <span class="tjek-pil">${ik('pil')}</span>
+      </button>`).join('')}
+    `:''}
+    <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="tilbage('${testetRetur}')">${ik('tilbage')} ${testetRetur==='forslag'?'Se de andre to':'Tilbage'}</button></div>
   </div>`;
 }
 function vælgTestetSted(id){
@@ -1862,7 +2221,8 @@ function vælgTestetSted(id){
   if(!t) return;
   sætDestination({ navn:t.navn, x:t.x, y:t.y, testetId:t.id });
   const { liste, idx } = sektionPos('destination');
-  gåTil(liste[idx+1].id);
+  // Stedet er valgt — siden er brugt op og skal ikke ligge i vejen på vej tilbage
+  gåTilErstat(liste[idx+1].id);
 }
 
 /* =============================================================
@@ -1914,7 +2274,7 @@ function skærmBilen(){
       <h3>Mangler I noget af det her?</h3>
       <p>Madras, forlænger, lagen, dyner og afskærmning — samlet i tasken, så I ikke skal ud og finde det hele hver for sig.</p>
       <button class="knap primær bred" onclick="gåTilKøb()">Køb Døsige Dølle-tasken ${ik('pil')}</button>
-      <button class="knap ${bilenTjekliste?'blød':'kontur'} bred" style="margin-top:10px" onclick="bilenTjekliste=!bilenTjekliste;tegn()">
+      <button class="knap ${bilenTjekliste?'blød':'kontur'} bred" style="margin-top:10px" onclick="gemUnderTrin();bilenTjekliste=!bilenTjekliste;tegn()">
         ${bilenTjekliste ? 'Tilbage til listen' : 'Gør listen til en tjekliste'} ${ik(bilenTjekliste?'bog':'tjek')}
       </button>
     </div>
@@ -1931,99 +2291,204 @@ function bilTjek(id){
 }
 
 /* =============================================================
-   4 · MAD/DRIKKE
+   4 · MAD/DRIKKE — to veje: Mad (mad→snacks→evt. morgenmad→drikkevarer→
+   udstyr) og Drikke (genvej direkte til drikkevarer→udstyr). Begge ender
+   i udstyrs-trinnet, som lægger de valgte ting over på Pakkelisten.
    ============================================================= */
-/* ---------- valg af mad/forplejning til turen ---------- */
-function madValgt(id){ const f=s.forberedelse; return !!(f && f.madValg && f.madValg.includes(id)); }
-function valgtMad(){ const f=s.forberedelse; if(!f||!f.madValg) return []; return f.madValg.filter(id=>MAD_INDLÆG[id]).map(id=>({id, m:MAD_INDLÆG[id]})); }
-function forplejningKlar(){ const f=s.forberedelse; return !!(f && f.madValg && f.madValg.length); }
-function toggleMadValg(id){
+function forplejningKlar(){
+  const f = s.forberedelse;
+  return !!(f && ((f.madValg&&f.madValg.length) || (f.snackValg&&f.snackValg.length) || (f.drikkeValg&&f.drikkeValg.length)));
+}
+/* Samlet liste af alt valgt mad, snacks og drikke — til turplan/huskeliste. */
+function valgtForplejning(){
+  const f = s.forberedelse; if(!f) return [];
+  return [
+    ...(f.madValg||[]).map(id=>MAD_VALG.find(x=>x.id===id)),
+    ...(f.snackValg||[]).map(id=>SNACK_VALG.find(x=>x.id===id)),
+    ...(f.drikkeValg||[]).map(id=>DRIKKE_VALG.find(x=>x.id===id))
+  ].filter(Boolean);
+}
+/* Flerdages-tur (Hjem igen ≠ samme dag) får et morgenmads-trin ind i flowet. */
+function flerdagsTur(){ const f=s.forberedelse; return !!(f && f.retur && f.retur!=='samme'); }
+function madTrinTop(titel, under, etiket){
+  return `<div class="trin-top">
+    <div class="etiket-række"><div class="etiket">${etiket||'Mad &amp; drikke'}</div>${overblikKnap()}</div>
+    <h1 style="font-size:22px">${titel}</h1>
+  </div>
+  ${under?`<p class="dæmpet" style="margin:2px 0 14px">${under}</p>`:''}`;
+}
+/* Tilbage følger historikken — fallback bruges kun, hvis man er landet
+   direkte på siden uden at komme et sted fra. */
+function madTrinFod(tilbageFald, næsteLabel, næsteAktion){
+  return `<div style="margin-top:18px">
+    <div class="fod-nav">
+      <button class="knap kontur lille" onclick="tilbage('${tilbageFald}')">${ik('tilbage')} Tilbage</button>
+      <button class="knap kontur lille" onclick="${næsteAktion}">${næsteLabel} ${ik('pil')}</button>
+    </div>
+  </div>`;
+}
+/* Multi-valg-liste, samme visuelle sprog som Bilen/Pakkeliste — man trykker
+   en ting for at markere den relevant, ikke for at "krydse den af". */
+function valgListe(punkter, valgte, toggleFn){
+  return `<div class="liste">
+    ${punkter.map(p=>{
+      const markeret = valgte.includes(p.id);
+      return `<div class="liste-punkt" onclick="${toggleFn}('${p.id}')" style="cursor:pointer">
+        <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+        <div class="navn">${p.tekst}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.tip}</div>`:''}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function toggleValg(arrNavn, id){
   if(!s.forberedelse) s.forberedelse = nyForberedelse();
-  const arr = s.forberedelse.madValg || (s.forberedelse.madValg=[]);
+  const arr = s.forberedelse[arrNavn] || (s.forberedelse[arrNavn]=[]);
   const i = arr.indexOf(id);
-  if(i>=0){ arr.splice(i,1); flash('Fjernet fra turen.'); }
-  else { arr.push(id); flash(MAD_INDLÆG[id].titel+' er tilføjet turen.','tjek'); }
+  if(i>=0) arr.splice(i,1); else arr.push(id);
   gem(); tegn();
 }
+function toggleMadValg(id){ toggleValg('madValg', id); }
+function toggleSnackValg(id){ toggleValg('snackValg', id); }
+function toggleDrikkeValg(id){ toggleValg('drikkeValg', id); }
+function toggleUdstyrValg(id){ toggleValg('udstyrValg', id); }
+
 function skærmMad(){
   if(s.forberedelse && !s.forberedelse.set.mad){ s.forberedelse.set.mad = true; gem(); }
-  const valgt = valgtMad();
-  const tilTuren = valgt.length ? `
-    <div class="sektion" style="margin-top:2px"><h3>${ik('hjerte')} Til turen · ${valgt.length}</h3></div>
-    <div class="liste" style="margin-bottom:22px">
-      ${valgt.map(({id,m})=>`
-        <div class="liste-punkt" onclick="gåTil('mad-${id}')" style="cursor:pointer">
-          <span style="color:#6d7d5e;flex-shrink:0">${ik('tjek')}</span>
-          <div class="navn" style="flex:1;font-size:14.5px">${m.titel}</div>
-          <span style="color:#c9c2b0;flex-shrink:0">${ik('pil')}</span>
-        </div>`).join('')}
-    </div>` : '';
+  const f = s.forberedelse || nyForberedelse();
+  const madKlar = (f.madValg&&f.madValg.length) || (f.snackValg&&f.snackValg.length);
+  const madUnder = madKlar ? (f.madValg.length+f.snackValg.length)+' valgt' : 'Mad, snacks og evt. morgenmad';
+  const drikkeKlar = f.drikkeValg && f.drikkeValg.length;
+  const drikkeUnder = drikkeKlar ? f.drikkeValg.length+' valgt' : 'Vand, kaffe, øl, vin …';
+  const rk = (ok,ikon,navn,under,mål)=>`
+    <button class="tjek-punkt ${ok?'klar':''}" onclick="gåTil('${mål}')">
+      <span class="tjek-boks">${ik('tjek')}</span>
+      <span class="tjek-krop"><span class="tjek-navn">${ik(ikon)} ${navn}</span><span class="tjek-under">${under}</span></span>
+      <span class="tjek-pil">${ik('pil')}</span>
+    </button>`;
   $('indhold').innerHTML = `<div class="side anim">
     ${sektionHeader('mad')}
     <div class="kort guide-brød">
       <p>En arytme handler om at gøre det enkelt. Derfor behøver I hverken planlægge store måltider eller pakke et helt udekøkken.</p>
       <p>Vælg noget, der er nemt at tage med, eller nyd et måltid undervejs. Måske en kvalitets pizza på vej til destinationen eller morgenkaffe og friskbagte rundstykker fra den lokale bager.</p>
       <p>Jo enklere beslutningerne er, desto hurtigere og nemmere kommer I afsted. Alle vores destinationer indeholder informationer om nærmeste madsted og bager.</p>
-      <p class="citat" style="margin-bottom:0">TIP: Husk kopper, glas, tallerkner og bestik, hvis det skal bruges.</p>
     </div>
-    ${tilTuren}
-    ${Object.entries(MAD_INDLÆG).map(([id,m])=>`
-    <div class="forslag-knap" onclick="gåTil('mad-${id}')" style="margin-bottom:11px">
-      <span class="f-ikon">${ik(m.ikon)}</span>
-      <span style="flex:1"><b>${m.titel}</b><br><span class="dæmpet" style="font-size:12.5px">${m.klar?'Læs indlægget':'Indlæg på vej — OD skriver'}</span></span>
-      <span class="pil"${madValgt(id)?' style="color:#6d7d5e"':''}>${ik(madValgt(id)?'tjek':'pil')}</span>
-    </div>`).join('')}
-    <div class="sektion"><h3>${ik('gnist')} Bonus</h3></div>
-    <div class="kort">
-      <h3>Den bedste varme kakao over blus</h3>
-      <div class="od-plads"><span class="od-mærke">OD skriver her</span><br>Bonusopskrift på den bedste varme kakao over blus.</div>
-      <h3 style="margin-top:16px">Den hyggeligste havregrød dagen derpå</h3>
-      <div class="od-plads"><span class="od-mærke">OD skriver her</span><br>Bonusopskrift på den hyggeligste havregrød dagen derpå.</div>
-    </div>
+    ${rk(madKlar,'gaffel','Mad', madUnder, 'mad-valg')}
+    ${rk(drikkeKlar,'kop','Drikke', drikkeUnder, 'mad-drikkevarer')}
     ${sektionFod('mad')}
   </div>`;
 }
-function skærmMadIndlæg(id){
-  const m = MAD_INDLÆG[id];
-  if(!m){ gåTil('mad'); return; }
-  const valgt = madValgt(id);
+/* ---- Trin 1: Mad ---- */
+function skærmMadValg(){
+  const f = s.forberedelse || nyForberedelse();
+  const valgte = f.madValg || [];
   $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop(m.titel,'mad','Mad & drikke')}
-    <div class="guide-hero" style="background:linear-gradient(150deg,#6b5433,#241f18)">
-      <div class="vandmærke">${ik(m.ikon)}</div>
-      <h1>${m.titel}</h1>
-      <div class="g-under">${m.klar?'Skrevet efter egne ture':'Indlæg på vej'}</div>
-    </div>
+    ${madTrinTop('Hvad skal I spise?')}
     <div class="kort guide-brød">
-      ${m.klar ? m.brød : `
-      <div class="od-plads"><span class="od-mærke">OD skriver her</span><br>
-      Indlægget om ${m.titel.toLowerCase()} — tips, erfaringer og anbefalinger fra egne ture.
-      Formatet kan ses under "Morgenmad og kaffe".</div>${m.ekstra||''}`}
+      <p>Arytmi er designet til at gøre det enkelt. Herunder finder I en liste med afprøvede muligheder. Du kan vælge muligheder, og appen vil derefter generere en liste med ting til pakkelisten, der er uundværlige.</p>
+      <p class="citat" style="margin-bottom:0">TIP: Vi er selv store tilhængere af at køre i den nærmeste delikatesse og købe små lækre anretninger, som vi deler som tapas.</p>
     </div>
-    <button class="knap ${valgt?'kontur':'primær'} bred" onclick="toggleMadValg('${id}')">
-      ${valgt ? `${ik('tjek')} Tilføjet — fjern fra turen` : `${ik('plus')} Tilføj til turen`}
-    </button>
+    ${valgListe(MAD_VALG, valgte, 'toggleMadValg')}
+    ${madTrinFod('mad','Næste',"gåTil('mad-snacks')")}
+  </div>`;
+}
+/* ---- Trin 2: Snacks ---- */
+function skærmMadSnacks(){
+  const f = s.forberedelse || nyForberedelse();
+  const valgte = f.snackValg || [];
+  const næsteMål = flerdagsTur() ? 'mad-morgen' : 'mad-drikkevarer';
+  const næsteLabel = 'Næste';
+  $('indhold').innerHTML = `<div class="side anim">
+    ${madTrinTop('Snacks til turen')}
+    <div class="kort guide-brød">
+      <p>Her kommer det vigtigste punkt på turen — snacks. Når vi danskere hygger, spiser vi, og det kan du gøre med god samvittighed, når du er på arytme.</p>
+      <p class="citat" style="margin-bottom:0">TIP: Der er mange gode "is"-destinationer i Danmark — det smarteste ved arytmen er, at I kan flytte jer, så I nemt kan hente dessert på havnen og køre tilbage til overnatningspladsen.</p>
+    </div>
+    ${valgListe(SNACK_VALG, valgte, 'toggleSnackValg')}
+    ${madTrinFod('mad-valg',næsteLabel,`gåTil('${næsteMål}')`)}
+  </div>`;
+}
+/* ---- Trin 3: Morgenmad (kun flerdages-ture) — rent informativt, ingen valg ---- */
+function skærmMadMorgen(){
+  $('indhold').innerHTML = `<div class="side anim">
+    ${madTrinTop('Morgenmad')}
+    <div class="kort guide-brød">
+      <p>Næsten alle destinationerne ligger i nærheden af et godt bageri — vi foreslår altid et under destinationen. Her kan du også tit få fremragende kaffe.</p>
+      <p>Nu kan I køre videre, eller I kan vende tilbage til basen — måske går turen hjem, inden I skal i gang med hverdagens rytmer.</p>
+    </div>
+    ${madTrinFod('mad-snacks','Næste',"gåTil('mad-drikkevarer')")}
+  </div>`;
+}
+/* ---- Trin 4: Drikkevarer — også selvstændig genvej fra "Drikke" ---- */
+function skærmMadDrikkevarer(){
+  const f = s.forberedelse || nyForberedelse();
+  const valgte = f.drikkeValg || [];
+  $('indhold').innerHTML = `<div class="side anim">
+    ${madTrinTop('Drikke')}
+    <div class="kort guide-brød">
+      <p class="citat" style="margin-bottom:0">TIP: Vi køber ofte drikkevarer, når vi snacker undervejs.</p>
+    </div>
+    ${valgListe(DRIKKE_VALG, valgte, 'toggleDrikkeValg')}
+    ${madTrinFod('mad','Næste',"gåTil('mad-udstyr-0')")}
+  </div>`;
+}
+/* ---- Trin 5: Udstyr — ét trin pr. gruppe, så siden ikke bliver en mur.
+   Det man vælger her, lander på Pakkelisten. ---- */
+function skærmMadUdstyr(nr){
+  const antal = FORPLEJNING_UDSTYR.length;
+  const i = Math.min(antal-1, Math.max(0, parseInt(nr,10) || 0));
+  const gruppe = FORPLEJNING_UDSTYR[i];
+  const f = s.forberedelse || nyForberedelse();
+  const valgte = f.udstyrValg || [];
+  const sidste = i === antal-1;
+  const prikker = FORPLEJNING_UDSTYR.map((g,n)=>`<span class="sek-prik ${n===i?'aktiv':''}"></span>`).join('');
+  $('indhold').innerHTML = `<div class="side anim">
+    ${madTrinTop(gruppe.navn, '', `Udstyr · ${i+1}/${antal}`)}
+    <div class="sek-prikker">${prikker}</div>
+    ${i===0?`<div class="kort guide-brød">
+      <p>Nu åbnes en huskeliste med forslag til ting, I skal bruge. Tryk så mange af tingene, der er relevante for jer — de bliver tilføjet jeres endelige pakkeliste.</p>
+      <p class="citat" style="margin-bottom:0">Vi anbefaler plastik, melamin eller lignende, så du kan bruge det igen og ikke skal være bange for, at noget går i stykker.</p>
+    </div>`:''}
+    ${valgListe(gruppe.punkter, valgte, 'toggleUdstyrValg')}
+    ${madTrinFod(
+      i===0 ? 'mad-drikkevarer' : 'mad-udstyr-'+(i-1),
+      sidste ? 'Færdig' : 'Næste',
+      sidste ? "tilbageTil('mad')" : `gåTil('mad-udstyr-${i+1}')`
+    )}
   </div>`;
 }
 
 /* =============================================================
    5 · PAKKE — personlige ting
    ============================================================= */
+/* Udstyr valgt på Forplejningens sidste trin — lander her som ekstra punkter. */
+function valgtUdstyr(){
+  const f = s.forberedelse; if(!f||!f.udstyrValg||!f.udstyrValg.length) return [];
+  const alle = FORPLEJNING_UDSTYR.flatMap(g=>g.punkter);
+  return f.udstyrValg.map(id=>alle.find(p=>p.id===id)).filter(Boolean);
+}
+function pakkeRække(p, tjek){
+  const markeret = tjek.includes(p.id);
+  return `
+  <div class="liste-punkt ${markeret?'strøget':''}" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">
+    <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+    <div class="navn">${p.tekst}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.tip}</div>`:''}</div>
+  </div>`;
+}
 function skærmPakke(){
   const f = s.forberedelse || nyForberedelse();
   const tjek = f.pakkeTjek || [];
+  const udstyr = valgtUdstyr();
   $('indhold').innerHTML = `<div class="side anim">
     ${sektionHeader('pakke')}
     <p class="dæmpet" style="margin-bottom:14px">Det eneste, I selv skal pakke — resten ligger i tasken og bilen.</p>
     <div class="liste">
-      ${PAKKE_PUNKTER.map(p=>{
-        const markeret = tjek.includes(p.id);
-        return `
-        <div class="liste-punkt ${markeret?'strøget':''}" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">
-          <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
-          <div class="navn">${p.tekst}</div>
-        </div>`;}).join('')}
+      ${PAKKE_PUNKTER.map(p=>pakkeRække(p,tjek)).join('')}
     </div>
+    ${udstyr.length?`
+    <div class="sektion"><h3>${ik('kop')} Fra Forplejningen · ${udstyr.length}</h3></div>
+    <div class="liste">
+      ${udstyr.map(p=>pakkeRække(p,tjek)).join('')}
+    </div>`:''}
     ${s.forberedelse&&s.forberedelse.destination?`<p class="dæmpet" style="font-size:13px">Destination: ${esc(s.forberedelse.destination.navn)} — ${['t1'].includes(s.forberedelse.destination.testetId)?'tag badetøjet med, I er ved vandet.':'tjek om der er badevand i nærheden.'}</p>`:''}
     ${sektionFod('pakke')}
   </div>`;
@@ -2034,41 +2499,6 @@ function pakkeTjek(id){
   const i = t.indexOf(id);
   if(i>=0) t.splice(i,1); else t.push(id);
   gem(); tegn();
-}
-
-/* =============================================================
-   6 · ARYTMI ØJEBLIKKE
-   ============================================================= */
-function skærmØjeblikke(){
-  if(s.forberedelse && !s.forberedelse.set.øjeblikke){ s.forberedelse.set.øjeblikke = true; gem(); }
-  // Siden er både afrundingen på planlægningen og "Om Arytmi" under Profil.
-  // Kom man fra Mad/drikke, er man i flowet og skal videre til fase 2.
-  const iFlowet = !!(s.forberedelse && (s.forberedelse.fase||1)===1 && sidsteSkærm==='mad');
-  $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop('Hvordan bliver turen mindeværdig?', iFlowet?'mad':'profil', iFlowet?'Planen er klar':'Om Arytmi')}
-    <div class="guide-hero" style="background:linear-gradient(150deg,#5c4348,#1c1813)">
-      <div class="vandmærke">${ik('hjerte')}</div>
-      ${ekgSVG('rgba(246,243,234,.5)')}
-      <h1>En sund forstyrrelse</h1>
-      <div class="g-under">af en vant rytme</div>
-    </div>
-    <div class="kort guide-brød">
-      <p>Arytmi er en forstyrrelse af en vant rytme. Det er vigtigt at tage tid ud til sig selv og hinanden i en travl hverdag — og når man så tager den tid, er det også vigtigt, at tiden bliver god.</p>
-      <p style="margin-top:10px">Vi arbejder med to ting:</p>
-      <ul>
-        <li><b>At fjerne så meget friktion som muligt</b> — det er appen.</li>
-        <li><b>Så I kan gøre øjeblikkene så mindeværdige som muligt</b> — det er jer.</li>
-      </ul>
-    </div>
-    ${iFlowet ? `
-    <div style="margin-top:18px">
-      <div class="fod-nav">
-        <button class="knap kontur lille" onclick="gåTil('mad')">${ik('tilbage')} Forrige: Mad/drikke</button>
-        <button class="knap kontur lille" onclick="tilFase(2)">Gør klar til afgang ${ik('pil')}</button>
-      </div>
-      <div style="text-align:center;margin-top:16px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>
-    </div>` : ''}
-  </div>`;
 }
 
 /* =============================================================
@@ -2105,13 +2535,13 @@ function sendAnmeldelse(){
     kommentar:anmeldKladde.kommentar.trim()
   });
   s.anmeldAfventer = null; anmeldKladde = null;
-  gem(); gåTil('log');
+  gem(); nulstilHistorik(); gåTil('log');
   flash('Tak! Turen er gemt i loggen, og feedback er sendt til OD (simuleret).', 'mail');
 }
 function skipAnmeldelse(){
   s.ture.unshift({ sted:s.anmeldAfventer.sted||'Jeres sted', dato:s.anmeldAfventer.dato, score:null, kommentar:'' });
   s.anmeldAfventer = null; anmeldKladde = null;
-  gem(); gåTil('hjem');
+  gem(); nulstilHistorik(); gåTil('hjem');
   flash('Helt fint — turen er gemt i loggen uden anmeldelse.');
 }
 
@@ -2203,13 +2633,6 @@ function skærmProfil(){
         ${p.notifikationer?'Slå beskeder fra':'Slå beskeder til'}
       </button>
     </div>
-    <div class="liste" style="margin-top:4px">
-      <div class="liste-punkt" onclick="gåTil('øjeblikke')" style="cursor:pointer">
-        <span style="color:var(--rav);flex-shrink:0">${ik('hjerte')}</span>
-        <div class="navn" style="font-size:14.5px">Om Arytmi<div class="dæmpet" style="font-size:12px;margin-top:2px">En sund forstyrrelse af en vant rytme</div></div>
-        <span style="color:#c9c2b0;flex-shrink:0">${ik('pil')}</span>
-      </div>
-    </div>
     <p class="dæmpet" style="text-align:center;margin-top:12px">ARYTMI · prototype v4 · vælg mindre, oplev mere<br>Feedback fra anmeldelser sendes til OD.</p>
     <div style="text-align:center;margin:16px 0">
       <button class="knap kontur lille" onclick="bekræft('Nulstil hele prototypen og slet alle data?', ()=>{localStorage.removeItem(GEM);localStorage.removeItem('klar-app-v2');location.reload()})">Nulstil prototypen</button>
@@ -2233,15 +2656,18 @@ function tegn(){
     case aktivSkærm==='destination':  skærmDestination(); break;
     case aktivSkærm==='bilen':        skærmBilen(); break;
     case aktivSkærm==='mad':          skærmMad(); break;
+    case aktivSkærm==='mad-valg':        skærmMadValg(); break;
+    case aktivSkærm==='mad-snacks':      skærmMadSnacks(); break;
+    case aktivSkærm==='mad-morgen':      skærmMadMorgen(); break;
+    case aktivSkærm==='mad-drikkevarer': skærmMadDrikkevarer(); break;
+    case aktivSkærm.startsWith('mad-udstyr'): skærmMadUdstyr(aktivSkærm.slice(11)); break;
     case aktivSkærm==='pakke':        skærmPakke(); break;
-    case aktivSkærm==='øjeblikke':    skærmØjeblikke(); break;
     case aktivSkærm==='anmeld':       skærmAnmeld(); break;
     case aktivSkærm==='log':          skærmLog(); break;
     case aktivSkærm==='profil':       skærmProfil(); break;
     case aktivSkærm==='invitation':      skærmInvitation(); break;
     case aktivSkærm==='turplan':         skærmTurplan(); break;
     case aktivSkærm.startsWith('testet-'): skærmTestet(aktivSkærm.slice(7)); break;
-    case aktivSkærm.startsWith('mad-'):    skærmMadIndlæg(aktivSkærm.slice(4)); break;
     default: skærmHjem();
   }
   // fuldskærms-forsiden skal ikke kunne scrolle på et tomt felt — men

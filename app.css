@@ -244,6 +244,19 @@
   .sek-prik{flex:1;height:4px;border-radius:100px;background:var(--flade-dyb);transition:background .2s}
   .sek-prik.klaret{background:var(--rav)}
   .sek-prik.aktiv{background:var(--gran)}
+  /* Top på et trin i flowet: etiket og Overblik-genvejen deler øverste linje,
+     spørgsmålet får hele bredden nedenunder. */
+  .trin-top{margin-bottom:16px}
+  .trin-top .etiket-række{display:flex;align-items:center;gap:12px;margin-bottom:5px;min-height:34px}
+  /* Genvej ud til overblikket. Ligger samme sted på hvert trin i flowet, så
+     vejen hjem altid er den samme — og Tilbage/Næste kun betyder ét skridt. */
+  .overblik-knap{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--linje);background:var(--flade);color:var(--fjord);
+    font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.3px;
+    padding:8px 13px;border-radius:100px;cursor:pointer;
+    box-shadow:0 3px 12px rgba(58,50,39,.05);transition:transform .18s,background .18s,color .18s}
+  .overblik-knap .ik{width:15px;height:15px}
+  .overblik-knap:hover{transform:translateY(-1px);background:#fff;color:var(--gran)}
 
   /* ---------- fremskridt ---------- */
   .fremskridt{height:6px;background:var(--flade-dyb);border-radius:100px;margin:16px 0;overflow:hidden}
@@ -333,6 +346,29 @@
   .guide-hero .g-under{color:rgba(246,243,234,.75);font-size:13.5px;margin-top:4px;position:relative}
   .guide-hero .vandmærke{position:absolute;right:-14px;bottom:-18px;opacity:.16}
   .guide-hero .vandmærke .ik{width:120px;height:120px;stroke-width:1.1}
+  /* Hero med rigtigt foto fra turen — gradienten ligger i style-attributten,
+     så teksten kan læses oven på et lyst billede */
+  .guide-hero.m-foto{background-size:cover;background-position:center;min-height:210px;
+    display:flex;flex-direction:column;justify-content:flex-end}
+  .guide-hero.m-foto .g-under{color:rgba(246,243,234,.92)}
+  .guide-hero .hero-mærkat{position:relative;align-self:flex-start;margin-top:10px;
+    font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;
+    background:rgba(246,243,234,.9);color:#5b4a2e;border-radius:100px;padding:4px 11px}
+
+  /* ---------- fotostribe på et testet sted ---------- */
+  .foto-stribe{display:flex;gap:8px;overflow-x:auto;margin:16px -20px 0;padding:0 20px 4px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .foto-stribe::-webkit-scrollbar{display:none}
+  .foto-stribe img{height:132px;width:auto;flex:0 0 auto;border-radius:12px;object-fit:cover;
+    scroll-snap-align:start;cursor:pointer;background:#e8e2d5}
+  .foto-tekst{font-size:12.5px;color:var(--dæmpet);margin-top:8px}
+  .ingen-foto{font-size:13px;color:var(--dæmpet);margin-top:14px;font-style:italic}
+  .foto-lup{position:fixed;inset:0;z-index:900;background:rgba(20,17,13,.94);
+    display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+  .foto-lup img{max-width:100%;max-height:88vh;border-radius:12px}
+  .lup-tæl{position:absolute;bottom:18px;left:0;right:0;text-align:center;
+    color:rgba(246,243,234,.7);font-size:12.5px;letter-spacing:.6px}
+
   .guide-brød{line-height:1.68;font-size:15px}
   .guide-brød h3{margin:22px 0 8px}
   .guide-brød ul{padding-left:20px;margin:8px 0}
@@ -378,9 +414,6 @@
   .ob-mail .m-top{background:#f4f2ec;padding:14px 18px;border-bottom:1px solid #e8e4da;font-size:12.5px;color:#6a655b}
   .ob-mail .m-krop{padding:22px 20px}
   .ob-kode{font-family:"SF Mono",Menlo,monospace;font-size:22px;letter-spacing:4px;color:var(--gran);background:#f4efe4;border-radius:12px;padding:12px 18px;text-align:center;margin:14px 0;font-weight:700}
-  .store-badges{display:flex;gap:10px;margin-top:14px}
-  .store-badge{flex:1;background:#1c1a16;color:#f2efe6;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:9px;font-size:11px;line-height:1.2;cursor:pointer}
-  .store-badge b{font-size:13.5px;display:block}
   .kode-felt{display:flex;gap:10px;justify-content:center;margin:16px 0}
   .kode-cifre{font-family:"SF Mono",Menlo,monospace;font-size:24px;letter-spacing:10px;text-align:center}
   .advarsel{background:#f6e8d8;border:1px solid #e4c9a4;border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.55;color:#6e4f2a;margin:14px 0}
