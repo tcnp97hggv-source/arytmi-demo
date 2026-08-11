@@ -215,13 +215,7 @@
     opacity:.14;filter:grayscale(1) contrast(.7)}
   @media(max-height:700px){ .app-baggrund .bg-signatur{width:190px;bottom:30px} }
 
-  /* lys der følger musen */
-  .kort::after,.liste::after,.forslag-knap::after{
-    content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background:radial-gradient(240px circle at var(--lx,-300px) var(--ly,-300px),rgba(255,255,255,.55),transparent 62%);
-    opacity:0;transition:opacity .35s}
   @media(hover:hover){
-    .kort:hover::after,.liste:hover::after,.forslag-knap:hover::after{opacity:1}
     .kort.klik:hover,.forslag-knap:hover{transform:translateY(-3px);box-shadow:0 22px 48px rgba(58,50,39,.15), inset 0 1px 0 rgba(255,255,255,.85)}
     .knap.primær:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(58,50,39,.36)}
     .knap.lys:hover,.knap.blød:hover,.knap.kontur:hover{transform:translateY(-1px)}
@@ -272,6 +266,32 @@
   .tjekboks.markeret svg path{stroke-dashoffset:0;transition:stroke-dashoffset .35s cubic-bezier(.2,.7,.3,1) .06s}
   .liste-punkt .navn{flex:1;font-size:15px;transition:color .2s}
   .liste-punkt.strøget .navn{color:var(--dæmpet);text-decoration:line-through;text-decoration-color:var(--rav)}
+
+  /* Bilen: foldbare emner. Overskriften er en almindelig listerække — teksten
+     folder sig ud nedenunder, så siden ikke bliver en mur af brødtekst. */
+  .bil-emne{border-bottom:none}
+  .bil-pil{color:#c9c2b0;flex-shrink:0;display:flex;transition:transform .25s}
+  .bil-pil.åben{transform:rotate(90deg)}
+  .bil-mærke{font-size:12px;font-weight:650;color:var(--fjord);flex-shrink:0;display:flex;align-items:center;gap:4px}
+  .bil-mærke svg{width:13px;height:13px}
+  .bil-krop{padding:0 0 16px;border-bottom:1px solid var(--linje);animation:fold .28s ease}
+  .bil-krop:last-child{border-bottom:none}
+  .bil-krop p{font-size:14.5px;line-height:1.66}
+  .bil-udkast{font-size:12.5px;font-style:italic;color:var(--dæmpet);margin-top:6px}
+  .bil-krop .knap{margin-top:12px}
+  @keyframes fold{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+  /* Pakkelisten: egne punkter. Feltet står nederst i listen som en tom række,
+     så det er tydeligt, at listen kan vokse. */
+  .eget-felt{flex:1;border:none;background:transparent;font:inherit;font-size:15px;color:var(--tekst);padding:0;min-width:0}
+  .eget-felt:focus{outline:none}
+  .eget-felt::placeholder{color:var(--dæmpet)}
+  .eget-tilføj{border:1px solid var(--linje);background:transparent;border-radius:999px;padding:5px 13px;
+    font:inherit;font-size:12.5px;font-weight:650;color:var(--gran);cursor:pointer;flex-shrink:0}
+  .eget-tilføj:active{transform:scale(.96)}
+  .eget-fjern{border:none;background:transparent;color:var(--dæmpet);cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;padding:4px}
+  .eget-fjern svg{width:15px;height:15px}
 
   /* beskrivelsen på forslagskortet — så man kan vælge ud fra andet end afstand */
   .res-tekst{display:block;font-size:13.5px;line-height:1.5;color:var(--tekst);margin:4px 0 6px}

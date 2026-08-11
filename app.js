@@ -287,24 +287,39 @@ const TESTEDE = [
       morgen:'' } }
 ];
 
-/* -- Bilen: forberedelsesliste -- */
-const BILEN_PUNKTER = [
-  { id:'lade',   tekst:'Du skal lade', tip:'Planlæg så I ankommer med mindst 40 % — natten koster typisk 5–10 %.' },
-  { id:'camp',   tekst:'Tjek at du kan indstille Camp Mode', tip:'Tip: bilen låses, så telefonen kan ligge i bilen, uden folk kan komme ind.' },
-  { id:'madras', tekst:'Madras', taske:true },
-  { id:'forlænger', tekst:'Madras-forlænger', taske:true },
-  { id:'lagen',  tekst:'Lagen', tip:'Husk at vaske før brug.', taske:true },
-  { id:'dyner',  tekst:'Dyner', taske:true },
-  { id:'afskærm',tekst:'Afskærmning front', taske:true },
-  { id:'vanddunk',tekst:'Lille vanddunk med taphane', tip:'Til tandbørstning og lign. (KN: kan den tilpasses bilen?)', taske:true },
-  { id:'puder',  tekst:'Egne hovedpuder' }
+/* -- Bilen: først hvilken bil, så det nødvendige, så det man kan investere i.
+   Emnerne folder teksten ud ved tryk, så siden ikke bliver en mur.
+   Brødteksterne er UDKAST og mærket som sådan i visningen — OD skriver dem. -- */
+const BIL_TYPER = [
+  { id:'el',    navn:'Elbil',     under:'Camp Mode, strøm fra batteriet og ladestop undervejs.' },
+  { id:'andet', navn:'Anden bil', under:'Benzin, diesel eller hybrid — strømmen skal med hjemmefra.' }
 ];
+const BILEN_GRUPPER = [
+  { id:'need', navn:'Need to have', under:'', punkter:[
+    { id:'strøm', navn:'Strøm', ikon:'lyn', huske:true,
+      brød:'Strøm er det, der afgør, om natten bliver behagelig. Kør hjemmefra med rigeligt på batteriet, og regn med at natten koster lidt. Har I ikke en elbil, skal strømmen med hjemmefra — en powerbank eller en lille station rækker langt til lys og telefoner.' },
+    { id:'camp',  navn:'Camp mode', ikon:'bil', huske:false,
+      brød:'Camp Mode holder varmen og luften kørende, mens bilen står låst. Prøv den hjemme i indkørslen inden turen — det er ærgerligt at stå på en mørk p-plads og lede i menuerne første gang.' }
+  ]},
+  { id:'nice', navn:'Nice to have', under:'Udstyr du kan investere i, hvis I bliver bidt af arytmer.', punkter:[
+    { id:'afskærmning', navn:'Afskærmning',       ikon:'måne', huske:true,
+      brød:'Afskærmning i ruderne giver mørke at sove i og en fornemmelse af at være for sig selv. Det er den ting, folk oftest anskaffer efter første tur.' },
+    { id:'nivellering', navn:'Niveleringsblokke', ikon:'bil',  huske:true,
+      brød:'De færreste p-pladser er i vater. Et par blokke under hjulene retter bilen op, så I ikke ligger og glider mod fodenden hele natten.' },
+    { id:'myggenet',    navn:'Myggenet',          ikon:'blad', huske:true,
+      brød:'Myggenet i vinduerne betyder, at I kan have en rude på klem hele natten. Ved vand og skov er det forskellen på frisk luft og en time med en summende gæst.' }
+  ]}
+];
+const BILEN_ALLE = BILEN_GRUPPER.flatMap(g=>g.punkter);
 
-/* -- Pakke: personlige ting -- */
+/* -- Pakke: personlige ting. De tre nederste er OD's tilføjelser 11/8 -- */
 const PAKKE_PUNKTER = [
   { id:'nattøj',  tekst:'Nattøj' },
   { id:'badetøj', tekst:'Badetøj eller lign. — afhængigt af destination' },
-  { id:'toilettaske', tekst:'Lille toilettaske med det basale!' }
+  { id:'toilettaske', tekst:'Lille toilettaske med det basale!' },
+  { id:'varmtøj', tekst:'Varm trøje eller jakke til om aftenen' },
+  { id:'ekstratøj', tekst:'Ekstra tøj til dagen efter' },
+  { id:'personligt', tekst:'Personlige ting — medicin, yndlingste eller lignende' }
 ];
 
 /* -- Mad/drikke: valgmuligheder (erstatter de gamle OD-artikler 26/7) --
@@ -405,6 +420,12 @@ function indlæs(){
         if(!f.snackValg) f.snackValg = [];
         if(!f.drikkeValg) f.drikkeValg = [];
         if(!f.udstyrValg) f.udstyrValg = [];
+        // migration 11/8: Bilen fik biltype + huskeliste, Pakkelisten egne punkter,
+        // og afgangsdagen sin egen tjekliste
+        if(f.bilType === undefined) f.bilType = null;
+        if(!f.bilHuske) f.bilHuske = [];
+        if(!f.egnePunkter) f.egnePunkter = [];
+        if(!f.klarTjek) f.klarTjek = [];
       }
       return g;
     }
@@ -594,6 +615,7 @@ function nyForberedelse(ekstra){
     madValg:[], snackValg:[], drikkeValg:[], udstyrValg:[],
     invType:null, invModtager:'', invAfsender:'', invStatus:null,
     invForslag:[], invForslagFra:null, invEnigDato:null,
+    bilType:null, bilHuske:[], egnePunkter:[], klarTjek:[], planlagt:false, egetUdkast:'',
     bilTjek:[], pakkeTjek:[],
     set:{mad:false},
     startet:new Date().toISOString().slice(0,10)
@@ -609,21 +631,33 @@ function fremdrift(fase){
     const klaret = SEKTIONER.filter(x=>x.fase===1 && sektionKlar(x.id)).length;
     return { total, klaret, mangler:total-klaret, pct:Math.round(klaret/total*100) };
   }
-  // Pakke-tallet vokser med de udstyrsting, man selv har markeret som relevante
-  // på Forplejningens udstyrs-trin — de skal jo også pakkes.
-  const pakkeTotal = f ? PAKKE_PUNKTER.length + (f.udstyrValg?f.udstyrValg.length:0) : PAKKE_PUNKTER.length;
-  const total = BILEN_PUNKTER.length + pakkeTotal; // 12 + valgt udstyr
+  // Fase 2: bilen tæller to svar (hvilken bil + Camp Mode), pakkelisten tæller
+  // sine egne punkter inkl. dem brugeren selv har skrevet.
+  const pakkeTotal = pakkePunkter().length;
+  const total = 2 + pakkeTotal;
   if(!f) return { total, klaret:0, mangler:total, pct:0 };
-  const klaret = f.bilTjek.length + f.pakkeTjek.length;
+  const klaret = (f.bilType?1:0) + ((f.bilTjek||[]).includes('camp')?1:0) + f.pakkeTjek.length;
   return { total, klaret, mangler:total-klaret, pct:Math.round(klaret/total*100) };
+}
+/* Bilen er klar, når man har svaret på hvilken bil det er, OG Camp Mode er
+   krydset af. Strøm og nice-to-have-udstyret er huskeliste-punkter, ikke krav —
+   de må ikke kunne spærre for at komme videre (OD 11/8: punktet blev aldrig
+   grønt, fordi det før krævede alle ni ting i Døsige Dølle-tasken). */
+function bilenKlar(f){ return !!(f && f.bilType && (f.bilTjek||[]).includes('camp')); }
+/* Pakkelisten er klar, når alle punkter — inkl. dem man selv har skrevet — er
+   krydset af. Forplejningen tæller IKKE med her længere (OD 11/8); den ligger
+   på pakkelisten under afgangsdagen. */
+function pakkePunkter(){
+  const f = s.forberedelse;
+  return [...PAKKE_PUNKTER, ...((f && f.egnePunkter) || [])];
 }
 function sektionKlar(id){
   const f = s.forberedelse; if(!f) return false;
   switch(id){
     case 'destination': return !!f.destination;
     case 'invitation':  return invErKlar(f);
-    case 'bilen': return f.bilTjek.length >= BILEN_PUNKTER.length;
-    case 'pakke': return f.pakkeTjek.length >= PAKKE_PUNKTER.length + (f.udstyrValg?f.udstyrValg.length:0);
+    case 'bilen': return bilenKlar(f);
+    case 'pakke': return f.pakkeTjek.length >= pakkePunkter().length;
     default: return !!f.set[id];
   }
 }
@@ -691,7 +725,11 @@ function sektionFod(id){
     næsteAktion = næsteLåst ? 'venterPåBekræftelse()' : `gåTil('${næste.id}')`;
   }
   else if(sek.fase===1){ næsteLabel = 'Planen er klar';        næsteAktion = "gåTil('hjem')"; }
-  else {                 næsteLabel = 'Af sted';               næsteAktion = 'afSted()'; }
+  // Sidste trin i fase 2. Planlægger man i skjul, er pakkelisten det sidste,
+  // der mangler, før overraskelsen kan sendes — så vejen går tilbage til
+  // invitationen med mailen klar, ikke ud af turen (OD 11/8).
+  else if(gaveKladde(s.forberedelse)){ næsteLabel = 'Videre til invitationen'; næsteAktion = 'tilInvitationMedMail()'; }
+  else {                 næsteLabel = 'Planen er klar';        næsteAktion = 'planenErKlar()'; }
 
   const næsteKnap = `<button class="knap kontur lille${næsteLåst?' låst':''}" onclick="${næsteAktion}">${næsteLabel} ${ik(næsteLåst?'lås':'pil')}</button>`;
 
@@ -866,15 +904,13 @@ function visning(){
   return {
     skærm: aktivSkærm,
     invType:    f ? (f.invType || null) : null,
-    invVisMail: f ? !!f.invVisMail : false,
-    bilTjekliste: bilenTjekliste
+    invVisMail: f ? !!f.invVisMail : false
   };
 }
 function sætVisning(v){
   aktivSkærm = v.skærm;
   const f = s.forberedelse;
   if(f){ f.invType = v.invType; f.invVisMail = v.invVisMail; gem(); }
-  bilenTjekliste = v.bilTjekliste;
   tegn();
   $('indhold').scrollTop = 0;
 }
@@ -1352,11 +1388,11 @@ function startSpontan(){
 }
 function hurtigListe(){
   const f = s.forberedelse;
-  const bil   = f.bilTjek.length;
   const pakke = f.pakkeTjek.length;
+  const pakkeAlle = pakkePunkter().length;
   return [
-    { navn:'Bilen',       under:`${bil} af ${BILEN_PUNKTER.length} klaret — ladning, Camp Mode, tasken`, klar:bil>=BILEN_PUNKTER.length,   mål:'bilen' },
-    { navn:'Pakkeliste',  under:`${pakke} af ${PAKKE_PUNKTER.length} klaret — de personlige ting`,        klar:pakke>=PAKKE_PUNKTER.length, mål:'pakke' },
+    { navn:'Bilen',       under: bilenKlar(f) ? 'Klar' : 'Vælg bil og tjek Camp Mode',                     klar: bilenKlar(f),          mål:'bilen' },
+    { navn:'Pakkeliste',  under:`${pakke} af ${pakkeAlle} klaret — de personlige ting`,                    klar:pakke>=pakkeAlle,       mål:'pakke' },
     { navn:'Mad og drikke', under: forplejningKlar()? valgtForplejning().length+' valgt' : 'Så I ikke skal handle på vejen', klar:forplejningKlar(), mål:'mad' }
   ];
 }
@@ -1407,6 +1443,23 @@ function dageTil(iso){
    rejsemakkeren har bekræftet datoen — først da er planen fælles. Gave og
    solo-ture skal derimod kunne forberedes fra start, så låsen gælder kun 'sammen'. */
 function afventerFællesPlan(f){ return f.invType==='sammen' && f.invStatus!=='bekræftet'; }
+/* Turen planlægges som en gave, der endnu ikke er sendt. */
+function gaveKladde(f){ return !!(f && f.invType==='gave' && f.invStatus!=='sendt' && f.invModtager); }
+/* Fra pakkelisten tilbage til invitationen — med mailen fremme, klar til at
+   rette og sende. */
+function tilInvitationMedMail(){
+  const f = s.forberedelse;
+  f.invVisMail = true; gem();
+  tilbageTil('invitation');
+}
+/* Planlægningen er slut for de veje, der ikke sender en overraskelse.
+   Forsiden skifter til de tre punkter om at komme afsted. */
+function planenErKlar(){
+  const f = s.forberedelse;
+  f.planlagt = true; gem();
+  nulstilHistorik(); gåTil('hjem');
+  infoModal('Du har planlagt jeres tur.', 'Til overblikket');
+}
 function venterPåBekræftelse(){
   const f = s.forberedelse;
   flash('I skal først blive enige om datoen med '+(f.invModtager||'rejsemakkeren')+'.', 'lås');
@@ -1424,11 +1477,117 @@ function tjeklisteData(){
         ? "gåTil('forslag')" : "gåTil('destination')" },
     { navn:'Invitation',    under: invUnderTekst(f),                               klar: invErKlar(f),   aktion:"gåTil('invitation')" },
     { navn:'Forplejning',   under: låst?'Låst indtil invitationen er bekræftet':(forplejningKlar()?valgtForplejning().length+' valgt':'Mad og drikke til turen'), klar: forplejningKlar(), aktion: låst?låstAktion:"gåTil('mad')", låst },
-    { navn:'Bil klargjort', under: låst?'Låst indtil invitationen er bekræftet':'Ladning, Camp Mode, tasken', klar: f.bilTjek.length>=BILEN_PUNKTER.length, aktion: låst?låstAktion:"gåTil('bilen')", låst },
-    { navn:'Pakkeliste',    under: låst?'Låst indtil invitationen er bekræftet':'De personlige ting', klar: f.pakkeTjek.length>=PAKKE_PUNKTER.length, aktion: låst?låstAktion:"gåTil('pakke')", låst }
+    { navn:'Bil klargjort', under: låst?'Låst indtil invitationen er bekræftet':'Strøm, Camp Mode og udstyr', klar: bilenKlar(f), aktion: låst?låstAktion:"gåTil('bilen')", låst },
+    { navn:'Pakkeliste',    under: låst?'Låst indtil invitationen er bekræftet':'De personlige ting', klar: f.pakkeTjek.length>=pakkePunkter().length, aktion: låst?låstAktion:"gåTil('pakke')", låst }
   ];
 }
+/* =============================================================
+   EFTER PLANLÆGNINGEN — forsiden skifter fra "hvad mangler vi" til
+   "sådan kommer vi afsted". Tre punkter i stedet for seks (OD 11/8).
+   ============================================================= */
+function turPlanlagt(){ const f = s.forberedelse; return !!(f && f.planlagt); }
+/* Det der skal PAKKES: de personlige ting (inkl. dem man selv har skrevet),
+   udstyret man har lagt på huskelisten under Bilen, og grejet fra
+   Forplejningen. Strøm hører ikke til her — den kan først laves på dagen. */
+function pakkeListe(){
+  const f = s.forberedelse; if(!f) return [];
+  return [
+    ...pakkePunkter().map(p=>({ id:'p-'+p.id, tekst:p.tekst, gruppe:'Personligt' })),
+    ...(f.bilHuske||[]).filter(id=>id!=='strøm')
+      .map(id=>BILEN_ALLE.find(p=>p.id===id)).filter(Boolean)
+      .map(p=>({ id:'b-'+p.id, tekst:p.navn, gruppe:'Til bilen' })),
+    ...valgtUdstyr().map(p=>({ id:'u-'+p.id, tekst:p.tekst, gruppe:'Forplejning' }))
+  ];
+}
+/* De sidste forberedelser: strøm, og den mad og drikke der først kan i bilen
+   dagen før eller på selve dagen. */
+function sidsteListe(){
+  const f = s.forberedelse; if(!f) return [];
+  const ud = [];
+  if((f.bilHuske||[]).includes('strøm')) ud.push({ id:'s-strøm', tekst:'Lad bilen op', gruppe:'Strøm' });
+  valgtForplejning().forEach(p=>ud.push({ id:'s-'+p.id, tekst:p.tekst, gruppe:'I bilen' }));
+  return ud;
+}
+function klarListe(hvilken){ return hvilken==='pakke' ? pakkeListe() : sidsteListe(); }
+function klarKlaret(hvilken){
+  const f = s.forberedelse; if(!f) return false;
+  const l = klarListe(hvilken);
+  return l.length>0 && l.every(p=>(f.klarTjek||[]).includes(p.id));
+}
+function klarTjek(id){
+  if(!s.forberedelse) return;
+  const t = s.forberedelse.klarTjek || (s.forberedelse.klarTjek = []);
+  const i = t.indexOf(id);
+  if(i>=0) t.splice(i,1); else t.push(id);
+  gem(); tegn();
+}
+function klarPunkter(){
+  return [
+    { id:'klar-pakke',  navn:'Jeg er klar til at pakke', under:'Alt det, I har valgt undervejs', klar:klarKlaret('pakke') },
+    { id:'klar-sidste', navn:'De sidste forberedelser',  under:'Dagen før eller på dagen',       klar:klarKlaret('sidste') },
+    { id:'turplan',     navn:'Se turplanen',             under:'Afgang, sted, rejsemakker og hjemkomst', klar:false }
+  ];
+}
+/* Krydsede punkter streges over og lægger sig nederst, så det man mangler
+   altid står øverst (OD 11/8). */
+function skærmKlarListe(hvilken){
+  const f = s.forberedelse; if(!f){ gåTil('hjem'); return; }
+  const punkter = klarListe(hvilken);
+  const tjek = f.klarTjek || [];
+  const sorteret = [...punkter.filter(p=>!tjek.includes(p.id)), ...punkter.filter(p=>tjek.includes(p.id))];
+  const klaret = punkter.filter(p=>tjek.includes(p.id)).length;
+  const titel = hvilken==='pakke' ? 'Jeg er klar til at pakke' : 'De sidste forberedelser';
+  const intro = hvilken==='pakke'
+    ? 'Alt det, I har valgt undervejs — samlet ét sted. Kryds af, efterhånden som det ryger i bilen.'
+    : 'Det, der først kan gøres dagen før eller på selve dagen.';
+  $('indhold').innerHTML = `<div class="side anim">
+    ${skærmTop(titel,'hjem', punkter.length?`${klaret} af ${punkter.length}`:'')}
+    <div class="kort guide-brød"><p style="margin:0">${intro}</p></div>
+    ${punkter.length ? `<div class="liste">
+      ${sorteret.map(p=>`
+        <div class="liste-punkt ${tjek.includes(p.id)?'strøget':''}" onclick="klarTjek('${p.id}')" style="cursor:pointer">
+          <div class="tjekboks ${tjek.includes(p.id)?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+          <div class="navn">${esc(p.tekst)}<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.gruppe}</div></div>
+        </div>`).join('')}
+    </div>`
+    : `<div class="liste"><div class="liste-punkt"><div class="navn dæmpet">Der er ikke valgt noget til denne liste endnu.</div></div></div>`}
+  </div>`;
+}
+function skærmHjemKlar(){
+  const f = s.forberedelse;
+  const dage = dageTil(f.dato);
+  const stort = dage===0 ? 'I dag' : dage===1 ? 'I morgen' : dage>1 ? dage : 'Snart';
+  const items = klarPunkter();
+  const altKlar = klarKlaret('pakke') && klarKlaret('sidste');
+  $('indhold').innerHTML = `
+  <div class="ned-hero">
+    ${heroScene('klar', 420)}
+    <div class="ned-lag">
+      <div class="ned-top"><div class="h-logo">${logoSVG(true)}</div>${arytmiTæller()}</div>
+      <div class="ned-label">${dage>1?'Nedtælling':'Snart afsted'}</div>
+      <div class="ned-tal">${stort}</div>
+      ${dage>1?`<div class="ned-label" style="margin-top:6px">dage til jeres tur</div>`:''}
+      <div class="ned-sted">${ik('nål')}${esc(f.destination?f.destination.navn:'Vælg et sted')}</div>
+      <div class="ned-dato">${pænDato(f.dato)}${f.afgangstid?` · afgang ca. ${f.afgangstid}`:''}</div>
+    </div>
+  </div>
+  <div class="tjek-blok">
+    <div class="tjek-overskrift"><h2>Turen er planlagt</h2></div>
+    <p class="dæmpet" style="font-size:13px;margin:-6px 0 14px">Nu er der kun det praktiske tilbage.</p>
+    ${items.map(it=>`
+      <button class="tjek-punkt ${it.klar?'klar':''}" onclick="gåTil('${it.id}')">
+        <span class="tjek-boks">${ik('tjek')}</span>
+        <span class="tjek-krop"><span class="tjek-navn">${it.navn}</span><span class="tjek-under">${it.under}</span></span>
+        <span class="tjek-pil">${ik('pil')}</span>
+      </button>`).join('')}
+    ${altKlar
+      ? `<button class="knap primær bred ånde" style="margin-top:8px" onclick="afSted()">Alt er klar — af sted ${ik('måne')}</button>`
+      : `<p class="dæmpet" style="text-align:center;font-size:12.5px;margin-top:10px">Kryds listerne af, så bliver de grønne.</p>`}
+    <div style="text-align:center;margin:14px 0 4px"><button class="knap kontur lille" onclick="annullerForberedelse()">Annullér turen</button></div>
+  </div>`;
+}
 function skærmHjemNedtælling(){
+  if(turPlanlagt()) return skærmHjemKlar();
   const f = s.forberedelse;
   const dage = dageTil(f.dato);
   const items = tjeklisteData();
@@ -1477,12 +1636,23 @@ function skærmTurplan(){
       <div class="navn" style="flex:1;font-size:14.5px">${navn}${under?`<div class="dæmpet" style="font-size:12px;margin-top:2px">${under}</div>`:''}</div>
       ${aktion?`<span style="color:#c9c2b0;flex-shrink:0">${ik('pil')}</span>`:''}
     </div>`;
+  // OD 11/8: turplanen skal kunne læses som ét svar på "hvornår, hvorhen,
+  // med hvem, og hvornår er vi hjemme igen".
+  const rejsemakker = f.invType==='selv' ? 'Du tager afsted alene'
+    : f.invModtager ? esc(f.invModtager)
+    : 'Ingen rejsemakker valgt endnu';
+  const rejseUnder = f.invType==='selv' ? 'Denne arytme er for dig'
+    : f.invType==='gave' ? (f.invStatus==='sendt' ? 'Overraskelsen er sendt' : 'Planlægges som gave')
+    : f.invType==='sammen' ? (f.invStatus==='bekræftet' ? 'Datoen er bekræftet' : 'Afventer bekræftelse')
+    : 'Vælg hvem du deler turen med';
   $('indhold').innerHTML = `<div class="side anim">
     ${skærmTop('Jeres turplan','hjem',etiket)}
-    <div class="kort">
-      <div class="etiket">Turen</div>
-      ${dest ? rad('nål','var(--rav)', esc(dest.navn), f.dato?pænDato(f.dato)+(f.afgangstid?' · afgang ca. '+f.afgangstid:''):'Dato ikke sat endnu', "gåTil('destination')")
-             : rad('nål','var(--rav)','Vælg et sted','Ingen destination endnu',"gåTil('destination')")}
+    <div class="liste">
+      ${rad('ur','var(--rav)','Afgang', f.dato ? pænDato(f.dato)+(f.afgangstid?' · ca. kl. '+f.afgangstid:'') : 'Dato ikke sat endnu', "gåTil('turdato')")}
+      ${dest ? rad('nål','var(--rav)','Destination', esc(dest.navn), "gåTil('destination')")
+             : rad('nål','var(--rav)','Destination','Ingen destination endnu',"gåTil('destination')")}
+      ${rad('folk','var(--rav)','Rejsemakker', rejsemakker+' · '+rejseUnder, "gåTil('invitation')")}
+      ${rad('hjem','var(--rav)','Hjemkomst', turHjemkomstTekst(f)||'Ikke sat endnu', "gåTil('turdato')")}
     </div>
     <div class="sektion"><h3>${ik('kop')} Forplejning</h3></div>
     <div class="liste">
@@ -1862,7 +2032,7 @@ function invGaveKrop(){
         <button class="knap kontur bred" style="margin-top:10px" onclick="gaveSvar('afslået')">${ik('kryds')} Kan ikke deltage</button>
       </div>` : ''}`;
   }
-  const mad = forplejningKlar(), bil = f.bilTjek.length>=BILEN_PUNKTER.length, pakke = f.pakkeTjek.length>=PAKKE_PUNKTER.length;
+  const mad = forplejningKlar(), bil = bilenKlar(f), pakke = f.pakkeTjek.length>=pakkePunkter().length;
   const rk = (ok,navn,under,mål)=>`<button class="tjek-punkt ${ok?'klar':''}" onclick="gåTil('${mål}')"><span class="tjek-boks">${ik('tjek')}</span><span class="tjek-krop"><span class="tjek-navn">${navn}</span><span class="tjek-under">${under}</span></span><span class="tjek-pil">${ik('pil')}</span></button>`;
   return `
     <div class="kort guide-brød"><p><b>Planlæg turen som en overraskelse.</b> ${esc(f.invModtager||'Din rejsemakker')} ser ingenting endnu. Gør detaljerne klar, og send så den færdige invitation.</p></div>
@@ -1884,9 +2054,12 @@ function invGaveKrop(){
 }
 function gaveSend(){
   const f = s.forberedelse; if(!f.invModtager){ flash('Skriv hvem overraskelsen er til.'); return; }
-  f.invStatus='sendt'; f.invVisMail=false; f.gaveSvar=null; gem();
-  tilbageTil('hjem');
-  flash('Overraskelsen er sendt (demo) til '+f.invModtager+'.', 'gave');
+  f.invStatus='sendt'; f.invVisMail=false; f.gaveSvar=null;
+  // Overraskelsen er sendt, og dermed er planlægningen slut — forsiden skifter
+  // til de tre punkter om at komme afsted (OD 11/8).
+  f.planlagt = true; gem();
+  nulstilHistorik(); gåTil('hjem');
+  infoModal('Gaven er nu sendt, og du har planlagt jeres tur.', 'Til overblikket');
 }
 /* Svaret på gaven kommer som en besked i appen. Afvises den, skal brugeren
    selv aftale en ny dato — appen kan ikke forhandle på en overraskelse. */
@@ -2226,59 +2399,84 @@ function vælgTestetSted(id){
 }
 
 /* =============================================================
-   3 · BILEN — liste, der kan blive tjekliste
+   3 · BILEN — først hvilken bil, så foldbare emner i to grupper
    ============================================================= */
-let bilenTjekliste = false;
+/* Hvilke emner der står foldet ud. Ren visningstilstand: den skal hverken
+   gemmes eller ligge i historikken — at folde en tekst ud er en oplysning,
+   ikke et skridt man skal kunne gå tilbage fra. */
+let åbneBilEmner = {};
+function bilFold(id){ åbneBilEmner[id] = !åbneBilEmner[id]; tegn(); }
+function vælgBilType(id){
+  if(!s.forberedelse) s.forberedelse = nyForberedelse();
+  s.forberedelse.bilType = id;
+  gem(); tegn();
+}
+/* "Føj til huskeliste" — punktet følger med over på pakkelisten (og Strøm
+   videre til de sidste forberedelser på selve dagen). */
+function bilHusk(id){
+  if(!s.forberedelse) s.forberedelse = nyForberedelse();
+  const h = s.forberedelse.bilHuske || (s.forberedelse.bilHuske = []);
+  const i = h.indexOf(id);
+  if(i>=0) h.splice(i,1); else h.push(id);
+  gem(); tegn();
+  if(i<0) flash('Føjet til huskelisten.', 'tjek');
+}
 function skærmBilen(){
   const f = s.forberedelse || nyForberedelse();
   const tjek = f.bilTjek || [];
-  const taske = BILEN_PUNKTER.filter(p=>p.taske);
-  const løse = BILEN_PUNKTER.filter(p=>!p.taske);
-  const række = (p)=>{
+  const huske = f.bilHuske || [];
+
+  // Trin 1: hvilken bil? Resten af siden handler om strøm og plads, og begge
+  // dele ser forskellige ud alt efter svaret — så spørgsmålet kommer først.
+  if(!f.bilType){
+    return void ($('indhold').innerHTML = `<div class="side anim">
+      ${sektionHeader('bilen')}
+      <div class="kort guide-brød"><p>Først: hvad kører I i? Det afgør, hvordan I får strøm til natten.</p></div>
+      ${BIL_TYPER.map(t=>`
+        <button class="res-kort" onclick="vælgBilType('${t.id}')">
+          <span class="res-ikon">${ik('bil')}</span>
+          <span class="res-krop"><span class="res-navn">${t.navn}</span><span class="res-meta">${t.under}</span></span>
+          <span class="tjek-pil">${ik('pil')}</span>
+        </button>`).join('')}
+      ${sektionFod('bilen')}
+    </div>`);
+  }
+
+  const valgtType = BIL_TYPER.find(t=>t.id===f.bilType) || BIL_TYPER[0];
+  const emne = (p)=>{
+    const åben = !!åbneBilEmner[p.id];
     const markeret = tjek.includes(p.id);
-    if(!bilenTjekliste) return `
-      <div class="liste-punkt">
-        <span style="color:var(--rav)">${ik(p.taske?'telt':p.id==='lade'?'lyn':p.id==='camp'?'bil':'måne')}</span>
-        <div class="navn">${p.tekst}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.tip}</div>`:''}</div>
-      </div>`;
+    const husket = huske.includes(p.id);
+    const mærke = markeret ? 'Klaret' : husket ? 'På huskelisten' : '';
     return `
-      <div class="liste-punkt ${markeret?'strøget':''}" onclick="bilTjek('${p.id}')" style="cursor:pointer">
-        <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
-        <div class="navn">${p.tekst}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.tip}</div>`:''}</div>
-      </div>`;
+      <div class="liste-punkt bil-emne" onclick="bilFold('${p.id}')" style="cursor:pointer">
+        <span style="color:var(--rav);flex-shrink:0">${ik(p.ikon)}</span>
+        <div class="navn">${p.navn}</div>
+        ${mærke?`<span class="bil-mærke">${ik('tjek')} ${mærke}</span>`:''}
+        <span class="bil-pil ${åben?'åben':''}">${ik('pil')}</span>
+      </div>
+      ${åben?`<div class="bil-krop">
+        <p>${p.brød}</p>
+        <p class="bil-udkast">Udkast — OD skriver den endelige tekst.</p>
+        ${p.huske
+          ? `<button class="knap ${husket?'blød':'kontur'} bred" onclick="event.stopPropagation();bilHusk('${p.id}')">${ik(husket?'tjek':'plus')} ${husket?'Fjern fra huskelisten':'Føj til huskeliste'}</button>`
+          : `<button class="knap ${markeret?'blød':'kontur'} bred" onclick="event.stopPropagation();bilTjek('${p.id}')">${ik('tjek')} ${markeret?'Krydset af':'Kryds af'}</button>`}
+      </div>`:''}`;
   };
-  const sortér = liste => bilenTjekliste
-    ? [...liste.filter(p=>!tjek.includes(p.id)), ...liste.filter(p=>tjek.includes(p.id))]
-    : liste;
+
   $('indhold').innerHTML = `<div class="side anim">
     ${sektionHeader('bilen')}
     <div class="liste">
-      ${sortér(løse.slice(0,2)).map(række).join('')}
+      <div class="liste-punkt">
+        <span style="color:var(--rav);flex-shrink:0">${ik('bil')}</span>
+        <div class="navn">${valgtType.navn}<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${valgtType.under}</div></div>
+        <button class="knap kontur lille" onclick="vælgBilType(null)">Skift</button>
+      </div>
     </div>
-    <div class="sektion"><h3>${ik('telt')} Medbring "Døsige Dølle"-tasken</h3></div>
-    <p class="dæmpet" style="margin:-4px 0 12px;font-size:13px">Tasken indeholder:</p>
-    <div class="liste">
-      ${sortér(taske).map(række).join('')}
-    </div>
-    <div class="liste">
-      ${sortér(løse.slice(2)).map(række).join('')}
-    </div>
-    <div class="mørk-kort">
-      <div class="glød"></div>
-      <div class="etiket" style="color:rgba(246,243,234,.6)">Bonus i tasken</div>
-      <h3 style="margin-top:4px">${ik('gnist')} Fysisk hyggebelysning</h3>
-      <p style="margin-top:6px">Følger med — varmt lys uden at trække på bilens strøm.</p>
-    </div>
-    <div class="sælg-kort">
-      <div class="sælg-etiket">Døsige Dølle-tasken</div>
-      <h3>Mangler I noget af det her?</h3>
-      <p>Madras, forlænger, lagen, dyner og afskærmning — samlet i tasken, så I ikke skal ud og finde det hele hver for sig.</p>
-      <button class="knap primær bred" onclick="gåTilKøb()">Køb Døsige Dølle-tasken ${ik('pil')}</button>
-      <button class="knap ${bilenTjekliste?'blød':'kontur'} bred" style="margin-top:10px" onclick="gemUnderTrin();bilenTjekliste=!bilenTjekliste;tegn()">
-        ${bilenTjekliste ? 'Tilbage til listen' : 'Gør listen til en tjekliste'} ${ik(bilenTjekliste?'bog':'tjek')}
-      </button>
-    </div>
-    ${bilenTjekliste?`<p class="dæmpet" style="text-align:center;font-size:12.5px;margin-top:-10px">Tryk på et punkt for at strege det over — det flytter selv ned i bunden. Tryk igen for at fortryde.</p>`:''}
+    ${BILEN_GRUPPER.map(g=>`
+      <div class="sektion"><h3>${g.navn}</h3></div>
+      ${g.under?`<p class="dæmpet" style="margin:-4px 0 12px;font-size:13px">${g.under}</p>`:''}
+      <div class="liste">${g.punkter.map(emne).join('')}</div>`).join('')}
     ${sektionFod('bilen')}
   </div>`;
 }
@@ -2452,9 +2650,19 @@ function skærmMadUdstyr(nr){
     ${madTrinFod(
       i===0 ? 'mad-drikkevarer' : 'mad-udstyr-'+(i-1),
       sidste ? 'Færdig' : 'Næste',
-      sidste ? "tilbageTil('mad')" : `gåTil('mad-udstyr-${i+1}')`
+      sidste ? 'forplejningFærdig()' : `gåTil('mad-udstyr-${i+1}')`
     )}
   </div>`;
+}
+/* Sidste trin i forplejningen. Det man har valgt, lander på pakkelisten — det
+   skal siges tydeligt, ikke bare ske. Planlægger man i skjul (gave), kom man
+   fra invitationens egen liste og skal tilbage dertil; ellers hjem til
+   overblikket. */
+function forplejningFærdig(){
+  const f = s.forberedelse;
+  const tilGave = f && f.invType==='gave' && f.invStatus!=='sendt';
+  if(tilGave) tilbageTil('invitation'); else tilbageTil('hjem');
+  infoModal('Tingene er nu tilføjet din pakkeliste.', tilGave ? 'Videre' : 'Til overblikket');
 }
 
 /* =============================================================
@@ -2474,22 +2682,54 @@ function pakkeRække(p, tjek){
     <div class="navn">${p.tekst}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.tip}</div>`:''}</div>
   </div>`;
 }
+/* Egne punkter: hver gang man har skrevet ét, dukker et nyt tomt felt op —
+   så listen kan vokse uden at man skal trykke "tilføj felt" først. */
+function tilføjEgetPunkt(værdi){
+  const tekst = (værdi||'').trim();
+  if(!tekst) return;
+  if(!s.forberedelse) s.forberedelse = nyForberedelse();
+  const egne = s.forberedelse.egnePunkter || (s.forberedelse.egnePunkter = []);
+  egne.push({ id:'eget-'+egneTæller++, tekst });
+  s.forberedelse.egetUdkast = '';
+  gem(); tegn();
+  const felt = $('eget-nyt'); if(felt) felt.focus();
+}
+let egneTæller = Date.now();
+function fjernEgetPunkt(id){
+  const f = s.forberedelse; if(!f) return;
+  f.egnePunkter = (f.egnePunkter||[]).filter(p=>p.id!==id);
+  f.pakkeTjek = (f.pakkeTjek||[]).filter(x=>x!==id);
+  gem(); tegn();
+}
 function skærmPakke(){
   const f = s.forberedelse || nyForberedelse();
   const tjek = f.pakkeTjek || [];
-  const udstyr = valgtUdstyr();
+  const egne = f.egnePunkter || [];
   $('indhold').innerHTML = `<div class="side anim">
     ${sektionHeader('pakke')}
-    <p class="dæmpet" style="margin-bottom:14px">Det eneste, I selv skal pakke — resten ligger i tasken og bilen.</p>
+    <div class="kort guide-brød">
+      <p>Når man holder arytmer i bilen, er det essentielle at pakke så lidt og let som muligt. Det er dog også vigtigt at have det med, man har brug for.</p>
+      <p>Vi har herunder lavet en liste med ting, du kan krydse af, som er vigtige på turen.</p>
+      <p class="citat" style="margin-bottom:0">OBS: Giver du denne arytme som gave, bliver de personlige punkter tilføjet din ledsagers liste med ting at huske.</p>
+    </div>
     <div class="liste">
       ${PAKKE_PUNKTER.map(p=>pakkeRække(p,tjek)).join('')}
+      ${egne.map(p=>`
+        <div class="liste-punkt ${tjek.includes(p.id)?'strøget':''}">
+          <div class="tjekboks ${tjek.includes(p.id)?'markeret':''}" onclick="pakkeTjek('${p.id}')" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+          <div class="navn" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">${esc(p.tekst)}</div>
+          <button class="eget-fjern" onclick="fjernEgetPunkt('${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
+        </div>`).join('')}
+      <div class="liste-punkt eget-nyt-række">
+        <span style="color:var(--rav);flex-shrink:0">${ik('plus')}</span>
+        <input id="eget-nyt" class="eget-felt" type="text" placeholder="Skriv dit eget punkt"
+               value="${esc(f.egetUdkast||'')}"
+               oninput="s.forberedelse.egetUdkast=this.value;gem()"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();tilføjEgetPunkt(this.value)}">
+        <button class="eget-tilføj" onclick="tilføjEgetPunkt($('eget-nyt').value)">Tilføj</button>
+      </div>
     </div>
-    ${udstyr.length?`
-    <div class="sektion"><h3>${ik('kop')} Fra Forplejningen · ${udstyr.length}</h3></div>
-    <div class="liste">
-      ${udstyr.map(p=>pakkeRække(p,tjek)).join('')}
-    </div>`:''}
-    ${s.forberedelse&&s.forberedelse.destination?`<p class="dæmpet" style="font-size:13px">Destination: ${esc(s.forberedelse.destination.navn)} — ${['t1'].includes(s.forberedelse.destination.testetId)?'tag badetøjet med, I er ved vandet.':'tjek om der er badevand i nærheden.'}</p>`:''}
+    ${f.destination?`<p class="dæmpet" style="font-size:13px">Destination: ${esc(f.destination.navn)} — ${f.destination.testetId==='t1'?'tag badetøjet med, I er ved vandet.':'tjek om der er badevand i nærheden.'}</p>`:''}
     ${sektionFod('pakke')}
   </div>`;
 }
@@ -2662,6 +2902,8 @@ function tegn(){
     case aktivSkærm==='mad-drikkevarer': skærmMadDrikkevarer(); break;
     case aktivSkærm.startsWith('mad-udstyr'): skærmMadUdstyr(aktivSkærm.slice(11)); break;
     case aktivSkærm==='pakke':        skærmPakke(); break;
+    case aktivSkærm==='klar-pakke':   skærmKlarListe('pakke'); break;
+    case aktivSkærm==='klar-sidste':  skærmKlarListe('sidste'); break;
     case aktivSkærm==='anmeld':       skærmAnmeld(); break;
     case aktivSkærm==='log':          skærmLog(); break;
     case aktivSkærm==='profil':       skærmProfil(); break;
@@ -2702,22 +2944,6 @@ document.addEventListener('pointerdown', e=>{
   spot.style.cssText = `width:${str}px;height:${str}px;left:${e.clientX-r.left-str/2}px;top:${e.clientY-r.top-str/2}px`;
   k.appendChild(spot);
   setTimeout(()=>spot.remove(), 700);
-}, {passive:true});
-
-/* ---------- lys følger musen ---------- */
-let lysRAF = null;
-document.addEventListener('pointermove', e=>{
-  if(lysRAF) return;
-  lysRAF = requestAnimationFrame(()=>{
-    lysRAF = null;
-    document.querySelectorAll('.kort,.liste,.forslag-knap').forEach(k=>{
-      const r = k.getBoundingClientRect();
-      if(e.clientX>r.left-80 && e.clientX<r.right+80 && e.clientY>r.top-80 && e.clientY<r.bottom+80){
-        k.style.setProperty('--lx', (e.clientX-r.left)+'px');
-        k.style.setProperty('--ly', (e.clientY-r.top)+'px');
-      }
-    });
-  });
 }, {passive:true});
 
 /* ---------- parallax på hero ---------- */
