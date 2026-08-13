@@ -48,12 +48,9 @@ const IKONER = {
 function ik(navn, kls){ return `<svg class="ik ${kls||''}" viewBox="0 0 24 24">${IKONER[navn]||''}</svg>`; }
 
 /* ---------- brand ---------- */
-let harLogo = false;
-(function(){
-  const test = new Image();
-  test.onload = ()=>{ harLogo = true; tegn(); };
-  test.src = 'logo.png';
-})();
+/* Her lå en test-indlæsning af logo.png (469 KB), der satte et flag ingen læste
+   og udløste en ekstra fuld gentegning efter første paint. Fjernet 13/8 —
+   ordmærket kommer fra brand-pakken via ordmærke() nedenfor. */
 const EKG_KURVE = 'M0 14 H34 L40 7 L46 19 L52 2 L58 21 L63 10 L67 14 H140';
 function ekgSVG(farve){
   return `<svg class="ekg" viewBox="0 0 140 22" preserveAspectRatio="none">
@@ -69,11 +66,14 @@ function pulsIKnap(){
       stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 }
-/* Logoet kommer direkte fra den godkendte logopakke. */
+/* Logoet kommer direkte fra den godkendte logopakke.
+   800px-udgaven, ikke 1200: ordmærket vises i 31-46px højde, så 1200 var 80 KB
+   hentet for at blive skaleret ned med faktor 26. 800 er stadig rigeligt til
+   skarphed på en telefon med tredobbelt pixeltæthed. */
 function ordmærke(lys, medSlogan){
   const fil = lys
-    ? 'brand/arytmi_logopakke_endelig/logo/arytmi_reversed_1200.png'
-    : 'brand/arytmi_logopakke_endelig/logo/arytmi_transparent_1200.png';
+    ? 'brand/arytmi_logopakke_endelig/logo/arytmi_reversed_800.png'
+    : 'brand/arytmi_logopakke_endelig/logo/arytmi_transparent_800.png';
   return `<span class="brand-lockup"><img class="logo-svg" src="${fil}" alt="ARYTMI">${medSlogan?'<span class="brand-tag">vælg mindre, oplev mere</span>':''}</span>`;
 }
 function logoSVG(lys){ return ordmærke(lys, false); }
@@ -590,6 +590,47 @@ function årstid(){
   const m = new Date().getMonth();
   return m>=2&&m<=4 ? 'forår' : m>=5&&m<=7 ? 'sommer' : m>=8&&m<=10 ? 'efterår' : 'vinter';
 }
+/* ---------- årstiden i landskabet (13/8) ----------
+   Landskabet kendte kun tidspunktet på dagen. Nu kender det også årstiden.
+
+   VIGTIGT for vedligehold: det er bygget som en JUSTERING af de fem palletter,
+   der allerede findes — ikke som nye palletter. Fire årstider × fem palletter
+   ville være tyve håndholdte farvesæt, og så er der ingen, der holder dem ved lige.
+   Her er der stadig fem sæt farver og fire tal at skrue på. */
+const ÅRSTIDSSKIFT = {
+  // mæt = mætning ganges, lys = lysstyrke lægges til, kulør = graders drejning
+  vinter:  { mæt:.50, lys:+.035, kulør:+8 },   // kold og udvasket, lidt lysere
+  forår:   { mæt:.95, lys:+.020, kulør:+10 },  // en anelse grønnere
+  sommer:  { mæt:1.15, lys:0,    kulør:-3 },   // fyldigst — sådan ser appen ud i dag
+  efterår: { mæt:1.20, lys:-.010, kulør:-10 }  // mod rav og kobber
+};
+function hexTilHsl(h){
+  const r=parseInt(h.slice(1,3),16)/255, g=parseInt(h.slice(3,5),16)/255, b=parseInt(h.slice(5,7),16)/255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2;
+  if(mx===mn) return [0,0,l];
+  const d=mx-mn, s=l>.5 ? d/(2-mx-mn) : d/(mx+mn);
+  const hh = mx===r ? ((g-b)/d+(g<b?6:0)) : mx===g ? ((b-r)/d+2) : ((r-g)/d+4);
+  return [hh*60, s, l];
+}
+function hslTilHex(hu,s,l){
+  hu=((hu%360)+360)%360; s=Math.min(1,Math.max(0,s)); l=Math.min(1,Math.max(0,l));
+  const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((hu/60)%2-1)), m=l-c/2;
+  const [r,g,b] = hu<60?[c,x,0]:hu<120?[x,c,0]:hu<180?[0,c,x]:hu<240?[0,x,c]:hu<300?[x,0,c]:[c,0,x];
+  return '#'+[r,g,b].map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');
+}
+function årstidsFarve(hex, skift){
+  const [h,s,l] = hexTilHsl(hex);
+  return hslTilHex(h + skift.kulør, s * skift.mæt, l + skift.lys);
+}
+function årstidsPalet(p, sæson){
+  const skift = ÅRSTIDSSKIFT[sæson];
+  if(!skift) return p;
+  return {
+    sky: p.sky.map(f=>årstidsFarve(f, skift)),
+    sol: årstidsFarve(p.sol, { ...skift, mæt:Math.min(skift.mæt,1.05) }), // solen må ikke blive skinger
+    b1: årstidsFarve(p.b1, skift), b2: årstidsFarve(p.b2, skift), b3: årstidsFarve(p.b3, skift)
+  };
+}
 /* demo-vejr — deterministisk ud fra sted+dag, så det føles stabilt */
 function demoVejr(x,y){
   const d = new Date();
@@ -779,7 +820,8 @@ function heroScene(variant, H){
     const t = new Date().getHours();
     nøgle = (t>=5&&t<10) ? 'klarMorgen' : (t>=10&&t<17) ? 'klarDag' : (t>=17&&t<22) ? 'klar' : 'klarNat';
   }
-  const p = paletter[nøgle]||paletter.klar;
+  const sæson = årstid();
+  const p = årstidsPalet(paletter[nøgle]||paletter.klar, sæson);
   const nat = variant==='tur';
   const skumring = nøgle==='klar' || nøgle==='klarNat';
   const måne = nat || skumring;        // aften og nat: månen. morgen og dag: solen.
@@ -816,7 +858,7 @@ function heroScene(variant, H){
   const hf = (252+off)/H;
   const g1 = (hf*0.64).toFixed(3), g2 = hf.toFixed(3);
   const vigStop = (110/H).toFixed(3);
-  const sfx = nøgle+'-'+H;   // unikke gradient-id'er pr. lærredshøjde
+  const sfx = nøgle+'-'+sæson+'-'+H;   // unikke gradient-id'er pr. palet, årstid og lærredshøjde
   return `
   <svg class="scene" viewBox="0 0 430 ${H}" preserveAspectRatio="xMidYMid slice">
     <defs>
@@ -1120,7 +1162,11 @@ function skærmHjem(){
   } else {
     overskrift='Klar til en sund<br>forstyrrelse?';
     underoverskrift='Fra idé til afsted.';
-    under='Jeg hjælper dig med at komme ud – vælg mindre, oplev mere. Appen er designet til at eliminere friktion, så du skal bruge mindst mulig kapacitet til planlægning og mest muligt på at nyde og opleve. Den hjælper dig direkte fra idé til afsted, da alt for mange idéer drukner i et ocean af planlægning.';
+    /* Strammet 13/8, så startknappen kommer inden for skærmen på en lille telefon.
+       Kennets egne ord er beholdt — kun gentagelsen og konsulentsproget er væk.
+       MIDLERTIDIG: OD og KN laver den rigtige tekstgennemgang, når det
+       overordnede er på plads. Rør den ikke før da. */
+    under='Vælg mindre, oplev mere. Alt for mange idéer drukner i planlægning — her går du direkte fra idé til afsted.';
     knap={ tekst:'Start her', aria:'Forbered tur', ikon:'bil', aktion:'startForberedelse()' };
     ekstraForside = `<button class="spontan-link" onclick="startSpontan()">${ik('gnist')} Eller start spontan arytme her</button>`;
   }
@@ -1341,6 +1387,34 @@ function forslagSteder(){
         || ((a.km||0)-(b.km||0));
   }).slice(0,3);
 }
+/* Ét sted som stående fotokort (OD 13/8). Formatet er bevidst 3:4: næsten alle
+   vores billeder er taget stående med en telefon, og det er netop det, der viser,
+   at nogen har stået der. Kortet er IKKE .res-kort — den bruges også af
+   invitationen, biltype-valget og "steder i nærheden", og skulle ikke rives med.
+
+   To steder (t1, t6) har ingen billeder endnu. De får landskabets egen aftenhimmel
+   i stedet, så rækken beholder sin rytme og hullet er ærligt i stedet for tomt. */
+function stedKort(r, først){
+  const t = r.t;
+  const foto = (t.billeder && t.billeder.length) ? t.billeder[0] : null;
+  const afstand = r.km!=null
+    ? `ca. ${r.km} km${r.indenfor?'':' — længere væk'}`
+    : 'afstand vises, når startpunktet er sat';
+  const ønsker = r.match && r.match.træf ? ` · ${r.match.træf} af ${r.match.ud_af} ønsker` : '';
+  return `
+    <button class="sted-kort${foto?'':' uden-foto'}" onclick="åbnTestet('${t.id}','forslag')">
+      ${foto
+        ? `<img class="sk-foto" src="${foto}" alt="" width="1050" height="1400"
+             ${først?'loading="eager" fetchpriority="high"':'loading="lazy"'} decoding="async">`
+        : `<span class="sk-vandmærke">${ik('stjerne')}</span>`}
+      <span class="sk-mærke${t.klar?'':' måske'}">${t.klar?'★ Testet af Arytmi':'Måske'}</span>
+      <span class="sk-tekst">
+        <span class="sk-navn">${esc(t.navn)}</span>
+        <span class="sk-meta">${afstand}${ønsker}</span>
+        ${foto?'':'<span class="sk-meta">Billeder er på vej</span>'}
+      </span>
+    </button>`;
+}
 function skærmForslag(){
   const f = s.forberedelse;
   if(!f){ gåTil('hjem'); return; }
@@ -1349,19 +1423,10 @@ function skærmForslag(){
   $('indhold').innerHTML = `<div class="side anim">
     ${skærmTop('Tre steder til jer','onsker','Ud fra jeres svar')}
     ${valgChips()}
-    <p class="dæmpet" style="margin:0 0 16px">Tryk ind på hvert sted og læs, hvor det ligger, og hvor I finder toilet, aftensmad og morgenkaffe. Vælg først, når I har set dem.</p>
-    ${res.map(r=>`
-      <button class="res-kort" onclick="åbnTestet('${r.t.id}','forslag')">
-        <span class="res-ikon">${ik('stjerne')}</span>
-        <span class="res-krop">
-          <span class="res-navn">${esc(r.t.navn)}</span>
-          <span class="res-tekst">${esc(r.t.kort||'')}</span>
-          <span class="res-meta">${r.km!=null?`ca. ${r.km} km herfra${r.indenfor?'':' — længere, end I valgte'}`:'afstand vises, når startpunktet er sat'}${
-            r.match&&r.match.træf?` · passer på ${r.match.træf} af ${r.match.ud_af} ønsker`:''}</span>
-          <span class="res-mærke ${r.t.klar?'ægte':''}">${r.t.klar?'★ Testet af Arytmi':'Måske — vi tester igen'}</span>
-        </span>
-        <span class="tjek-pil">${ik('pil')}</span>
-      </button>`).join('')}
+    <p class="dæmpet" style="margin:0 0 14px">Træk til siden for at se dem alle. Tryk ind på et sted og læs, hvor I finder toilet, aftensmad og morgenkaffe.</p>
+    <div class="sted-række">
+      ${res.map((r,i)=>stedKort(r, i===0)).join('')}
+    </div>
     ${udenfor?`<p class="dæmpet" style="font-size:12.5px;margin-top:4px">Vi har kun ${res.length-udenfor} testet sted inden for jeres radius lige nu — de øvrige ligger længere væk, men er taget med.</p>`:''}
     <div style="text-align:center;margin-top:18px">
       <button class="knap kontur lille" onclick="gåTil('destination')">${ik('nål')} Ingen af dem? Se hele kortet</button>
@@ -2319,17 +2384,45 @@ function faciliteterKort(t){
     ${rækker || `<div class="v-tekst dæmpet">Vi noterede ikke faciliteterne her — regn med, at I selv skal have det nødvendige med.</div>`}
   </div>`;
 }
-/* Billeder fra rekognosceringsturen. Første billede bruges som hero ovenfor,
-   resten ligger i en stribe man kan swipe i. Lazy loading, fordi et sted kan
-   have seks fotos, og de skal ikke hentes, før man er på siden. */
-function billedstribe(t){
+/* Billederne fra rekognosceringsturen får hele skærmen (OD 13/8). Før lå det
+   første som et 210px bånd og resten som frimærker på 132px — seks billeder fra
+   en tur, gemt væk. Nu ét stående 3:4-galleri man swiper i, med stedets navn
+   liggende fast ovenpå og prikker der viser hvor man er.
+   Teksten har pointer-events:none, så et træk hen over den stadig bladrer. */
+function stedGalleri(t){
   const b = t.billeder || [];
-  if(!b.length) return `<div class="ingen-foto">Vi nåede ikke at få billeder med hjem herfra — de kommer.</div>`;
-  if(b.length === 1) return '';   // det ene billede er allerede hero
-  return `<div class="foto-stribe">${b.map((f,i)=>
-    `<img src="${f}" alt="${esc(t.navn)} — foto ${i+1}" loading="lazy" onclick="visFoto('${t.id}',${i})">`
-  ).join('')}</div>
-  <div class="foto-tekst">${b.length} billeder fra vores egen tur — tryk for at se dem stort</div>`;
+  const overlay = `
+    <div class="sg-tekst">
+      ${t.klar?'':'<span class="sg-mærkat">Måske — vi tester igen</span>'}
+      <h1 class="sg-navn">${esc(t.navn)}</h1>
+      ${t.kort?`<div class="sg-under">${esc(t.kort)}</div>`:''}
+    </div>`;
+  if(!b.length){
+    return `<div class="sted-galleri uden-foto">
+      <span class="sg-vandmærke">${ik('stjerne')}</span>
+      ${overlay}
+      <div class="sg-ingen">Vi nåede ikke at få billeder med hjem herfra — de kommer.</div>
+    </div>`;
+  }
+  return `<div class="sted-galleri">
+    <div class="sg-spor" id="sg-${t.id}" onscroll="sgPrik('${t.id}')">
+      ${b.map((f,i)=>`<img src="${f}" alt="${esc(t.navn)} — billede ${i+1} af ${b.length}"
+        width="1050" height="1400" ${i?'loading="lazy"':'fetchpriority="high"'} decoding="async"
+        onclick="visFoto('${t.id}',${i})">`).join('')}
+    </div>
+    ${overlay}
+    ${b.length>1?`<div class="sg-prikker" id="sgp-${t.id}">${b.map((_,i)=>
+      `<span class="${i?'':'på'}"></span>`).join('')}</div>`:''}
+  </div>
+  ${b.length>1?`<div class="foto-tekst">${b.length} billeder fra vores egen tur — træk til siden, tryk for at se stort</div>`:''}`;
+}
+/* Hvilket billede står man på. Regnes ud fra scroll-positionen, så prikkerne
+   følger fingeren i stedet for at skulle klikkes. */
+function sgPrik(id){
+  const spor = $('sg-'+id), prikker = $('sgp-'+id);
+  if(!spor || !prikker) return;
+  const i = Math.round(spor.scrollLeft / spor.clientWidth);
+  [...prikker.children].forEach((p,n)=>p.classList.toggle('på', n===i));
 }
 function visFoto(id, i){
   const t = TESTEDE.find(x=>x.id===id); if(!t) return;
@@ -2359,17 +2452,8 @@ function skærmTestet(id){
   $('indhold').innerHTML = `<div class="side anim">
     ${skærmTop(t.navn,testetRetur, t.klar?'Testet af Arytmi ★':'Måske — vi tester igen')}
     ${linjer.length?`<div class="kort"><div class="etiket">For jeres tur</div>${linjer.join('')}</div>`:''}
-    <div class="guide-hero${bill.length?' m-foto':''}" style="${bill.length
-        ? `background-image:linear-gradient(180deg,rgba(20,17,13,.15) 0%,rgba(20,17,13,.85) 100%),url('${bill[0]}')`
-        : 'background:linear-gradient(150deg,#4a4238,#1c1813)'}">
-      <div class="vandmærke">${ik('stjerne')}</div>
-      <h1 style="font-size:20px">${esc(t.navn)}</h1>
-      <div class="g-under">${esc(t.kort||'')}</div>
-      ${t.klar?'':'<div class="hero-mærkat">Måske — vi tester igen</div>'}
-    </div>
-    <div class="kort guide-brød"><p>${esc(t.beskrivelse||'')}</p>
-      ${billedstribe(t)}
-    </div>
+    ${stedGalleri(t)}
+    <div class="kort guide-brød"><p>${esc(t.beskrivelse||'')}</p></div>
     ${faciliteterKort(t)}
     <button class="knap primær bred" onclick="vælgTestetSted('${t.id}')">Vælg dette sted ${ik('pil')}</button>
     ${nær.length?`

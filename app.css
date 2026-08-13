@@ -8,7 +8,34 @@
      og halvdelen af designet forsvinder lydløst.
      Palette fra logoet: kobber, bark, oliven, sølvgrå, creme
      ========================================================= */
+
+  /* Appens egne skrifter (11/8). Før lånte appen skrift fra maskinen, så den
+     så forskellig ud på Mac, Windows og Android — og overskrifter og tal endte
+     som TO forskellige skrifter på Windows. Nu er de pinnet.
+     Variable fonte: vægt-INTERVALLET i font-weight er det, der gør at
+     font-weight:650 (brugt 5 steder) rent faktisk rammer 650 og ikke 700.
+     Relativ sti uden skråstreg foran — så virker de også på demo-linket,
+     der ligger i en undermappe. Licenser ligger i fonts/. */
+  @font-face{
+    font-family:'Fraunces';
+    font-style:normal;
+    font-weight:300 700;
+    font-display:swap;
+    src:url('fonts/fraunces.woff2') format('woff2');
+  }
+  @font-face{
+    font-family:'Inter';
+    font-style:normal;
+    font-weight:400 700;
+    font-display:swap;
+    src:url('fonts/inter.woff2') format('woff2');
+  }
+
   :root{
+    /* Fallback-stakkene er præcis dem, appen brugte før — går en fontfil tabt,
+       ser appen ud som den plejede i stedet for at gå i stykker. */
+    --skrift-display:'Fraunces',"Iowan Old Style","Palatino Linotype","Palatino","Georgia",serif;
+    --skrift-brød:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     --gran:#3a3227;          /* mørk bark — primær */
     --gran-mørk:#241f18;
     --fjord:#5f6353;         /* dæmpet oliven */
@@ -20,14 +47,30 @@
     --flade:#faf9f5;
     --flade-dyb:#dfdbd0;
     --tekst:#2e2a24;
-    --dæmpet:#8e8a7f;
+    /* Var #8e8a7f: 3,3:1 mod fladen og under kravet på 4,5:1 — brugt i småtekst
+       18 steder. #6b675c klarer 4,5:1 på ALLE tre bunde appen bruger
+       (bund 4,7 · flade 5,4 · kort 5,1). Målt, ikke skønnet. (13/8) */
+    --dæmpet:#6b675c;
     --linje:#ddd8cb;
     --radius:26px;
+    --radius-m:18px;         /* kompakte kort og knap-kort */
+
+    /* ---- ét kort i stedet for syv (13/8) ----
+       Appen havde syv næsten ens matterede flader: tre gennemsigtigheder, to
+       slørings-styrker, fire hjørneafrundinger og fem skygge-opskrifter til
+       samme idé. Forskellene var for små til at ses og store nok til, at det
+       aldrig føltes helt roligt. Nu ét sæt værdier, som alle syv trækker på.
+       Vil man ændre kortenes udseende, sker det HER — ikke syv steder. */
+    --kort-flade:rgba(252,250,245,.6);
+    --kort-kant:rgba(255,255,255,.64);
+    --kort-sløring:blur(16px) saturate(1.15);
+    --kort-skygge:0 12px 32px rgba(58,50,39,.08), inset 0 1px 0 rgba(255,255,255,.78);
+    --kort-skygge-løft:0 20px 44px rgba(58,50,39,.14), inset 0 1px 0 rgba(255,255,255,.85);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-family:var(--skrift-brød);
     background:#d8d4c6;color:var(--tekst);display:flex;justify-content:center;
   }
   .telefon{width:100%;max-width:430px;height:min(100dvh,932px);min-height:0;background:var(--bund);
@@ -36,7 +79,12 @@
   .indhold{flex:1;overflow-y:auto;padding:0 0 118px;scroll-behavior:smooth;position:relative;z-index:1}
   .side{padding:22px 22px 0}
 
-  h1,h2,h3,.serif{font-family:"Iowan Old Style","Palatino Linotype","Palatino","Georgia",serif;font-weight:600;color:var(--gran);letter-spacing:.2px}
+  /* font-optical-sizing:auto er browserens standard for variable fonte: Fraunces
+     tegner selv 64px-nedtællingen anderledes end en 15px-etiket. Derfor ingen
+     manuel opsz nogen steder. lining-nums holder tallene på linje — appen bruger
+     serifen til rene tal flere steder (nedtælling, radius, tæller). */
+  h1,h2,h3,.serif{font-family:var(--skrift-display);font-weight:600;color:var(--gran);letter-spacing:.2px;
+    font-variant-numeric:lining-nums}
   h1{font-size:27px;line-height:1.22}
   h2{font-size:20px}
   h3{font-size:17px}
@@ -148,9 +196,9 @@
   .aryt-tæller .at-ekg .spark{stroke:var(--rav-lys);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:22 100;filter:drop-shadow(0 0 2px rgba(210,169,126,.7));animation:ekgSweep 2.6s cubic-bezier(.85,0,.5,1) infinite}
   .aryt-tæller .at-hjerte{width:12px;height:12px;transform-origin:center;animation:hjerteBeat 2.6s ease-in-out infinite}
   .aryt-tæller .at-hjerte path{fill:var(--rav-lys);stroke:none}
-  .aryt-tæller .at-tal{font-family:"Iowan Old Style","Palatino","Georgia",serif;font-weight:700;font-size:16px;color:#f6f3ea;line-height:1}
+  .aryt-tæller .at-tal{font-family:var(--skrift-display);font-weight:700;font-size:16px;color:#f6f3ea;line-height:1}
   .h-bund h1{color:#f6f3ea;font-size:28px;text-shadow:0 1px 12px rgba(0,0,0,.25);animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) both}
-  .h-under{font-family:"Iowan Old Style","Palatino","Georgia",serif;font-weight:600;font-size:17px;color:var(--rav-lys);margin-top:5px;text-shadow:0 1px 8px rgba(0,0,0,.2);animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) .08s both}
+  .h-under{font-family:var(--skrift-display);font-weight:600;font-size:17px;color:var(--rav-lys);margin-top:5px;text-shadow:0 1px 8px rgba(0,0,0,.2);animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) .08s both}
   .hero.fuld .h-under{font-size:19px}
   .h-bund p{color:rgba(242,239,230,.82);font-size:14.5px;margin-top:6px;max-width:310px;text-shadow:0 1px 8px rgba(0,0,0,.2);animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) .12s both}
   .h-bund .handling{margin-top:16px;animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) .24s both}
@@ -184,15 +232,20 @@
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
     transform:translateX(-150%) skewX(-18deg);animation:sheenAuto 5.5s ease-in-out 1.5s infinite}
 
-  /* ---------- flader ---------- */
-  .kort{background:rgba(252,250,245,.58);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);
-    border:1px solid rgba(255,255,255,.62);border-radius:var(--radius);padding:22px;
-    box-shadow:0 14px 38px rgba(58,50,39,.09), inset 0 1px 0 rgba(255,255,255,.75);margin-bottom:16px;position:relative}
+  /* ---------- flader ----------
+     Alle matterede flader deler nu ét sæt værdier (se :root). Klassenavnene
+     er urørt — de bruges af navigationstesten og af hver eneste skærm. */
+  .kort,.liste,.tur-kort,.forslag-knap,.res-kort,.tjek-punkt{
+    background:var(--kort-flade);
+    backdrop-filter:var(--kort-sløring);-webkit-backdrop-filter:var(--kort-sløring);
+    -webkit-backdrop-filter:var(--kort-sløring);
+    border:1px solid var(--kort-kant);
+    box-shadow:var(--kort-skygge);
+    position:relative}
+  .kort{border-radius:var(--radius);padding:22px;margin-bottom:16px}
   .kort.klik{cursor:pointer;transition:transform .15s}
   .kort.klik:active{transform:scale(.98)}
-  .liste{background:rgba(252,250,245,.58);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-    border:1px solid rgba(255,255,255,.62);border-radius:var(--radius);padding:8px 20px;
-    box-shadow:0 14px 38px rgba(58,50,39,.09), inset 0 1px 0 rgba(255,255,255,.75);margin-bottom:16px;position:relative}
+  .liste{border-radius:var(--radius);padding:8px 20px;margin-bottom:16px}
   .sektion{margin:26px 0 10px;display:flex;align-items:baseline;justify-content:space-between}
   .telefon::before{content:'';position:absolute;top:330px;left:-90px;width:320px;height:320px;border-radius:50%;
     background:radial-gradient(circle,rgba(176,121,78,.20),transparent 68%);pointer-events:none;z-index:0}
@@ -226,7 +279,7 @@
 
   /* ---------- bundnav ---------- */
   .bundnav{position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));
-    background:rgba(30,26,20,.72);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.09);
+    background:rgba(30,26,20,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.09);
     border-radius:100px;display:flex;padding:8px;z-index:50;box-shadow:0 18px 40px rgba(20,17,12,.35)}
   .navpunkt{flex:1;background:none;border:none;cursor:pointer;text-align:center;color:#9a948a;font-family:inherit;padding:11px 0;border-radius:100px;position:relative;transition:color .2s;display:flex;align-items:center;justify-content:center}
   .navpunkt .ik{width:23px;height:23px}
@@ -313,7 +366,7 @@
 
   /* ---------- valg-kort ---------- */
   .forslag{display:flex;flex-direction:column;gap:11px}
-  .forslag-knap{display:flex;align-items:center;gap:14px;background:rgba(252,250,245,.58);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.62);border-radius:20px;padding:17px 18px;font-family:inherit;font-size:15px;cursor:pointer;text-align:left;box-shadow:0 8px 24px rgba(58,50,39,.06);color:var(--tekst);position:relative;overflow:hidden}
+  .forslag-knap{display:flex;align-items:center;gap:14px;border-radius:var(--radius-m);padding:17px 18px;font-family:inherit;font-size:15px;cursor:pointer;text-align:left;color:var(--tekst);overflow:hidden}
   .forslag-knap:active{transform:scale(.97)}
   .forslag-knap b{color:var(--gran)}
   .forslag-knap .f-ikon{width:40px;height:40px;border-radius:13px;background:#eadfcd;color:#8a5f3e;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -393,7 +446,10 @@
   .guide-brød h3{margin:22px 0 8px}
   .guide-brød ul{padding-left:20px;margin:8px 0}
   .guide-brød li{margin-bottom:8px}
-  .citat{border-left:3px solid var(--rav);padding:6px 0 6px 16px;margin:16px 0;font-style:italic;color:var(--gran);font-family:"Iowan Old Style","Palatino","Georgia",serif;font-size:16px}
+  /* Opret, ikke kursiv: der er kun hentet den oprette Fraunces ned, og en
+     browser-skråstillet serif med høj stregkontrast ser forkert ud. Et citat
+     på 16px læses fint oprejst — kobber-stregen bærer allerede markeringen. */
+  .citat{border-left:3px solid var(--rav);padding:6px 0 6px 16px;margin:16px 0;color:var(--gran);font-family:var(--skrift-display);font-size:16px}
 
   /* ---------- OD-pladsholder ---------- */
   .od-plads{border:1.6px dashed #cdc6b3;border-radius:16px;padding:14px 16px;color:var(--dæmpet);font-size:13.5px;background:rgba(255,255,255,.35);margin:10px 0}
@@ -423,7 +479,7 @@
   .bølger{color:var(--rav);letter-spacing:1px;font-size:13px}
 
   /* ---------- log ---------- */
-  .tur-kort{background:rgba(252,250,245,.58);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.62);border-radius:var(--radius);padding:20px 22px;box-shadow:0 14px 38px rgba(58,50,39,.09);margin-bottom:16px;position:relative}
+  .tur-kort{border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
   .tur-kort .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:10px}
   .tur-kort .dato{font-size:12.5px;color:var(--dæmpet);white-space:nowrap}
   .tom-tilstand{text-align:center;padding:40px 26px}
@@ -456,11 +512,11 @@
   #splash .brand-tag{font-size:12.5px;letter-spacing:3.5px;margin-top:10px;animation:heroTekst 1.1s cubic-bezier(.2,.7,.3,1) .5s both}
   #splash .s-linje{width:0;height:1px;background:rgba(246,243,234,.4);margin:14px auto 0;animation:linjeUd 1s ease .8s both}
 
-  .succes-flash{position:absolute;top:18px;left:18px;right:18px;background:rgba(30,26,20,.94);backdrop-filter:blur(10px);color:#f2efe6;border-radius:18px;padding:15px 19px;font-size:14px;z-index:100;box-shadow:0 14px 34px rgba(0,0,0,.3);opacity:0;transform:translateY(-14px) scale(.97);transition:all .35s cubic-bezier(.2,.7,.3,1);pointer-events:none;display:flex;gap:11px;align-items:center;line-height:1.45}
+  .succes-flash{position:absolute;top:18px;left:18px;right:18px;background:rgba(30,26,20,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#f2efe6;border-radius:18px;padding:15px 19px;font-size:14px;z-index:100;box-shadow:0 14px 34px rgba(0,0,0,.3);opacity:0;transform:translateY(-14px) scale(.97);transition:all .35s cubic-bezier(.2,.7,.3,1);pointer-events:none;display:flex;gap:11px;align-items:center;line-height:1.45}
   .succes-flash.vis{opacity:1;transform:none}
   .succes-flash .ik{color:var(--rav-lys);animation:pop .5s cubic-bezier(.2,.7,.3,1) .15s both}
   /* egen bekræftelsesboks i stedet for window.confirm() */
-  .modal-bag{position:fixed;inset:0;background:rgba(20,17,12,.55);backdrop-filter:blur(3px);
+  .modal-bag{position:fixed;inset:0;background:rgba(20,17,12,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
     display:flex;align-items:center;justify-content:center;z-index:300;padding:24px;
     animation:fadeUp .22s cubic-bezier(.2,.7,.3,1) both}
   .modal-kort{background:var(--flade);border-radius:var(--radius);padding:24px 22px;max-width:340px;width:100%;
@@ -498,7 +554,9 @@
   .seg-række{margin:16px 0}
   .seg-titel{font-size:12.5px;font-weight:650;color:var(--gran);margin-bottom:8px;letter-spacing:.3px}
   .seg-valg{display:flex;gap:10px}
-  .seg-knap{flex:1;background:rgba(252,250,245,.58);border:1.5px solid var(--linje);border-radius:16px;
+  /* Segmentknappen beholder sin egen kant (1.5px linje) — den skal LIGNE et valg,
+     ikke et kort. Men fladen er den fælles. */
+  .seg-knap{flex:1;background:var(--kort-flade);border:1.5px solid var(--linje);border-radius:var(--radius-m);
     padding:15px 10px 13px;font-family:inherit;cursor:pointer;text-align:center;color:var(--tekst);
     display:flex;flex-direction:column;align-items:center;gap:7px;transition:all .18s}
   .seg-knap .ik{width:24px;height:24px;color:var(--fjord)}
@@ -509,7 +567,7 @@
 
   /* afstands-slider */
   .radius-vis{text-align:center;margin:8px 0 18px}
-  .radius-tal{font-family:"Iowan Old Style","Palatino","Georgia",serif;font-size:30px;color:var(--gran);line-height:1.1}
+  .radius-tal{font-family:var(--skrift-display);font-size:30px;color:var(--gran);line-height:1.1}
   .radius-under{color:var(--dæmpet);font-size:13px;margin-top:2px}
   input[type=range].radius{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:100px;
     background:linear-gradient(90deg,var(--rav),var(--flade-dyb));outline:none;margin:6px 0}
@@ -521,11 +579,10 @@
   .radius-mærker{display:flex;justify-content:space-between;font-size:11px;color:var(--dæmpet);margin-top:6px}
 
   /* resultat-kort (3 steder) */
-  .res-kort{position:relative;background:rgba(252,250,245,.62);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.62);
-    border-radius:20px;padding:18px;margin-bottom:13px;cursor:pointer;box-shadow:0 10px 28px rgba(58,50,39,.07);
+  .res-kort{border-radius:var(--radius-m);padding:18px;margin-bottom:13px;cursor:pointer;
     display:flex;gap:15px;align-items:flex-start;text-align:left;width:100%;font-family:inherit;color:var(--tekst);transition:transform .18s,box-shadow .2s}
   .res-kort:active{transform:scale(.98)}
-  @media(hover:hover){.res-kort:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(58,50,39,.14)}}
+  @media(hover:hover){.res-kort:hover{transform:translateY(-2px);box-shadow:var(--kort-skygge-løft)}}
   .res-ikon{width:46px;height:46px;border-radius:14px;background:#eadfcd;color:#8a5f3e;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .res-krop{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
   .res-navn{font-weight:650;font-size:15.5px;color:var(--gran)}
@@ -534,6 +591,72 @@
     color:#8a6320;background:#f0e2cb;border-radius:100px;padding:2px 9px;margin-top:8px}
   .res-mærke.ægte{color:#5c6b48;background:#e2ead2}
 
+  /* ---------- de tre steder som stående fotokort (13/8) ----------
+     Vandret række med snap i stedet for tre kort under hinanden: tre fuldbredde
+     3:4-kort ville være 1300px indhold på en 800px skærm, og skærmen, hvis
+     hele formål er at SAMMENLIGNE, ville blive noget man scroller forbi.
+     Kortene bløder ud til skærmkanten via negativ margin, så man kan se, at
+     der er mere til højre. */
+  .sted-række{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+    margin:0 -22px;padding:2px 22px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .sted-række::-webkit-scrollbar{display:none}
+  .sted-kort{position:relative;flex:0 0 72%;aspect-ratio:3/4;scroll-snap-align:start;
+    border:none;padding:0;border-radius:20px;overflow:hidden;cursor:pointer;display:block;
+    text-align:left;font-family:inherit;color:inherit;background:var(--flade-dyb);
+    box-shadow:0 10px 28px rgba(58,50,39,.14);transition:transform .18s,box-shadow .2s}
+  .sted-kort:active{transform:scale(.98)}
+  @media(hover:hover){.sted-kort:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(58,50,39,.2)}}
+  .sk-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  /* Steder uden billeder får landskabets egen aftenhimmel, ikke et tomt felt */
+  .sted-kort.uden-foto{background:linear-gradient(168deg,#4a4238 0%,#7d7261 58%,#cdb591 100%)}
+  .sk-vandmærke{position:absolute;right:-16px;bottom:6px;color:#f6f3ea;opacity:.16;
+    display:block;line-height:0}
+  .sk-vandmærke .ik{width:132px;height:132px;stroke-width:1.1}
+  /* Gradienten ligger på TEKSTEN, ikke på kortet: så er bunden under skriften
+     kendt uanset hvor lyst fotografiet er, og kontrasten kan garanteres. */
+  .sk-tekst{position:absolute;left:0;right:0;bottom:0;padding:30px 16px 15px;
+    display:flex;flex-direction:column;gap:3px;
+    background:linear-gradient(to top,rgba(18,15,11,.9) 0%,rgba(18,15,11,.62) 55%,transparent 100%)}
+  .sk-navn{font-family:var(--skrift-display);font-weight:600;font-size:19px;line-height:1.2;
+    color:#f6f3ea;text-shadow:0 1px 10px rgba(0,0,0,.45)}
+  .sk-meta{font-size:12px;color:rgba(246,243,234,.86);line-height:1.4}
+  /* Stempel i hjørnet frem for etiket i bunden — så flytter det sig ikke,
+     når stedets navn er langt. Samme farver som .hero-mærkat, der allerede
+     er appens svar på "etiket oven på et fotografi". */
+  .sk-mærke{position:absolute;top:12px;left:12px;font-size:10px;letter-spacing:1px;
+    text-transform:uppercase;font-weight:700;padding:5px 10px;border-radius:100px;
+    background:rgba(246,243,234,.92);color:#5b4a2e}
+  .sk-mærke.måske{background:rgba(246,243,234,.9);color:#6e4f2a}
+
+  /* ---------- destinationens galleri (13/8) ----------
+     Stående 3:4 i fuld bredde. Billederne er taget stående med en telefon —
+     det er formatet, der viser, at nogen har stået der. */
+  .sted-galleri{position:relative;margin:0 -22px 16px;aspect-ratio:3/4;overflow:hidden;background:var(--flade-dyb)}
+  .sg-spor{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .sg-spor::-webkit-scrollbar{display:none}
+  .sg-spor img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;
+    display:block;cursor:zoom-in}
+  .sted-galleri.uden-foto{background:linear-gradient(168deg,#4a4238 0%,#7d7261 58%,#cdb591 100%);aspect-ratio:4/3}
+  .sg-vandmærke{position:absolute;right:-18px;bottom:34px;color:#f6f3ea;opacity:.16;line-height:0}
+  .sg-vandmærke .ik{width:150px;height:150px;stroke-width:1.1}
+  .sg-ingen{position:absolute;top:18px;left:22px;right:22px;font-size:13px;
+    color:rgba(246,243,234,.82);font-style:italic}
+  /* pointer-events:none — ellers ville et træk hen over teksten ikke bladre */
+  .sg-tekst{position:absolute;left:0;right:0;bottom:0;padding:56px 22px 26px;pointer-events:none;
+    background:linear-gradient(to top,rgba(18,15,11,.92) 0%,rgba(18,15,11,.58) 56%,transparent 100%)}
+  .sg-navn{font-family:var(--skrift-display);font-weight:600;font-size:26px;line-height:1.18;
+    color:#f6f3ea;text-shadow:0 1px 12px rgba(0,0,0,.45);margin:0}
+  .sg-under{font-size:13.5px;line-height:1.5;color:rgba(246,243,234,.85);margin-top:6px;max-width:30em}
+  .sg-mærkat{display:inline-block;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;
+    font-weight:700;padding:4px 10px;border-radius:100px;background:rgba(246,243,234,.9);
+    color:#5b4a2e;margin-bottom:9px}
+  .sg-prikker{position:absolute;left:0;right:0;bottom:11px;display:flex;gap:5px;justify-content:center;
+    pointer-events:none}
+  .sg-prikker span{width:6px;height:6px;border-radius:50%;background:rgba(246,243,234,.42);
+    transition:background .2s,transform .2s}
+  .sg-prikker span.på{background:#f6f3ea;transform:scale(1.25)}
+
   /* ---------- nedtælling + tjekliste (forsiden når turen har en dato) ---------- */
   .ned-hero{position:relative;color:#f2efe6;padding:0 0 20px;overflow:hidden}
   .ned-hero svg.scene{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -541,7 +664,7 @@
     background:linear-gradient(to bottom,rgba(20,16,11,.5),rgba(20,16,11,.15) 55%,rgba(20,16,11,.4))}
   .ned-hero .ned-lag{position:relative;z-index:1;padding:20px 22px 4px}
   .ned-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
-  .ned-tal{font-family:"Iowan Old Style","Palatino","Georgia",serif;font-size:64px;line-height:.95;color:#f6f3ea;text-shadow:0 2px 16px rgba(0,0,0,.3)}
+  .ned-tal{font-family:var(--skrift-display);font-size:64px;line-height:.95;color:#f6f3ea;text-shadow:0 2px 16px rgba(0,0,0,.3)}
   .ned-label{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:rgba(246,243,234,.78);font-weight:600;margin-bottom:6px}
   .ned-sted{font-size:16px;color:#f6f3ea;margin-top:10px;text-shadow:0 1px 8px rgba(0,0,0,.25)}
   .ned-sted .ik{width:16px;height:16px;vertical-align:-3px;color:var(--rav-lys);margin-right:4px}
@@ -549,14 +672,14 @@
   .tjek-blok{padding:20px 18px 8px}
   .tjek-overskrift{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
   .tjek-overskrift h2{font-size:18px;color:var(--gran)}
-  .tjek-tæl{font-family:"Iowan Old Style","Palatino","Georgia",serif;color:var(--gran);font-size:15px}
+  .tjek-tæl{font-family:var(--skrift-display);color:var(--gran);font-size:15px}
   .tjek-bar{height:6px;background:var(--flade-dyb);border-radius:100px;margin:12px 0 18px;overflow:hidden}
   .tjek-bar .fyld{height:100%;background:linear-gradient(90deg,var(--rav),#6d7d5e);border-radius:100px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
-  .tjek-punkt{display:flex;align-items:center;gap:14px;width:100%;background:rgba(252,250,245,.6);border:1px solid rgba(255,255,255,.62);
-    border-radius:18px;padding:15px 16px;margin-bottom:10px;font-family:inherit;cursor:pointer;text-align:left;
-    box-shadow:0 8px 22px rgba(58,50,39,.05);transition:transform .16s,box-shadow .2s}
+  .tjek-punkt{display:flex;align-items:center;gap:14px;width:100%;
+    border-radius:var(--radius-m);padding:15px 16px;margin-bottom:10px;font-family:inherit;cursor:pointer;text-align:left;
+    transition:transform .16s,box-shadow .2s}
   .tjek-punkt:active{transform:scale(.98)}
-  @media(hover:hover){.tjek-punkt:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(58,50,39,.12)}}
+  @media(hover:hover){.tjek-punkt:hover{transform:translateY(-2px);box-shadow:var(--kort-skygge-løft)}}
   .tjek-boks{width:28px;height:28px;border-radius:50%;border:1.8px solid #cdc6b3;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .25s}
   .tjek-boks .ik{width:15px;height:15px;color:#f2efe6;stroke-width:2.6;opacity:0;transform:scale(.6);transition:all .25s}
   .tjek-punkt.klar .tjek-boks{background:#6d7d5e;border-color:#6d7d5e}
@@ -603,6 +726,50 @@
   }
 
   @media(prefers-reduced-motion:reduce){
-    *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+    /* Rettet 13/8: før stod her kun animation-duration:.001s, hvilket fik de
+       uendelige sløjfer (ildfluer, stjerneskud, pulsringe, ånde) til at køre
+       HURTIGERE i stedet for at stoppe. Antallet af gentagelser og forsinkelsen
+       skal med, ellers gør reglen det modsatte af det, den lover. */
+    *,*::before,*::after{
+      animation-duration:.001s !important;
+      animation-iteration-count:1 !important;
+      animation-delay:0s !important;
+      transition-duration:.001s !important;
+    }
+    .sted-række,.sg-spor,.foto-stribe,.indhold{scroll-behavior:auto !important}
     #splash{display:none}
   }
+
+  /* ---------- fokus: appen kunne ikke betjenes med tastatur (13/8) ----------
+     Alle fem :focus-regler i filen slog markeringen fra uden at sætte noget i
+     stedet. :focus-visible vises kun ved tastatur, ikke ved tryk — så det
+     generer ingen på telefonen. */
+  :where(button,a,input,textarea,select,[tabindex]):focus-visible{
+    outline:2px solid var(--rav);outline-offset:2px;border-radius:4px}
+  .knap:focus-visible,.tilbage:focus-visible,.overblik-knap:focus-visible,
+  .navpunkt:focus-visible,.sted-chip:focus-visible,.eget-tilføj:focus-visible{
+    outline:2px solid var(--rav);outline-offset:3px}
+  .rund-knap:focus-visible,.tjekboks:focus-visible,.prik-valg:focus-visible{
+    outline:2px solid var(--rav);outline-offset:4px}
+  .sted-kort:focus-visible,.res-kort:focus-visible,.tjek-punkt:focus-visible,
+  .forslag-knap:focus-visible,.seg-knap:focus-visible{
+    outline:2px solid var(--rav);outline-offset:3px}
+  /* På mørk bund skal ringen være lys for at kunne ses */
+  .hero :focus-visible,.sted-kort:focus-visible,.sg-spor img:focus-visible,
+  .bundnav :focus-visible{outline-color:var(--rav-lys)}
+
+  /* ---------- tryk-flader op på 44px (13/8) ----------
+     Måles med et usynligt felt via ::after, så knapperne SER ud præcis som før
+     — det er kun fingerens mål, der vokser. */
+  .knap.lille{min-height:44px}
+  .tilbage{width:44px;height:44px}
+  .eget-fjern,.prik-valg,.tjekboks,.overblik-knap,.sted-chip{position:relative}
+  .eget-fjern::after,.tjekboks::after,.overblik-knap::after,.sted-chip::after{
+    content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:max(100%,44px);height:max(100%,44px)}
+  /* Bedømmelsesprikkerne står fem i træk med 8px imellem — et 44px bredt felt
+     ville få naboernes felter til at overlappe, så man ramte den forkerte.
+     De vokser derfor kun i højden, hvor rækken er tynd. */
+  .prik-valg::after{
+    content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:100%;height:44px}
