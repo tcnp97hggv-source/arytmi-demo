@@ -52,9 +52,27 @@
        --fjord bliver som sekundær; --anker er den, fakta og struktur står i.
        Kontrast MÅLT mod appens tre bunde: bund 9,8 · flade 11,2 · kort 11,2.
        --anker-mid rammer 6,3 på flade og kort — over kravet på 4,5. */
-    --anker:#2f3a34;
-    --anker-mid:#4e6157;     /* ikoner og understøttende tal på lys bund — 5,1:1 */
-    --anker-lys:#e0e8e3;     /* fladen bag et faktafelt */
+    /* Justeret 14/8 fra #2F3A34: den lå kun 19 RGB-enheder fra barken #3A3227,
+       og ved afkrydsningsfelt-størrelse kunne øjet ikke skelne dem — den var
+       teknisk grøn, ikke synligt grøn. #354A3E ligger 34 fra barken, altså
+       næsten dobbelt så langt, og er stadig mørk og kølig.
+       MÅLT: 7,9 på bund · 9,1 på flade · 9,1 på kort · creme ovenpå 8,3. */
+    --anker:#354a3e;
+    --anker-mid:#4f6b58;     /* ikoner og understøttende tal på lys bund — målt 5,6:1 */
+    --anker-lys:#e2ece5;     /* fladen bag et faktafelt */
+    /* ---- hvor ankerfarven bruges (rettet 14/8 efter KN's indvending) ----
+       Første udgave brugte den KUN på fakta-værdier. Men appens faktafelter er
+       næsten tomme (underlag: 0 af 19 steder, faciliteter kun delvist skrevet),
+       så modvægten havde reelt ét element at stå på i hele overblikket — og
+       var derfor usynlig. Det var en designfejl, ikke en implementeringsfejl.
+       Reglen nu, og den skal holdes:
+         --anker  = TILSTAND OG STRUKTUR. Det valgte, det klarede, det der
+                    skrider frem: primærknap, afkrydsning, valgte segmenter og
+                    chips, aktive trin-prikker, fremdriftsbjælker, fakta.
+         --gran   = TEKST. Overskrifter og brødtekst. Røres ikke.
+         --rav    = ACCENT. Logoets kobber, EKG'en, ikoner, det der skal
+                    fange øjet ét sted ad gangen. Røres ikke.
+       Sådan virker farven, uanset om nogen har skrevet data ind endnu. */
     --bund:#eceae3;          /* sølvgrå creme */
     --flade:#faf9f5;
     --flade-dyb:#dfdbd0;
@@ -253,7 +271,7 @@
   /* ---------- knapper ---------- */
   .knap{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;border-radius:100px;padding:14px 26px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s,opacity .15s,box-shadow .2s;overflow:hidden;position:relative}
   .knap:active{transform:scale(.96)}
-  .knap.primær{background:var(--gran);color:#f2efe6;box-shadow:0 8px 22px rgba(58,50,39,.28)}
+  .knap.primær{background:var(--anker);color:#f2efe6;box-shadow:0 8px 22px rgba(35,45,39,.3)}
   .knap.lys{background:#f6f3ea;color:var(--gran);box-shadow:0 6px 18px rgba(0,0,0,.22)}
   .knap.blød{background:var(--flade-dyb);color:var(--gran)}
   .knap.kontur{background:transparent;color:var(--gran);border:1.5px solid #c9c2b0}
@@ -330,7 +348,7 @@
   .sek-prikker{display:flex;gap:6px;margin:2px 0 18px}
   .sek-prik{flex:1;height:4px;border-radius:100px;background:var(--flade-dyb);transition:background .2s}
   .sek-prik.klaret{background:var(--rav)}
-  .sek-prik.aktiv{background:var(--gran)}
+  .sek-prik.aktiv{background:var(--anker)}
   /* Top på et trin i flowet: etiket og Overblik-genvejen deler øverste linje,
      spørgsmålet får hele bredden nedenunder. */
   .trin-top{margin-bottom:16px}
@@ -347,7 +365,7 @@
 
   /* ---------- fremskridt ---------- */
   .fremskridt{height:6px;background:var(--flade-dyb);border-radius:100px;margin:16px 0;overflow:hidden}
-  .fremskridt .bar{height:100%;background:linear-gradient(90deg,var(--rav),var(--gran));border-radius:100px;transition:width .35s cubic-bezier(.2,.7,.3,1)}
+  .fremskridt .bar{height:100%;background:linear-gradient(90deg,var(--rav),var(--anker));border-radius:100px;transition:width .35s cubic-bezier(.2,.7,.3,1)}
 
   /* ---------- lister & tjek ---------- */
   .liste-punkt{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid var(--linje)}
@@ -355,7 +373,7 @@
   .tjekboks{width:26px;height:26px;border-radius:50%;border:1.8px solid #cdc6b3;background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
   .tjekboks svg{width:13px;height:13px;stroke:#f2efe6;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
   .tjekboks svg path{stroke-dasharray:24;stroke-dashoffset:24}
-  .tjekboks.markeret{background:var(--gran);border-color:var(--gran);animation:pop .3s}
+  .tjekboks.markeret{background:var(--anker);border-color:var(--anker);animation:pop .3s}
   .tjekboks.markeret svg path{stroke-dashoffset:0;transition:stroke-dashoffset .35s cubic-bezier(.2,.7,.3,1) .06s}
   .liste-punkt .navn{flex:1;font-size:15px;transition:color .2s}
   .liste-punkt.strøget .navn{color:var(--dæmpet);text-decoration:line-through;text-decoration-color:var(--rav)}
@@ -438,7 +456,7 @@
   .sted-chip{display:inline-flex;align-items:center;gap:6px;border:1.3px solid var(--linje);background:var(--flade);
     border-radius:100px;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--tekst);cursor:pointer;font-family:inherit;transition:all .2s}
   .sted-chip .ik{width:14px;height:14px;color:var(--rav)}
-  .sted-chip.valgt{background:var(--gran);border-color:var(--gran);color:#f2efe6}
+  .sted-chip.valgt{background:var(--anker);border-color:var(--anker);color:#f2efe6}
   .sted-chip.valgt .ik{color:var(--rav-lys)}
   input[type=text],input[type=email],input[type=password],textarea{
     width:100%;border:1.5px solid var(--linje);border-radius:14px;padding:13px 15px;
@@ -618,7 +636,7 @@
   .wiz-etiket{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;font-weight:700;color:var(--rav)}
   .wiz-prik-række{display:flex;gap:6px;margin-top:12px}
   .wiz-prik{flex:1;height:4px;border-radius:100px;background:var(--flade-dyb);transition:background .25s}
-  .wiz-prik.aktiv{background:var(--gran)}
+  .wiz-prik.aktiv{background:var(--anker)}
   .wiz-prik.klaret{background:var(--rav)}
   .wiz-spm{font-size:22px;margin:6px 0 4px;color:var(--gran)}
   .wiz-under{color:var(--dæmpet);font-size:14px;margin-bottom:4px;line-height:1.5}
@@ -635,7 +653,7 @@
   .seg-knap .ik{width:24px;height:24px;color:var(--fjord)}
   .seg-knap span{font-size:13.5px;font-weight:600}
   .seg-knap:active{transform:scale(.96)}
-  .seg-knap.valgt{background:var(--gran);border-color:var(--gran);color:#f2efe6}
+  .seg-knap.valgt{background:var(--anker);border-color:var(--anker);color:#f2efe6}
   .seg-knap.valgt .ik{color:var(--rav-lys)}
 
   /* afstands-slider */
@@ -767,7 +785,7 @@
   .tjek-tæl{font-family:var(--skrift-brød);font-weight:700;color:var(--anker);font-size:14px;
     font-variant-numeric:tabular-nums lining-nums}
   .tjek-bar{height:6px;background:var(--flade-dyb);border-radius:100px;margin:12px 0 18px;overflow:hidden}
-  .tjek-bar .fyld{height:100%;background:linear-gradient(90deg,var(--rav),#6d7d5e);border-radius:100px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
+  .tjek-bar .fyld{height:100%;background:linear-gradient(90deg,var(--rav),var(--anker));border-radius:100px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
   /* ---------- bilens instrumentbræt (14/8) ----------
      Fire felter, man aflæser i stedet for at læse. Tallene i Inter med lige
      brede cifre, så de står som instrumenter og ikke som pynt. */
@@ -807,7 +825,7 @@
   @media(hover:hover){.tjek-punkt:hover{transform:translateY(-2px);box-shadow:var(--kort-skygge-løft)}}
   .tjek-boks{width:28px;height:28px;border-radius:50%;border:1.8px solid #cdc6b3;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .25s}
   .tjek-boks .ik{width:15px;height:15px;color:#f2efe6;stroke-width:2.6;opacity:0;transform:scale(.6);transition:all .25s}
-  .tjek-punkt.klar .tjek-boks{background:#6d7d5e;border-color:#6d7d5e}
+  .tjek-punkt.klar .tjek-boks{background:var(--anker);border-color:var(--anker)}
   .tjek-punkt.klar .tjek-boks .ik{opacity:1;transform:none}
   .tjek-krop{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .tjek-navn{font-weight:650;font-size:15px;color:var(--gran)}
