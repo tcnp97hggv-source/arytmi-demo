@@ -43,6 +43,18 @@
     --rav:#b0794e;           /* kobber — logoets accent */
     --rav-lys:#d2a97e;
     --nat:#242019;
+    /* ---- ankerfarven (14/8) ----
+       Appen havde ingen kølig tone overhovedet: kobber, creme og bark trækker
+       alle samme vej, og derfor læses hele appen som blød uden modvægt.
+       --anker er jeres grønne, kørt dybere ned og drejet et par grader mod blå.
+       Den er IKKE --fjord: #5f6353 er for lyst og for varmt (gulgrønt) til at
+       kunne være modvægt — det ligger i samme temperaturfamilie som kobberet.
+       --fjord bliver som sekundær; --anker er den, fakta og struktur står i.
+       Kontrast MÅLT mod appens tre bunde: bund 9,8 · flade 11,2 · kort 11,2.
+       --anker-mid rammer 6,3 på flade og kort — over kravet på 4,5. */
+    --anker:#2f3a34;
+    --anker-mid:#4e6157;     /* ikoner og understøttende tal på lys bund — 5,1:1 */
+    --anker-lys:#e0e8e3;     /* fladen bag et faktafelt */
     --bund:#eceae3;          /* sølvgrå creme */
     --flade:#faf9f5;
     --flade-dyb:#dfdbd0;
@@ -52,8 +64,8 @@
        (bund 4,7 · flade 5,4 · kort 5,1). Målt, ikke skønnet. (13/8) */
     --dæmpet:#6b675c;
     --linje:#ddd8cb;
-    --radius:26px;
-    --radius-m:18px;         /* kompakte kort og knap-kort */
+    --radius:18px;           /* var 26px — se kort-blokken nedenfor */
+    --radius-m:14px;         /* kompakte kort og knap-kort */
 
     /* ---- ét kort i stedet for syv (13/8) ----
        Appen havde syv næsten ens matterede flader: tre gennemsigtigheder, to
@@ -61,11 +73,21 @@
        samme idé. Forskellene var for små til at ses og store nok til, at det
        aldrig føltes helt roligt. Nu ét sæt værdier, som alle syv trækker på.
        Vil man ændre kortenes udseende, sker det HER — ikke syv steder. */
-    --kort-flade:rgba(252,250,245,.6);
-    --kort-kant:rgba(255,255,255,.64);
-    --kort-sløring:blur(16px) saturate(1.15);
-    --kort-skygge:0 12px 32px rgba(58,50,39,.08), inset 0 1px 0 rgba(255,255,255,.78);
-    --kort-skygge-løft:0 20px 44px rgba(58,50,39,.14), inset 0 1px 0 rgba(255,255,255,.85);
+    /* ---- fra sky til flade (14/8) ----
+       Kortet svævede: 60 % gennemsigtigt, 16px sløring, en hvid inderkant og
+       26px hjørner. Ingenting i appen havde en kant, man kunne se, og dét er
+       det, der læses som "blødt". Samme farver, samme indhold — men nu ligger
+       kortet ned på siden i stedet for at flyde over den.
+       Vær opmærksom: ved 86 % dækker fladen reelt landskabet bag kortet
+       (blandet giver den rgb(250,249,244) — praktisk talt --flade). Det er
+       bevidst: landskabet skal ses mellem kortene, ikke igennem dem.
+       Skal det tilbage, er det tallet her, der skrues ned — ikke sløringen.
+       Ét sted at ændre, alle syv korttyper følger med. */
+    --kort-flade:rgba(252,251,247,.86);
+    --kort-kant:#ddd8cb;
+    --kort-sløring:blur(7px) saturate(1.04);
+    --kort-skygge:0 4px 14px rgba(58,50,39,.07);
+    --kort-skygge-løft:0 10px 26px rgba(58,50,39,.12);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
@@ -91,6 +113,18 @@
   p{line-height:1.6}
   .dæmpet{color:var(--dæmpet);font-size:14px;line-height:1.55}
   .etiket{font-size:11px;letter-spacing:2.2px;text-transform:uppercase;color:var(--dæmpet);font-weight:600}
+  /* ---------- to skrifter, to opgaver (14/8) ----------
+     Fraunces sad på ALT — også afstande, radius, tælleren og nedtællingen.
+     En serif med høj stregkontrast får tal til at læses som pynt frem for som
+     oplysning, og det er en af de stærkeste grunde til, at appen føltes
+     dekoreret frem for præcis. Fraunces beholder det store nedtællingstal og
+     overskrifterne (dér ER tallet en følelse). Alt funktionelt — km, minutter,
+     klokkeslæt, tællere — kører nu i Inter med lige brede cifre, så de ikke
+     hopper, når de tæller ned. Klassen sættes på selve tal-elementet. */
+  .tal{font-family:var(--skrift-brød);font-variant-numeric:tabular-nums lining-nums;
+    font-feature-settings:"tnum" 1,"lnum" 1}
+  .res-meta,.sk-meta,.ned-dato,.foto-tekst,.sted-chip,.lup-tæl,.tjek-under,.radius-mærker{
+    font-variant-numeric:tabular-nums lining-nums}
 
   /* ---------- animationer ---------- */
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -105,9 +139,7 @@
   @keyframes skud{0%,88%{opacity:0;transform:translate(0,0)}90%{opacity:.9}96%{opacity:0;transform:translate(-150px,64px)}100%{opacity:0}}
   @keyframes flue{0%,100%{transform:translate(0,0);opacity:.15}30%{opacity:.9}50%{transform:translate(7px,-9px);opacity:.4}70%{opacity:.85}}
   @keyframes spejl{0%,100%{opacity:.22}50%{opacity:.4}}
-  @keyframes sheenAuto{0%,58%{transform:translateX(-150%) skewX(-18deg)}78%,100%{transform:translateX(280%) skewX(-18deg)}}
   @keyframes rippleUd{to{transform:scale(1);opacity:0}}
-  @keyframes ånde{0%,100%{box-shadow:0 6px 18px rgba(0,0,0,.22)}50%{box-shadow:0 6px 32px rgba(232,213,174,.65)}}
   @keyframes ekgTegn{to{stroke-dashoffset:0}}
   @keyframes splashUd{to{opacity:0;transform:translateY(-24px) scale(1.02);visibility:hidden}}
   @keyframes linjeUd{to{width:120px}}
@@ -155,9 +187,11 @@
   .rund-knap:active{transform:scale(.94)}
   @media(hover:hover){.rund-knap:hover{transform:scale(1.05);
     box-shadow:0 20px 54px rgba(0,0,0,.48), 0 0 48px rgba(232,213,174,.45), inset 0 1px 0 rgba(255,255,255,.95)}}
+  /* Én ring, ikke to (14/8). To ringe, der udvidede sig i forskudt takt, gjorde
+     knappen urolig uden at gøre den tydeligere. Pulsen er brandet og bliver —
+     den skal bare slå én gang ad gangen. r2 findes ikke længere i markup'et. */
   .rk-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(210,169,126,.85);
     pointer-events:none;animation:ping 3.6s cubic-bezier(.2,.6,.3,1) infinite}
-  .rk-ring.r2{animation-delay:1.8s}
   /* stille dobbeltring — samme greb som i logoets bomærke */
   .rund-knap::after{content:'';position:absolute;inset:-7px;border-radius:50%;
     border:1px solid rgba(210,169,126,.42);pointer-events:none}
@@ -196,7 +230,9 @@
   .aryt-tæller .at-ekg .spark{stroke:var(--rav-lys);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:22 100;filter:drop-shadow(0 0 2px rgba(210,169,126,.7));animation:ekgSweep 2.6s cubic-bezier(.85,0,.5,1) infinite}
   .aryt-tæller .at-hjerte{width:12px;height:12px;transform-origin:center;animation:hjerteBeat 2.6s ease-in-out infinite}
   .aryt-tæller .at-hjerte path{fill:var(--rav-lys);stroke:none}
-  .aryt-tæller .at-tal{font-family:var(--skrift-display);font-weight:700;font-size:16px;color:#f6f3ea;line-height:1}
+  /* Tælleren er et instrument, ikke en overskrift — Inter, lige brede cifre */
+  .aryt-tæller .at-tal{font-family:var(--skrift-brød);font-weight:700;font-size:15.5px;
+    font-variant-numeric:tabular-nums lining-nums;color:#f6f3ea;line-height:1}
   .h-bund h1{color:#f6f3ea;font-size:28px;text-shadow:0 1px 12px rgba(0,0,0,.25);animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) both}
   .h-under{font-family:var(--skrift-display);font-weight:600;font-size:17px;color:var(--rav-lys);margin-top:5px;text-shadow:0 1px 8px rgba(0,0,0,.2);animation:heroTekst .8s cubic-bezier(.2,.7,.3,1) .08s both}
   .hero.fuld .h-under{font-size:19px}
@@ -224,13 +260,16 @@
   .knap.lille{padding:9px 18px;font-size:13.5px}
   .knap.bred{width:100%}
   .knap:disabled{opacity:.35;cursor:default;box-shadow:none}
-  .knap.ånde{animation:ånde 4.5s ease-in-out infinite}
+  /* .ånde er tom med vilje (14/8). Klassen sidder seks steder i app.js og på
+     appens vigtigste knapper — den er fjernet som ANIMATION, ikke som klasse,
+     så markup'et ikke skal rettes seks steder for at fjerne ét åndedrag.
+     En trykflade, der puster, mens man læser, gør appen urolig. */
+  .knap.ånde{}
   .ripple{position:absolute;border-radius:50%;background:rgba(58,50,39,.14);transform:scale(0);animation:rippleUd .65s ease-out both;pointer-events:none}
   .knap.primær .ripple{background:rgba(255,255,255,.28)}
+  /* Lysstrejfet hen over knappen hvert 5,5. sekund i al evighed er fjernet —
+     det er et sprog fra spilbutikker, ikke fra en app om at holde fri. */
   .kør-knap{background:linear-gradient(125deg,#f9f5e9,#eaddbe);color:var(--gran);font-size:15.5px;padding:15px 22px 15px 19px;gap:10px}
-  .kør-knap::before{content:'';position:absolute;top:0;bottom:0;width:45%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
-    transform:translateX(-150%) skewX(-18deg);animation:sheenAuto 5.5s ease-in-out 1.5s infinite}
 
   /* ---------- flader ----------
      Alle matterede flader deler nu ét sæt værdier (se :root). Klassenavnene
@@ -247,10 +286,11 @@
   .kort.klik:active{transform:scale(.98)}
   .liste{border-radius:var(--radius);padding:8px 20px;margin-bottom:16px}
   .sektion{margin:26px 0 10px;display:flex;align-items:baseline;justify-content:space-between}
+  /* Ét glød, ikke to (14/8). Der lå to store farvede skyer bag ALT indhold —
+     én kobber, én oliven — og de var med til at gøre hele appen ens varm.
+     Den ene er væk, den anden halveret. Landskabet gør arbejdet nu. */
   .telefon::before{content:'';position:absolute;top:330px;left:-90px;width:320px;height:320px;border-radius:50%;
-    background:radial-gradient(circle,rgba(176,121,78,.20),transparent 68%);pointer-events:none;z-index:0}
-  .telefon::after{content:'';position:absolute;bottom:90px;right:-110px;width:360px;height:360px;border-radius:50%;
-    background:radial-gradient(circle,rgba(95,99,83,.18),transparent 68%);pointer-events:none;z-index:0}
+    background:radial-gradient(circle,rgba(176,121,78,.10),transparent 68%);pointer-events:none;z-index:0}
 
   /* ---------- landskabet som gennemgående baggrund ---------- */
   .app-baggrund{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
@@ -406,6 +446,39 @@
   input:focus,textarea:focus{outline:none;border-color:var(--fjord)}
   textarea{resize:vertical;min-height:72px}
   label.felt-etiket{display:block;font-size:12.5px;font-weight:650;color:var(--gran);margin:15px 0 7px;letter-spacing:.3px}
+
+  /* ---------- faktagitteret (14/8) ----------
+     Felterne toilet/handel/aftensmad/morgen har ligget i datamodellen hele
+     tiden og blev vist som fire rækker brødtekst nederst på siden — altså som
+     noget, man skulle læse. Nu et gitter man kan scanne: den ene læser tager
+     tabellen og trykker videre, den anden springer den over og læser
+     fortællingen. Begge bliver betjent i stedet for kun den ene. */
+  .fakta-net{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--linje);
+    border:1px solid var(--linje);border-radius:var(--radius-m);overflow:hidden;margin:0 0 16px}
+  .fakta{background:var(--flade);padding:11px 13px;display:flex;gap:9px;align-items:flex-start}
+  .fakta .ik{width:16px;height:16px;color:var(--anker-mid);margin-top:1px}
+  .fakta-krop{min-width:0}
+  .fakta-navn{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--dæmpet);display:block}
+  .fakta-værdi{font-variant-numeric:tabular-nums lining-nums;font-size:13px;font-weight:600;
+    color:var(--anker);line-height:1.35;display:block;margin-top:2px}
+  .fakta-værdi.tom{color:var(--dæmpet);font-weight:400;font-style:italic}
+  /* Under 340px bliver to spalter for smalle til "Offentligt toilet ved slusen,
+     600 m" — så falder gitteret til én. */
+  @media(max-width:359px){ .fakta-net{grid-template-columns:1fr} }
+
+  /* ---------- "kort fortalt" over prosaen (14/8) ----------
+     Stedbeskrivelserne er det bedste i appen, og der er ikke ændret ét ord i
+     dem. Der er kun sat en linje ovenover, så den, der vil have svaret, får
+     det på to sekunder — og den, der vil have stemningen, får den uforstyrret,
+     fordi den ikke længere også skal levere fakta. */
+  .dom{background:var(--flade);border:1px solid var(--linje);border-radius:var(--radius-m);
+    padding:12px 15px;margin-bottom:14px}
+  .dom-titel{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+    color:var(--dæmpet);margin-bottom:6px}
+  .dom-linje{display:flex;flex-wrap:wrap;gap:0 6px;font-variant-numeric:tabular-nums lining-nums;
+    font-size:13.5px;color:var(--anker);font-weight:600;line-height:1.7}
+  .dom-linje i{color:#b9beb6;font-style:normal}
 
   /* ---------- verts-kortet ---------- */
   .vært-række{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--linje)}
@@ -567,7 +640,8 @@
 
   /* afstands-slider */
   .radius-vis{text-align:center;margin:8px 0 18px}
-  .radius-tal{font-family:var(--skrift-display);font-size:30px;color:var(--gran);line-height:1.1}
+  .radius-tal{font-family:var(--skrift-brød);font-weight:700;font-size:26px;letter-spacing:-.3px;
+    font-variant-numeric:tabular-nums lining-nums;color:var(--anker);line-height:1.15}
   .radius-under{color:var(--dæmpet);font-size:13px;margin-top:2px}
   input[type=range].radius{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:100px;
     background:linear-gradient(90deg,var(--rav),var(--flade-dyb));outline:none;margin:6px 0}
@@ -620,6 +694,22 @@
   .sk-navn{font-family:var(--skrift-display);font-weight:600;font-size:19px;line-height:1.2;
     color:#f6f3ea;text-shadow:0 1px 10px rgba(0,0,0,.45)}
   .sk-meta{font-size:12px;color:rgba(246,243,234,.86);line-height:1.4}
+  /* ---------- det fremhævede ord (14/8) ----------
+     Tre kort, der alle sagde "rammer 3 af 3 ønsker", fortalte i praksis
+     ingenting: man skulle ind på hvert enkelt for at finde ud af, hvad der
+     skilte dem. Ordet er stedets ene kendetegn, og det står som overlinje
+     OVER navnet — ikke som endnu et mærke i hjørnet, hvor det ville slås med
+     "★ Testet af Arytmi" om pladsen på en 250px-bred kortflade. */
+  .sk-ord{font-size:10.5px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+    color:var(--rav-lys);text-shadow:0 1px 8px rgba(0,0,0,.5);margin-bottom:1px}
+  /* Datastriben. Egen linje under navnet, adskilt af en hårstreg, lige brede
+     cifre. Kortet kan nu vælges på tal og ikke kun på fornemmelse. */
+  .sk-fakta{display:flex;flex-wrap:wrap;align-items:center;gap:0 7px;margin-top:7px;
+    padding-top:8px;border-top:1px solid rgba(246,243,234,.28);
+    font-variant-numeric:tabular-nums lining-nums;
+    font-size:12px;color:rgba(246,243,234,.94);letter-spacing:.1px}
+  .sk-fakta b{font-weight:700}
+  .sk-fakta i{color:rgba(246,243,234,.42);font-style:normal}
   /* Stempel i hjørnet frem for etiket i bunden — så flytter det sig ikke,
      når stedets navn er langt. Samme farver som .hero-mærkat, der allerede
      er appens svar på "etiket oven på et fotografi". */
@@ -664,7 +754,9 @@
     background:linear-gradient(to bottom,rgba(20,16,11,.5),rgba(20,16,11,.15) 55%,rgba(20,16,11,.4))}
   .ned-hero .ned-lag{position:relative;z-index:1;padding:20px 22px 4px}
   .ned-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
-  .ned-tal{font-family:var(--skrift-display);font-size:64px;line-height:.95;color:#f6f3ea;text-shadow:0 2px 16px rgba(0,0,0,.3)}
+  /* Det store tal BLIVER i Fraunces — her er tallet en følelse, ikke en måling */
+  .ned-tal{font-family:var(--skrift-display);font-size:64px;line-height:.95;color:#f6f3ea;
+    font-variant-numeric:lining-nums;text-shadow:0 2px 16px rgba(0,0,0,.3)}
   .ned-label{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:rgba(246,243,234,.78);font-weight:600;margin-bottom:6px}
   .ned-sted{font-size:16px;color:#f6f3ea;margin-top:10px;text-shadow:0 1px 8px rgba(0,0,0,.25)}
   .ned-sted .ik{width:16px;height:16px;vertical-align:-3px;color:var(--rav-lys);margin-right:4px}
@@ -672,9 +764,42 @@
   .tjek-blok{padding:20px 18px 8px}
   .tjek-overskrift{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
   .tjek-overskrift h2{font-size:18px;color:var(--gran)}
-  .tjek-tæl{font-family:var(--skrift-display);color:var(--gran);font-size:15px}
+  .tjek-tæl{font-family:var(--skrift-brød);font-weight:700;color:var(--anker);font-size:14px;
+    font-variant-numeric:tabular-nums lining-nums}
   .tjek-bar{height:6px;background:var(--flade-dyb);border-radius:100px;margin:12px 0 18px;overflow:hidden}
   .tjek-bar .fyld{height:100%;background:linear-gradient(90deg,var(--rav),#6d7d5e);border-radius:100px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
+  /* ---------- bilens instrumentbræt (14/8) ----------
+     Fire felter, man aflæser i stedet for at læse. Tallene i Inter med lige
+     brede cifre, så de står som instrumenter og ikke som pynt. */
+  .maaler-net{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+  .maaler{background:var(--flade);border:1px solid var(--linje);border-radius:var(--radius-m);
+    padding:13px 14px}
+  .maaler .m-navn{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--dæmpet)}
+  .maaler .m-tal{font-variant-numeric:tabular-nums lining-nums;font-size:20px;font-weight:700;
+    color:var(--anker);line-height:1.2;margin-top:4px;letter-spacing:-.2px}
+  .maaler .m-tal small{font-size:12.5px;font-weight:600;color:var(--anker-mid)}
+  .maaler .m-under{font-size:11.5px;color:var(--dæmpet);margin-top:3px;line-height:1.35}
+  .maaler.ok{background:var(--anker-lys);border-color:#c9d5cd}
+  .maaler.ok .m-tal{color:#3c5546}
+  @media(max-width:359px){ .maaler-net{grid-template-columns:1fr} }
+
+  /* ---------- overskrift over de tre planlægningspunkter (14/8, OD) ---------- */
+  .plan-overskrift{margin:22px 0 10px}
+  .plan-overskrift h3{font-size:16.5px;line-height:1.3}
+  /* ---------- invitationen som rund knap i bunden (14/8, OD) ----------
+     Samme form som startknappen på forsiden, men mindre og uden pulsringe:
+     den skal læses som sidens ene store greb, ikke som en ny nedtælling. */
+  .inviter-blok{display:flex;flex-direction:column;align-items:center;gap:9px;
+    margin:26px 0 4px;padding-top:22px;border-top:1px solid var(--linje)}
+  .rund-knap.inviter-rund{width:68px;height:68px;box-shadow:0 8px 22px rgba(58,50,39,.22),
+    inset 0 1px 0 rgba(255,255,255,.95)}
+  .rund-knap.inviter-rund::after{inset:-6px;border-color:rgba(176,121,78,.34)}
+  .rund-knap.inviter-rund .ik{width:27px;height:27px;color:var(--anker)}
+  .inviter-tekst{font-family:var(--skrift-display);font-weight:600;font-size:16px;
+    color:var(--gran);text-align:center;line-height:1.3}
+  .inviter-under{font-size:12.5px;color:var(--dæmpet);text-align:center;margin-top:-4px}
+
   .tjek-punkt{display:flex;align-items:center;gap:14px;width:100%;
     border-radius:var(--radius-m);padding:15px 16px;margin-bottom:10px;font-family:inherit;cursor:pointer;text-align:left;
     transition:transform .16s,box-shadow .2s}
@@ -727,7 +852,7 @@
 
   @media(prefers-reduced-motion:reduce){
     /* Rettet 13/8: før stod her kun animation-duration:.001s, hvilket fik de
-       uendelige sløjfer (ildfluer, stjerneskud, pulsringe, ånde) til at køre
+       uendelige sløjfer (ildfluer, stjerneskud, pulsringe) til at køre
        HURTIGERE i stedet for at stoppe. Antallet af gentagelser og forsinkelsen
        skal med, ellers gør reglen det modsatte af det, den lover. */
     *,*::before,*::after{
