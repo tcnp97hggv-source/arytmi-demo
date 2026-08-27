@@ -1130,6 +1130,51 @@ function skærmTop(titel, tilbageTil, etiket){
    ONBOARDING — velkomst → personlig kode → notifikationer
    ============================================================= */
 let obTrin = 1;
+/* Dato som tre valg (dag/måned/år) i stedet for et nativt dato-felt — genbrugt
+   af fødselsdag (onboarding), afgangsdato og "vælg dato" ved hjemkomst.
+   Et kalenderhjul er dårligt til fødselsdage (30-40 klik tilbage i tiden) og
+   så forskelligt ud på tværs af Mac/Windows/Android, ligesom skriften gjorde
+   det før 13/8. Dag-listen retter sig efter måned/år, så 30. februar ikke kan
+   vælges. `retning` styrer årlisten: 'fortid' (fødselsdag, ned til 1920,
+   nyeste år først) eller 'fremtid' (rejsedatoer, i år + 2 år frem).
+   `gemFn`, hvis angivet, kaldes efter dag-listen er opdateret — bruges til
+   rejsedatoer, der skal gemmes og opdatere resten af skærmen med det samme
+   (fx om "Videre"-knappen skal låses op). Fødselsdag gemmes først ved klik
+   på "Gem min kode", så onboarding sender ikke noget gemFn. */
+function datoSelects(id, iso, retning, gemFn){
+  const [åY,åM,åD] = (iso||'').split('-').map(Number);
+  const maxDage = åM ? new Date(åY||2000, åM, 0).getDate() : 31;
+  const opt = (v,valgt,tekst)=>`<option value="${v}" ${v===valgt?'selected':''}>${tekst}</option>`;
+  const dage = Array.from({length:maxDage},(_,i)=>opt(i+1, åD, i+1)).join('');
+  const måneder = MDR.map((m,i)=>opt(i+1, åM, m[0].toUpperCase()+m.slice(1))).join('');
+  const iÅr = new Date().getFullYear();
+  const årListe = retning==='fremtid'
+    ? [iÅr, iÅr+1, iÅr+2]
+    : Array.from({length:iÅr-1920+1},(_,i)=>iÅr-i);
+  const år = årListe.map(v=>opt(v, åY, v)).join('');
+  const skift = `datoTegnDage('${id}')${gemFn?`;${gemFn}()`:''}`;
+  return `<div class="dato-vælger">
+    <select id="${id}Dag" aria-label="Dag" onchange="${skift}">${!åD?'<option value="" selected disabled>Dag</option>':''}${dage}</select>
+    <select id="${id}Måned" aria-label="Måned" onchange="${skift}">${!åM?'<option value="" selected disabled>Måned</option>':''}${måneder}</select>
+    <select id="${id}År" aria-label="År" onchange="${skift}">${!åY?'<option value="" selected disabled>År</option>':''}${år}</select>
+  </div>`;
+}
+/* Genopbygger kun Dag-listen ved skift af måned/år, så man ikke mister
+   andre felter, man er i gang med (hele skærmen tegnes ikke om her). */
+function datoTegnDage(id){
+  const dagFelt = $(id+'Dag'), valgtDag = parseInt(dagFelt.value)||0;
+  const måned = parseInt($(id+'Måned').value)||0, år = parseInt($(id+'År').value)||0;
+  const maxDage = måned ? new Date(år||2000, måned, 0).getDate() : 31;
+  const dag = Math.min(valgtDag, maxDage) || '';
+  const opt = (v,valgt,tekst)=>`<option value="${v}" ${v===valgt?'selected':''}>${tekst}</option>`;
+  dagFelt.innerHTML = (!dag?'<option value="" selected disabled>Dag</option>':'') +
+    Array.from({length:maxDage},(_,i)=>opt(i+1, dag, i+1)).join('');
+}
+/* Læser de tre valg til ét ISO-datotekst (eller null, hvis ikke alle tre er sat). */
+function datoLæs(id){
+  const d=$(id+'Dag').value, m=$(id+'Måned').value, å=$(id+'År').value;
+  return (d&&m&&å) ? `${å}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}` : null;
+}
 function skærmOnboarding(){
   if(obTrin===1){
     $('indhold').innerHTML = `
@@ -1157,13 +1202,16 @@ function skærmOnboarding(){
       <div style="display:flex;justify-content:center;margin-bottom:22px">${logoSVG(false)}</div>
       <div class="kort">
         <div class="etiket">Første login</div>
-        <h2 style="margin-top:6px">Lidt om dig</h2>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:6px">
+          <span style="color:var(--rav)">${ik('person','stor')}</span>
+          <h2>Lidt om dig</h2>
+        </div>
         <p class="dæmpet" style="margin-top:6px">Fortæl os, hvem du er, og vælg din egen 4-cifrede kode.</p>
         <label class="felt-etiket">Dit navn</label>
         <input type="text" id="obNavn" placeholder="Fx Kennet" value="${esc(s.profil.navn||'')}">
         <label class="felt-etiket">Fødselsdag</label>
-        <input type="date" id="obFødsel" min="1920-01-01" max="${new Date().toISOString().slice(0,10)}" value="${s.profil.fødselsdag||''}">
-        <p class="dæmpet" style="font-size:12.5px;margin-top:6px">Tryk på årstallet øverst i kalenderen for at hoppe direkte til dit fødselsår.</p>
+        ${datoSelects('ob', s.profil.fødselsdag, 'fortid')}
+        <div style="border-top:1px solid var(--linje);margin:22px 0 4px"></div>
         <label class="felt-etiket">Din kode</label>
         <input type="password" id="kode1" class="kode-cifre" maxlength="4" inputmode="numeric" placeholder="····">
         <label class="felt-etiket">Gentag koden</label>
@@ -1194,7 +1242,7 @@ function gemKode(){
   if(k1.length<4){ flash('Koden skal være 4 cifre.'); return; }
   if(k1!==k2){ flash('De to koder er ikke ens — prøv igen.'); return; }
   s.profil.navn = navn;
-  s.profil.fødselsdag = $('obFødsel').value || '';
+  s.profil.fødselsdag = datoLæs('ob') || '';
   s.profil.kode = k1; gem();
   obTrin = 3; tegn();
 }
@@ -1364,17 +1412,25 @@ function datoFelter(){
   const seg = (v,tekst)=>`<button class="seg-knap ${f.retur===v?'valgt':''}" style="flex-direction:row;padding:12px 8px" onclick="sætRetur('${v}')"><span>${tekst}</span></button>`;
   return `<div class="kort">
     <label class="felt-etiket" style="margin-top:0">Afgangsdato</label>
-    <input type="date" value="${f.dato||''}" onchange="s.forberedelse.dato=this.value||null;gem();tegn()">
+    ${datoSelects('afgang', f.dato, 'fremtid', 'sætAfgangDato')}
+    <div style="border-top:1px solid var(--linje);margin:20px 0 4px"></div>
     <label class="felt-etiket">Hjem igen? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-    <div class="seg-valg">${seg('samme','Samme dag')}${seg('næste','Næste dag')}${seg('dato','Vælg dato')}</div>
-    ${f.retur==='dato'?`<input type="date" style="margin-top:10px" value="${f.returDato||''}" onchange="s.forberedelse.returDato=this.value;gem();tegn()">`:''}
+    <div class="seg-valg">${seg('samme','I dag')}${seg('næste','I morgen')}${seg('dato','Vælg dato')}</div>
+    ${f.retur==='dato'?`<div style="margin-top:10px">${datoSelects('retur', f.returDato, 'fremtid', 'sætReturDato')}</div>`:''}
   </div>`;
   /* Hjemkomst-TIDSPUNKTET står bevidst IKKE her (KN 26/7: "fjern ur funktionen"
      — Dato-trinnet skal kun handle om datoer). Det spørges der om på
      tidsplan-skærmen, hvor det er motiveret: dér kan man se, at svaret er
-     forskellen på, om frokosten dagen efter er jeres eller hjemme i køkkenet. */
+     forskellen på, om frokosten dagen efter er jeres eller hjemme i køkkenet.
+     "I dag"/"I morgen" (24/8, KN's ønske) er relativt til AFGANGSDATOEN, ikke
+     til den rigtige kalenderdato — sætRetur() og alt der læser f.retur
+     ('samme'/'næste'/'dato') er urørt. Præcist ved en afgang i morgen; ved en
+     afgang længere ude i fremtiden betyder det stadig "samme dag som turen"/
+     "dagen efter", bare med en mere hverdagsagtig ordlyd. */
 }
 function sætRetur(v){ s.forberedelse.retur=v; gem(); tegn(); }
+function sætAfgangDato(){ s.forberedelse.dato = datoLæs('afgang'); gem(); tegn(); }
+function sætReturDato(){ s.forberedelse.returDato = datoLæs('retur'); gem(); tegn(); }
 function skærmTurDato(){
   const f = s.forberedelse;
   if(!f){ gåTil('hjem'); return; }
@@ -1681,7 +1737,7 @@ function tjeklisteData(){
     /* Invitation er fjernet herfra (OD 13/8) — den ligger nu som en rund knap
        i bunden af overblikket. Den var et krav, der stod i vejen; nu er den
        et tilbud, man tager, når man har lyst. */
-    { navn:'Forplejning',   under: låst?'Låst indtil invitationen er bekræftet':(forplejningKlar()?valgtForplejning().length+' valgt':'Mad og drikke til turen'), klar: forplejningKlar(), aktion: låst?låstAktion:"gåTil('mad')", låst, plan:true },
+    { navn:'Forplejning',   under: låst?'Låst indtil invitationen er bekræftet':(forplejningKlar()?valgtForplejning().length+' valgt':'Snacks, drikkevarer og det, der skal til for at nyde det'), klar: forplejningKlar(), aktion: låst?låstAktion:"gåTil('mad')", låst, plan:true },
     { navn:'Bil',           under: låst?'Låst indtil invitationen er bekræftet':'Strøm, Camp Mode og udstyr', klar: bilenKlar(f), aktion: låst?låstAktion:"gåTil('bilen')", låst, plan:true },
     { navn:'Personligt',    under: låst?'Låst indtil invitationen er bekræftet':'De personlige ting', klar: f.pakkeTjek.length>=pakkePunkter().length, aktion: låst?låstAktion:"gåTil('pakke')", låst, plan:true }
   ];
@@ -2357,7 +2413,7 @@ const SEKTIONER = [
      ingenting, låser ingenting — invType er null, og afventerFællesPlan()
      er kun sand for 'sammen'. */
   { id:'mad',         fase:2, navn:'Forplejning',      under:'Tips fra vores egne ture', ikon:'kop',    farve:'#ece8dd', ifarve:'#6b705c',
-    spørg:'Hvad skal I spise og drikke?', forklar:'Vores egne tips til aftensmad, morgenkaffe og det søde undervejs.' },
+    spørg:'Uden mad og drikke duer helten ikke', forklar:'Vores egne tips til aftensmad, morgenkaffe og det søde undervejs.' },
   { id:'bilen',       fase:2, navn:'Bil',              under:'Lade, Camp Mode, tasken',  ikon:'bil',    farve:'#e6e6d9', ifarve:'#5f6353',
     spørg:'Er bilen klar?',               forklar:'Ladning, Camp Mode og alt indholdet i Døsige Dølle-tasken.' },
   { id:'pakke',       fase:2, navn:'Personligt',       under:'Personlige ting',          ikon:'telt',   farve:'#e8e2d4', ifarve:'#7a6a4f',
@@ -3136,8 +3192,8 @@ function skærmMad(){
     ${sektionHeader('mad')}
     <div class="kort guide-brød">
       <p>En arytme handler om at gøre det enkelt. Derfor behøver I hverken planlægge store måltider eller pakke et helt udekøkken.</p>
-      <p>Vælg noget, der er nemt at tage med, eller nyd et måltid undervejs. Måske en kvalitets pizza på vej til destinationen eller morgenkaffe og friskbagte rundstykker fra den lokale bager.</p>
-      <p>Jo enklere beslutningerne er, desto hurtigere og nemmere kommer I afsted. Alle vores destinationer indeholder informationer om nærmeste madsted og bager.</p>
+      <p>Vælg noget, der er nemt at tage med, eller nyd et måltid undervejs.</p>
+      <p>Lad os sørge for, at I har det, I skal bruge — også til de små ting, der gør forskellen.</p>
     </div>
     ${rk(planKlar,'ur','Tidsplan', planUnder, 'mad-tidsplan')}
     ${rk(madKlar,'gaffel','Mad', madUnder, 'mad-valg')}
