@@ -1929,9 +1929,9 @@ function pakkeListe(){
     ...(f.bilHuske||[]).filter(id=>id!=='strøm')
       .map(bilOpslag).filter(Boolean)
       .map(p=>({ id:'b-'+p.id, tekst:p.navn || p.tekst, gruppe:'Til bilen' })),
-    ...valgtUdstyr().map(p=>({ id:'u-'+p.id, tekst:p.tekst, gruppe:'Forplejning' })),
-    ...madScenarieUdstyr().map(p=>({ id:'ms-'+p.id, tekst:p.tekst, gruppe:'Forplejning' })),
-    ...morgenUdstyr().map(p=>({ id:'mo-'+p.id, tekst:p.tekst, gruppe:'Forplejning' }))
+    ...valgtUdstyr().map(p=>({ id:'u-'+p.id, tekst:p.tekst, gruppe:p.gruppe })),
+    ...madScenarieUdstyr().map(p=>({ id:'ms-'+p.id, tekst:p.tekst, gruppe:p.gruppe })),
+    ...morgenUdstyr().map(p=>({ id:'mo-'+p.id, tekst:p.tekst, gruppe:p.gruppe }))
   ];
 }
 /* De sidste forberedelser: strøm, og den mad og drikke der først kan i bilen
@@ -1963,28 +1963,43 @@ function klarPunkter(){
     { id:'turplan',     navn:'Se turplanen',             under:'Afgang, sted, rejsemakker og hjemkomst', klar:false }
   ];
 }
-/* Krydsede punkter streges over og lægger sig nederst, så det man mangler
-   altid står øverst (OD 11/8). */
+/* Punkter grupperes efter hvor de hører til (Personligt, Til bilen,
+   Morgenmad, hvert madscenarie, Udstyr-grupperne …) i stedet for én lang
+   liste (KN 27/8). Rækkefølgen følger, hvornår gruppen først dukker op.
+   Krydsede punkter streges stadig over og lægger sig nederst — men nu kun
+   inden for deres egen gruppe, ikke i bunden af hele listen (OD 11/8). */
+function grupperListe(punkter){
+  const rækkefølge = [], map = new Map();
+  punkter.forEach(p=>{
+    if(!map.has(p.gruppe)){ map.set(p.gruppe, []); rækkefølge.push(p.gruppe); }
+    map.get(p.gruppe).push(p);
+  });
+  return rækkefølge.map(gruppe=>({ gruppe, punkter:map.get(gruppe) }));
+}
 function skærmKlarListe(hvilken){
   const f = s.forberedelse; if(!f){ gåTil('hjem'); return; }
   const punkter = klarListe(hvilken);
   const tjek = f.klarTjek || [];
-  const sorteret = [...punkter.filter(p=>!tjek.includes(p.id)), ...punkter.filter(p=>tjek.includes(p.id))];
+  const grupper = grupperListe(punkter);
   const klaret = punkter.filter(p=>tjek.includes(p.id)).length;
   const titel = hvilken==='pakke' ? 'Jeg er klar til at pakke' : 'De sidste forberedelser';
   const intro = hvilken==='pakke'
     ? 'Alt det, I har valgt undervejs — samlet ét sted. Kryds af, efterhånden som det ryger i bilen.'
     : 'Det, der først kan gøres dagen før eller på selve dagen.';
+  const række = p => `
+    <div class="liste-punkt ${tjek.includes(p.id)?'strøget':''}" onclick="klarTjek('${p.id}')" style="cursor:pointer">
+      <div class="tjekboks ${tjek.includes(p.id)?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+      <div class="navn">${esc(p.tekst)}</div>
+    </div>`;
   $('indhold').innerHTML = `<div class="side anim">
     ${skærmTop(titel,'hjem', punkter.length?`${klaret} af ${punkter.length}`:'')}
     <div class="kort guide-brød"><p style="margin:0">${intro}</p></div>
-    ${punkter.length ? `<div class="liste">
-      ${sorteret.map(p=>`
-        <div class="liste-punkt ${tjek.includes(p.id)?'strøget':''}" onclick="klarTjek('${p.id}')" style="cursor:pointer">
-          <div class="tjekboks ${tjek.includes(p.id)?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
-          <div class="navn">${esc(p.tekst)}<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.gruppe}</div></div>
-        </div>`).join('')}
-    </div>`
+    ${punkter.length ? grupper.map(({gruppe,punkter:gp})=>{
+        const sorteret = [...gp.filter(p=>!tjek.includes(p.id)), ...gp.filter(p=>tjek.includes(p.id))];
+        return `
+          <div class="sektion"><h3>${esc(gruppe)}</h3></div>
+          <div class="liste">${sorteret.map(række).join('')}</div>`;
+      }).join('')
     : `<div class="liste"><div class="liste-punkt"><div class="navn dæmpet">Der er ikke valgt noget til denne liste endnu.</div></div></div>`}
   </div>`;
 }
@@ -3157,21 +3172,25 @@ function valgtForplejning(){
 /* "Det skal I bruge"-listerne fra de valgte madscenarier (kun dem med en
    detaljeside, jf. MAD_SCENARIE_DETALJER) lander på pakkelisten, ligesom
    Udstyr-trinnets valg gør. */
+/* Hvert punkt får sit madscenaries navn som gruppe (KN 27/8: pakkelisten skal
+   vise, hvor et punkt hører til — ikke bare "Forplejning" for det hele). */
 function madScenarieUdstyr(){
   const f = s.forberedelse; if(!f) return [];
-  return (f.madValg||[])
-    .map(id => MAD_SCENARIE_DETALJER[id])
-    .filter(Boolean)
-    .flatMap(d => d.brug);
+  return (f.madValg||[]).flatMap(id => {
+    const d = MAD_SCENARIE_DETALJER[id];
+    if(!d) return [];
+    const scenarie = MAD_VALG.find(x=>x.id===id);
+    return d.brug.map(p=>({ ...p, gruppe: scenarie ? scenarie.tekst : 'Mad' }));
+  });
 }
 /* Morgenmad-trinnets valgte punkter (faste + selvskrevne) lander på
-   pakkelisten, ligesom de andre Forplejnings-lister gør. */
+   pakkelisten under deres egen gruppe "Morgenmad" (KN 27/8). */
 function morgenUdstyr(){
   const f = s.forberedelse; if(!f) return [];
   return [
     ...(f.morgenValg||[]).map(id=>MORGEN_VALG.find(x=>x.id===id)).filter(Boolean),
     ...egne('morgen')
-  ];
+  ].map(p=>({ ...p, gruppe:'Morgenmad' }));
 }
 /* Flerdages-tur (Hjem igen ≠ samme dag) får et morgenmads-trin ind i flowet. */
 function flerdagsTur(){ const f=s.forberedelse; return !!(f && f.retur && f.retur!=='samme'); }
@@ -3557,10 +3576,12 @@ function forplejningFærdig(){
 /* =============================================================
    5 · PAKKE — personlige ting
    ============================================================= */
-/* Udstyr valgt på Forplejningens sidste trin — lander her som ekstra punkter. */
+/* Udstyr valgt på Forplejningens sidste trin — lander her som ekstra punkter,
+   under den gruppe (Service og spisegrej / Køl og varme / Oprydning) de selv
+   hører til under (KN 27/8), i stedet for samlet under ét "Forplejning". */
 function valgtUdstyr(){
   const f = s.forberedelse; if(!f||!f.udstyrValg||!f.udstyrValg.length) return [];
-  const alle = FORPLEJNING_UDSTYR.flatMap(g=>g.punkter);
+  const alle = FORPLEJNING_UDSTYR.flatMap(g=>g.punkter.map(p=>({ ...p, gruppe:g.navn })));
   return f.udstyrValg.map(id=>alle.find(p=>p.id===id)).filter(Boolean);
 }
 /* Ingen strøget-streg her (KN 27/8): dette er stadig planlægning — punktet
