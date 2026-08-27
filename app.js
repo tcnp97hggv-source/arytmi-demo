@@ -402,9 +402,14 @@ const MAD_VALG = [
   { id:'sammen',   tekst:'Lav-det-sammen' },
   { id:'ude',      tekst:'Vi spiser ude/på vejen' }
 ];
-/* Uddybende indhold pr. madscenarie — kun 'tapas' har tekst fra Kennet endnu
-   (27/8). De fire andre i MAD_VALG viser "indhold på vej" på valgskærmen og
-   åbner ingen detaljeside, før de får et opslag her efter samme skabelon. */
+/* Uddybende indhold pr. madscenarie — alle fem har tekst fra Kennet nu (27/8).
+   Felterne er alle valgfrie ud over nr/tagline/intro/brug/sådanGørVi/lilleEkstra:
+   tipForan (tip-boks FØR "Det skal I bruge"), brugIntro (linje under selve
+   overskriften), brugTitel (erstatter "Det skal I bruge", fx på 05), tip
+   (tip-boks EFTER "Sådan gør vi") og efter ("Efter måltidet" — udelades helt,
+   hvis scenariet ikke har en). Item-id'erne i brug[] er navngivet med
+   scenarie-præfiks (fx 'tapas-glas' vs 'picnic-glas'), så to valgte
+   scenarier med samme udstyrsnavn ikke deler afkrydsning på pakkelisten. */
 const MAD_SCENARIE_DETALJER = {
   tapas: {
     nr: '01',
@@ -414,15 +419,15 @@ const MAD_SCENARIE_DETALJER = {
       'Det fungerer klart bedst, når I kan have det hele inden for rækkevidde, så begræns udvalget og sørg for det kan ligge på max 2 fade/tallerkner eller beholdere.'
     ],
     brug: [
-      { id:'tallerkener-anret', tekst:'Tallerkener', tip:'eller små skåle til anretning' },
-      { id:'tallerkener-spise', tekst:'Tallerkner',  tip:'til at spise af' },
-      { id:'bestik',            tekst:'Bestik' },
-      { id:'glas',              tekst:'Glas', tip:'måske både vin og vandglas' },
-      { id:'lille-kniv',        tekst:'Lille kniv' },
-      { id:'lille-skærebræt',   tekst:'Lille skærebræt' },
-      { id:'servietter',        tekst:'Servietter' },
-      { id:'affaldspose',       tekst:'Affaldspose' },
-      { id:'vådservietter',     tekst:'Vådservietter' }
+      { id:'tapas-tallerkener-anret', tekst:'Tallerkener', tip:'eller små skåle til anretning' },
+      { id:'tapas-tallerkener-spise', tekst:'Tallerkner',  tip:'til at spise af' },
+      { id:'tapas-bestik',            tekst:'Bestik' },
+      { id:'tapas-glas',              tekst:'Glas', tip:'måske både vin og vandglas' },
+      { id:'tapas-lille-kniv',        tekst:'Lille kniv' },
+      { id:'tapas-lille-skærebræt',   tekst:'Lille skærebræt' },
+      { id:'tapas-servietter',        tekst:'Servietter' },
+      { id:'tapas-affaldspose',       tekst:'Affaldspose' },
+      { id:'tapas-vådservietter',     tekst:'Vådservietter' }
     ],
     sådanGørVi: 'Lav én samlet spiseplads i stedet for at have mad og emballage liggende rundt omkring. En bakke eller et skærebræt fungerer godt som fælles "bord". I bilen kan man ligge/halv ligge. Eller sidde på forsæder/bagagerum.',
     tip: [
@@ -434,24 +439,132 @@ const MAD_SCENARIE_DETALJER = {
       'Og glem ikke en god flaskeåbner (eller køb med skruelåg), hvis der skal vin på bordet.'
     ],
     efter: 'Vi tørrer diverse ting over med vådservietterne og lægger dem tilbage i tasken, så kan de ryge direkte i opvasker når vi kommer hjem.'
+  },
+  takeaway: {
+    nr: '02',
+    tagline: 'Køb det, I har lyst til. Vi hjælper med resten.',
+    intro: [
+      'Pizza, burger, sushi, sandwich eller noget helt femte. Takeaway er nemt — lige indtil emballagen, saucerne og drikkevarerne skal have plads.'
+    ],
+    brug: [
+      { id:'takeaway-tallerkener',   tekst:'Tallerkener', tip:'eller underlag' },
+      { id:'takeaway-bestik',        tekst:'Evt. bestik/spisepinde' },
+      { id:'takeaway-servietter',    tekst:'Servietter' },
+      { id:'takeaway-glas',          tekst:'Glas', tip:'måske både vin- og vandglas' },
+      { id:'takeaway-affaldspose',   tekst:'Affaldspose' },
+      { id:'takeaway-vådservietter', tekst:'Vådservietter' },
+      { id:'takeaway-køletaske',     tekst:'Køle/varmetaske' }
+    ],
+    sådanGørVi: [
+      'Find jeres spiseplads, før I åbner maden.',
+      'Brug bagagerummet, et bord eller en anden fast flade som fælles spiseplads. Find affaldsposen frem med det samme til emballagen så den er af vejen.'
+    ],
+    tip: 'Er du Tesla ejer kan man tømme trunken og fjerne den yderste bagagerumsplade. Sæderne kan lægges "halvt" ned enten med mekanikken eller madrassen på bagsædet. De fungerer fint som ryglæn. Se billeder.',
+    lilleEkstra: [
+      'Har I køletasker fungerer de lige så godt til at holde maden varm.',
+      'Og tag altid et par ekstra servietter med. Altid.'
+    ]
+  },
+  picnic: {
+    nr: '03',
+    tagline: 'Når maden bare skal åbnes og nydes',
+    intro: [
+      'Salater, sandwiches, tærte, frugt, ost, charcuteri eller det, I allerede har i køleskabet.',
+      'Det gode ved kold picnic er, at I ikke skal lave mad, når I ankommer men har god tid til at pakke hjemmefra. Derfor kan I bruge tiden på hinanden.'
+    ],
+    brug: [
+      { id:'picnic-tallerkener',   tekst:'Tallerkener' },
+      { id:'picnic-bestik',        tekst:'Bestik' },
+      { id:'picnic-glas',          tekst:'Glas', tip:'måske både vand- og vinglas' },
+      { id:'picnic-servietter',    tekst:'Servietter' },
+      { id:'picnic-lille-kniv',    tekst:'Lille kniv' },
+      { id:'picnic-skærebræt',     tekst:'Skærebræt' },
+      { id:'picnic-underlag',      tekst:'Underlag/tæppe' },
+      { id:'picnic-affaldspose',   tekst:'Affaldspose' },
+      { id:'picnic-vådservietter', tekst:'Vådservietter' }
+    ],
+    sådanGørVi: [
+      'Pak maden så den kan komme direkte fra køletaske til spiseplads.',
+      'Hvis I skal sidde udenfor, så tænk over underlaget, hvis der ikke er bænk i nærheden. Hvis I skal spise i bilen, så lav en fast flade til maden og sørg for en god siddeplads med støtte i ryggen.'
+    ],
+    lilleEkstra: [
+      'Pak maden i få større beholdere frem for mange små.',
+      'Det gør både transport, spisningen og oprydningen lettere.'
+    ],
+    efter: 'Vi tørrer diverse ting over med vådservietterne og lægger dem tilbage i tasken, så kan de ryge direkte i opvasker når vi kommer hjem.'
+  },
+  sammen: {
+    nr: '04',
+    tagline: 'Når maden er en del af oplevelsen',
+    intro: [
+      'Her er det ikke bare maden, der er målet. Det er også det, I laver sammen.',
+      'Suppe, gryderetter, bøffer, pasta, hotdogs… listen med muligheder er lang.'
+    ],
+    tipForan: 'Mad der skal samles kræver ofte god plads. Sørg for at vælge en destination med borde/bænkesæt. Alternativt medbring bord/stole sammen med grill eller gasblus. Husk at det kategoriseres som camping og man skal derfor vælge en destination der tillader camping.',
+    brugIntro: 'Det afhænger af retten, men tænk især på:',
+    brug: [
+      { id:'sammen-køkkenredskaber', tekst:'Køkkenredskaber' },
+      { id:'sammen-grill',           tekst:'Grill/gasblus' },
+      { id:'sammen-skærebræt',       tekst:'Skærebræt' },
+      { id:'sammen-knive',           tekst:'Knive' },
+      { id:'sammen-tallerkener',     tekst:'Tallerkener' },
+      { id:'sammen-bestik',          tekst:'Bestik' },
+      { id:'sammen-glas',            tekst:'Glas', tip:'vand og/eller vinglas' },
+      { id:'sammen-servietter',      tekst:'Servietter' },
+      { id:'sammen-affaldspose',     tekst:'Affaldspose' },
+      { id:'sammen-vådservietter',   tekst:'Vådservietter' }
+    ],
+    sådanGørVi: [
+      'Vælg noget, der kan tilberedes uden at kræve et helt køkken.',
+      'Lav en lille arbejdsplads, hvor én kan gøre klar, mens den anden laver noget andet. Medbring evt parasol eller paraply hvis det regner.'
+    ],
+    lilleEkstra: [
+      'Jo mere kompliceret maden er, jo mere skal I tænke over hvor den skal laves.',
+      'Madlavning er hyggeligt. At opdage, at man mangler en ske, når gryden allerede koger, er mindre hyggeligt.',
+      'Obs hvis I allerede har gasblusen med er der også gode muligheder for morgenmad på sådan en.'
+    ]
+  },
+  ude: {
+    nr: '05',
+    tagline: 'Nogle gange er det bedste måltid det, andre har lavet.',
+    intro: [
+      'I behøver ikke have mad med for at få glæde af Arytmi. Måske finder I en lille restaurant, en café eller noget lækkert på vejen.'
+    ],
+    brugTitel: 'Det skal I stadig overveje',
+    brug: [
+      { id:'ude-vand',        tekst:'Vand', tip:'til turen' },
+      { id:'ude-snacks',      tekst:'Snacks' },
+      { id:'ude-kaffe-te',    tekst:'Kaffe/te' },
+      { id:'ude-drikkevarer', tekst:'Evt. drikkevarer til senere' },
+      { id:'ude-morgenmad',   tekst:'Morgenmad', tip:'til dagen efter' }
+    ],
+    sådanGørVi: [
+      'Hvis I spiser ude så husk bordbestilling.',
+      'Vi gør indimellem det at vi først finder overnatning i nærheden og bestiller en taxa til spisestedet hvis der er for langt at gå, så slipper i for "hvem kører" samtalen og kan nyde det hele i fulde drag.'
+    ],
+    lilleEkstra: [
+      'Tænk ét måltid frem.',
+      'Hvis I spiser ude om aftenen, hvad skal I så have til morgenkaffen?'
+    ]
   }
 };
+/* Snacks og drikkevarer er slået sammen til én skærm (KN 27/8): to grupper,
+   "Til turen" (herunder) og "Til aftenen" (DRIKKE_VALG nedenfor). Navnene på
+   state-felterne (f.snackValg/f.drikkeValg) er urørt, så migrationen i
+   indlæs() og valgtForplejning() ikke skal ændres. */
 const SNACK_VALG = [
-  { id:'slik-pose',      tekst:'Slik i pose' },
-  { id:'slik-indpakket', tekst:'Indpakket slik' },
-  { id:'chips',          tekst:'Chips', tip:'Hvis dip, lav den hjemmefra med et godt låg.' },
-  { id:'kage',           tekst:'Portionsanrettet kage' },
-  { id:'andet-snack',    tekst:'Andet' }
+  { id:'vand',      tekst:'Vand' },
+  { id:'snacks',    tekst:'Snacks' },
+  { id:'kaffe-te',  tekst:'Kaffe/te' },
+  { id:'sødt-salt', tekst:'Evt. sødt eller salt' },
+  { id:'drinks',    tekst:'Evt. drinks/vin/øl' }
 ];
 const DRIKKE_VALG = [
-  { id:'kaffe',        tekst:'Kaffe' },
-  { id:'vand',         tekst:'Vand', tip:'Masser af vand kan også bruges til tandbørstning.' },
-  { id:'sodavand',     tekst:'Sodavand' },
-  { id:'øl',           tekst:'Øl' },
-  { id:'vin',          tekst:'Vin' },
-  { id:'kakao',        tekst:'Kakao' },
-  { id:'te',           tekst:'Te' },
-  { id:'andet-drikke', tekst:'Andet' }
+  { id:'glas',       tekst:'Glas' },
+  { id:'åbner',      tekst:'Åbner' },
+  { id:'servietter', tekst:'Servietter' },
+  { id:'skål',       tekst:'Skål/tallerken der står godt' },
+  { id:'køletaske',  tekst:'Evt. køletaske' }
 ];
 /* Udstyr: det man reelt skal bruge til det, man har valgt ovenfor. Man vælger
    selv, hvad der er relevant — det lander som ekstra punkter på Pakkelisten. */
@@ -3214,7 +3327,7 @@ function skærmMad(){
   const madKlar = (f.madValg&&f.madValg.length) || (f.snackValg&&f.snackValg.length);
   const madUnder = madKlar ? (f.madValg.length+f.snackValg.length)+' valgt' : 'Mad, snacks og evt. morgenmad';
   const drikkeKlar = f.drikkeValg && f.drikkeValg.length;
-  const drikkeUnder = drikkeKlar ? f.drikkeValg.length+' valgt' : 'Vand, kaffe, øl, vin …';
+  const drikkeUnder = drikkeKlar ? f.drikkeValg.length+' valgt' : 'Glas, åbner og service til aftenen';
   /* Tidsplanen er "klar", så snart appen kan regne den ud — den kræver ingen
      handling, den fortæller bare, hvor mange måltider turen dækker. */
   const antalMåltider = madPlan().filter(m=>!m.fra).length;
@@ -3237,7 +3350,7 @@ function skærmMad(){
     </div>
     ${rk(planKlar,'ur','Tidsplan', planUnder, 'mad-tidsplan')}
     ${rk(madKlar,'gaffel','Mad', madUnder, 'mad-valg')}
-    ${rk(drikkeKlar,'kop','Drikke', drikkeUnder, 'mad-drikkevarer')}
+    ${rk(drikkeKlar,'kop','Drikke', drikkeUnder, 'mad-snacks')}
     ${sektionFod('mad')}
   </div>`;
 }
@@ -3277,7 +3390,9 @@ function skærmMadScenarie(id){
   $('indhold').innerHTML = `<div class="side anim">
     ${skærmTop(d.tagline, 'mad-valg', d.nr+' · '+scenarie.tekst.toUpperCase())}
     <div class="kort guide-brød">${afsnit(d.intro)}</div>
-    <div class="sektion"><h3>Det skal I bruge</h3></div>
+    ${d.tipForan?`<div class="kort"><div class="etiket">Tip</div>${afsnit(d.tipForan)}</div>`:''}
+    <div class="sektion"><h3>${esc(d.brugTitel||'Det skal I bruge')}</h3></div>
+    ${d.brugIntro?`<p class="dæmpet" style="margin:0 0 10px">${esc(d.brugIntro)}</p>`:''}
     <div class="liste">
       ${d.brug.map(p=>`
         <div class="liste-punkt">
@@ -3285,12 +3400,11 @@ function skærmMadScenarie(id){
         </div>`).join('')}
     </div>
     <div class="sektion"><h3>Sådan gør vi</h3></div>
-    <p class="dæmpet" style="margin-bottom:14px">${esc(d.sådanGørVi)}</p>
+    <div class="dæmpet" style="margin-bottom:14px">${afsnit(d.sådanGørVi)}</div>
     ${d.tip?`<div class="kort"><div class="etiket">Tip</div>${afsnit(d.tip)}</div>`:''}
     <div class="sektion"><h3>Det lille ekstra</h3></div>
     <div class="dæmpet" style="margin-bottom:14px">${afsnit(d.lilleEkstra)}</div>
-    <div class="sektion"><h3>Efter måltidet</h3></div>
-    <p class="dæmpet" style="margin-bottom:20px">${esc(d.efter)}</p>
+    ${d.efter?`<div class="sektion"><h3>Efter måltidet</h3></div><div class="dæmpet" style="margin-bottom:20px">${afsnit(d.efter)}</div>`:''}
     <button class="knap primær bred" onclick="tilføjMadScenarie('${id}')">Tilføj til program &amp; pakkeliste ${ik('pil')}</button>
     <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="tilbage('mad-valg')">${ik('tilbage')} Tilbage</button></div>
   </div>`;
@@ -3306,20 +3420,25 @@ function tilføjMadScenarie(id){
   flash('Tilføjet til jeres program og pakkeliste.', 'tjek');
   tilbage('mad-valg');
 }
-/* ---- Trin 2: Snacks ---- */
+/* ---- Trin 2: Snacks og drikkevarer — én skærm, to grupper (KN 27/8, slår
+   den tidligere separate Drikkevarer-skærm sammen med Snacks). Også
+   selvstændig genvej fra "Drikke" på Forplejnings-oversigten. ---- */
 function skærmMadSnacks(){
   const f = s.forberedelse || nyForberedelse();
-  const valgte = f.snackValg || [];
-  const næsteMål = flerdagsTur() ? 'mad-morgen' : 'mad-drikkevarer';
-  const næsteLabel = 'Næste';
+  const valgtTuren = f.snackValg || [];
+  const valgtAftenen = f.drikkeValg || [];
+  const næsteMål = flerdagsTur() ? 'mad-morgen' : 'mad-udstyr-0';
   $('indhold').innerHTML = `<div class="side anim">
-    ${madTrinTop('Snacks til turen')}
+    ${madTrinTop('Snacks og drikkevarer')}
     <div class="kort guide-brød">
-      <p>Her kommer det vigtigste punkt på turen — snacks. Når vi danskere hygger, spiser vi, og det kan du gøre med god samvittighed, når du er på arytme.</p>
-      <p class="citat" style="margin-bottom:0">TIP: Der er mange gode "is"-destinationer i Danmark — det smarteste ved arytmen er, at I kan flytte jer, så I nemt kan hente dessert på havnen og køre tilbage til overnatningspladsen.</p>
+      <p>Det absolut vigtigste på enhver tur: snacks og hygge.</p>
     </div>
-    ${valgListe(SNACK_VALG, valgte, 'toggleSnackValg')}
-    ${madTrinFod('mad-valg',næsteLabel,`gåTil('${næsteMål}')`)}
+    <div class="sektion"><h3>Det skal I overveje</h3></div>
+    <p class="dæmpet" style="margin:0 0 10px;font-size:13px">Til turen</p>
+    ${valgListe(SNACK_VALG, valgtTuren, 'toggleSnackValg')}
+    <p class="dæmpet" style="margin:18px 0 10px;font-size:13px">Til aftenen</p>
+    ${valgListe(DRIKKE_VALG, valgtAftenen, 'toggleDrikkeValg')}
+    ${madTrinFod('mad-valg','Tilføj til tur',`gåTil('${næsteMål}')`)}
   </div>`;
 }
 /* ---- Trin 3: Morgenmad (kun flerdages-ture) — rent informativt, ingen valg ---- */
@@ -3330,20 +3449,7 @@ function skærmMadMorgen(){
       <p>Næsten alle destinationerne ligger i nærheden af et godt bageri — vi foreslår altid et under destinationen. Her kan du også tit få fremragende kaffe.</p>
       <p>Nu kan I køre videre, eller I kan vende tilbage til basen — måske går turen hjem, inden I skal i gang med hverdagens rytmer.</p>
     </div>
-    ${madTrinFod('mad-snacks','Næste',"gåTil('mad-drikkevarer')")}
-  </div>`;
-}
-/* ---- Trin 4: Drikkevarer — også selvstændig genvej fra "Drikke" ---- */
-function skærmMadDrikkevarer(){
-  const f = s.forberedelse || nyForberedelse();
-  const valgte = f.drikkeValg || [];
-  $('indhold').innerHTML = `<div class="side anim">
-    ${madTrinTop('Drikke')}
-    <div class="kort guide-brød">
-      <p class="citat" style="margin-bottom:0">TIP: Vi køber ofte drikkevarer, når vi snacker undervejs.</p>
-    </div>
-    ${valgListe(DRIKKE_VALG, valgte, 'toggleDrikkeValg')}
-    ${madTrinFod('mad','Næste',"gåTil('mad-udstyr-0')")}
+    ${madTrinFod('mad-snacks','Næste',"gåTil('mad-udstyr-0')")}
   </div>`;
 }
 /* ---- Trin 5: Udstyr — ét trin pr. gruppe, så siden ikke bliver en mur.
@@ -3365,7 +3471,7 @@ function skærmMadUdstyr(nr){
     </div>`:''}
     ${valgListe(gruppe.punkter, valgte, 'toggleUdstyrValg')}
     ${madTrinFod(
-      i===0 ? 'mad-drikkevarer' : 'mad-udstyr-'+(i-1),
+      i===0 ? 'mad-snacks' : 'mad-udstyr-'+(i-1),
       sidste ? 'Færdig' : 'Næste',
       sidste ? 'forplejningFærdig()' : `gåTil('mad-udstyr-${i+1}')`
     )}
@@ -3674,7 +3780,6 @@ function tegn(){
     case aktivSkærm.startsWith('mad-scenarie-'): skærmMadScenarie(aktivSkærm.slice(13)); break;
     case aktivSkærm==='mad-snacks':      skærmMadSnacks(); break;
     case aktivSkærm==='mad-morgen':      skærmMadMorgen(); break;
-    case aktivSkærm==='mad-drikkevarer': skærmMadDrikkevarer(); break;
     case aktivSkærm.startsWith('mad-udstyr'): skærmMadUdstyr(aktivSkærm.slice(11)); break;
     case aktivSkærm==='pakke':        skærmPakke(); break;
     case aktivSkærm==='klar-pakke':   skærmKlarListe('pakke'); break;
