@@ -566,6 +566,19 @@ const DRIKKE_VALG = [
   { id:'skål',       tekst:'Skål/tallerken der står godt' },
   { id:'køletaske',  tekst:'Evt. køletaske' }
 ];
+/* Morgenmad-trinnets faste liste (KN 27/8) — kun for flerdages-ture. Man
+   vælger selv, hvad der er relevant, og kan skrive egne punkter til (se
+   s.egneTing.morgen), som huskes på tværs af ture ligesom pakke/hygge/hund. */
+const MORGEN_VALG = [
+  { id:'kaffe-te',    tekst:'Kaffe/te', tip:'eller andet morgenritual' },
+  { id:'kopper',      tekst:'Kopper' },
+  { id:'ske',         tekst:'Ske' },
+  { id:'vand',        tekst:'Vand' },
+  { id:'morgenmad',   tekst:'Morgenmad' },
+  { id:'mælk-sukker', tekst:'Mælk, sukker eller lign.' },
+  { id:'bestik',      tekst:'Bestik' },
+  { id:'varme',       tekst:'Evt. noget at varme vand/mad i' }
+];
 /* Udstyr: det man reelt skal bruge til det, man har valgt ovenfor. Man vælger
    selv, hvad der er relevant — det lander som ekstra punkter på Pakkelisten. */
 const FORPLEJNING_UDSTYR = [
@@ -619,8 +632,9 @@ function friskState(){
        nulstilles hver gang man kører af sted (se afSted()). Selve
        afkrydsningen er stadig turens — det er tingene, der huskes, ikke om
        de var pakket sidste gang.
-       Tre lister: pakke (Personligt), hygge (Bilens nice-to-have) og hund. */
-    egneTing:{ pakke:[], hygge:[], hund:[] },
+       Fire lister: pakke (Personligt), hygge (Bilens nice-to-have), hund
+       og morgen (Morgenmad-trinnets egne punkter, 27/8). */
+    egneTing:{ pakke:[], hygge:[], hund:[], morgen:[] },
     påTur:null,          // {sted, startet}
     anmeldAfventer:null, // {sted, dato}
     ture:[]              // {sted,dato,score:{destination,app,hygge},kommentar}
@@ -638,8 +652,8 @@ function indlæs(){
          overlever, at man kører af sted. Dem, der ligger i en igangværende
          forberedelse, tages med op — ellers ville folk miste det, de allerede
          havde skrevet, i selve den opdatering, der skulle bevare det. */
-      if(!g.egneTing) g.egneTing = { pakke:[], hygge:[], hund:[] };
-      ['pakke','hygge','hund'].forEach(k=>{ if(!Array.isArray(g.egneTing[k])) g.egneTing[k] = []; });
+      if(!g.egneTing) g.egneTing = { pakke:[], hygge:[], hund:[], morgen:[] };
+      ['pakke','hygge','hund','morgen'].forEach(k=>{ if(!Array.isArray(g.egneTing[k])) g.egneTing[k] = []; });
       if(g.forberedelse && Array.isArray(g.forberedelse.egnePunkter) && g.forberedelse.egnePunkter.length){
         const kendte = new Set(g.egneTing.pakke.map(p=>p.tekst));
         g.forberedelse.egnePunkter.forEach(p=>{ if(!kendte.has(p.tekst)) g.egneTing.pakke.push(p); });
@@ -650,6 +664,7 @@ function indlæs(){
         const f = g.forberedelse;
         if(!f.snackValg) f.snackValg = [];
         if(!f.drikkeValg) f.drikkeValg = [];
+        if(!f.morgenValg) f.morgenValg = [];
         if(!f.udstyrValg) f.udstyrValg = [];
         // migration 11/8: Bilen fik biltype + huskeliste, og afgangsdagen sin
         // egen tjekliste. (egnePunkter er flyttet op i s.egneTing 14/8 — se
@@ -894,7 +909,7 @@ function nyForberedelse(ekstra){
     måltidFra:[], egneMåltider:[],
     startNavn:'', startXY:null, radius:2, oplevelser:{lys:null, natur:null, stemning:null},
     destination:null,
-    madValg:[], snackValg:[], drikkeValg:[], udstyrValg:[],
+    madValg:[], snackValg:[], drikkeValg:[], morgenValg:[], udstyrValg:[],
     invType:null, invModtager:'', invAfsender:'', invStatus:null,
     invForslag:[], invForslagFra:null, invEnigDato:null,
     /* egnePunkter er væk fra turen (14/8) — egne punkter bor i s.egneTing og
@@ -1911,7 +1926,8 @@ function pakkeListe(){
       .map(bilOpslag).filter(Boolean)
       .map(p=>({ id:'b-'+p.id, tekst:p.navn || p.tekst, gruppe:'Til bilen' })),
     ...valgtUdstyr().map(p=>({ id:'u-'+p.id, tekst:p.tekst, gruppe:'Forplejning' })),
-    ...madScenarieUdstyr().map(p=>({ id:'ms-'+p.id, tekst:p.tekst, gruppe:'Forplejning' }))
+    ...madScenarieUdstyr().map(p=>({ id:'ms-'+p.id, tekst:p.tekst, gruppe:'Forplejning' })),
+    ...morgenUdstyr().map(p=>({ id:'mo-'+p.id, tekst:p.tekst, gruppe:'Forplejning' }))
   ];
 }
 /* De sidste forberedelser: strøm, og den mad og drikke der først kan i bilen
@@ -3133,6 +3149,15 @@ function madScenarieUdstyr(){
     .filter(Boolean)
     .flatMap(d => d.brug);
 }
+/* Morgenmad-trinnets valgte punkter (faste + selvskrevne) lander på
+   pakkelisten, ligesom de andre Forplejnings-lister gør. */
+function morgenUdstyr(){
+  const f = s.forberedelse; if(!f) return [];
+  return [
+    ...(f.morgenValg||[]).map(id=>MORGEN_VALG.find(x=>x.id===id)).filter(Boolean),
+    ...egne('morgen')
+  ];
+}
 /* Flerdages-tur (Hjem igen ≠ samme dag) får et morgenmads-trin ind i flowet. */
 function flerdagsTur(){ const f=s.forberedelse; return !!(f && f.retur && f.retur!=='samme'); }
 function madTrinTop(titel, under, etiket){
@@ -3175,6 +3200,7 @@ function toggleValg(arrNavn, id){
 function toggleMadValg(id){ toggleValg('madValg', id); }
 function toggleSnackValg(id){ toggleValg('snackValg', id); }
 function toggleDrikkeValg(id){ toggleValg('drikkeValg', id); }
+function toggleMorgenValg(id){ toggleValg('morgenValg', id); }
 function toggleUdstyrValg(id){ toggleValg('udstyrValg', id); }
 
 /* =============================================================
@@ -3443,13 +3469,38 @@ function skærmMadSnacks(){
 }
 /* ---- Trin 3: Morgenmad (kun flerdages-ture) — rent informativt, ingen valg ---- */
 function skærmMadMorgen(){
+  const f = s.forberedelse || nyForberedelse();
+  const valgte = f.morgenValg || [];
+  const afsnit = tekst => (Array.isArray(tekst)?tekst:[tekst]).map(t=>`<p>${esc(t)}</p>`).join('');
+  const valgRk = p => `<div class="liste-punkt" onclick="toggleMorgenValg('${p.id}')" style="cursor:pointer">
+    <div class="tjekboks ${valgte.includes(p.id)?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+    <div class="navn">${esc(p.tekst)}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${esc(p.tip)}</div>`:''}</div>
+  </div>`;
   $('indhold').innerHTML = `<div class="side anim">
-    ${madTrinTop('Morgenmad')}
+    ${madTrinTop('Til morgenen')}
     <div class="kort guide-brød">
-      <p>Næsten alle destinationerne ligger i nærheden af et godt bageri — vi foreslår altid et under destinationen. Her kan du også tit få fremragende kaffe.</p>
-      <p>Nu kan I køre videre, eller I kan vende tilbage til basen — måske går turen hjem, inden I skal i gang med hverdagens rytmer.</p>
+      <p>Tænk altid et måltid frem. Nogen gange er morgenerne her programmet rigtig starter andre gange kører vi videre eller også kører vi hjem.</p>
+      <p>Derfor kan morgene være alt fra ingenting til en kop kaffe eller en banan og en kop vand til vi lander det næste sted.</p>
     </div>
-    ${madTrinFod('mad-snacks','Næste',"gåTil('mad-udstyr-0')")}
+    <div class="sektion"><h3>Tænk over disse ting</h3></div>
+    <div class="liste">
+      ${MORGEN_VALG.map(valgRk).join('')}
+      ${egne('morgen').map(egetMorgenRække).join('')}
+      ${egetFeltRække('morgen','Skriv jeres eget punkt')}
+    </div>
+    <div class="sektion"><h3>Sådan gør vi</h3></div>
+    <p class="dæmpet" style="margin-bottom:14px">Vi elsker solopgange og at putte under dynen mens bagagerummet er åbent og lukker naturen ind.</p>
+    <div class="sektion"><h3>Vores erfaring</h3></div>
+    <div class="dæmpet" style="margin-bottom:14px">${afsnit([
+      'Morgenen er meget rituelle og forskellig fra person til person. Vi har derfor valgt at man selv kan tilføje, det I har brug for på de åbne punkter herover.',
+      'Vi elsker god kaffe og morgenbrød, så vi finder oftest en bager eller cafe i området.'
+    ])}</div>
+    <div class="sektion"><h3>Det lille ekstra</h3></div>
+    <div class="dæmpet" style="margin-bottom:20px">${afsnit([
+      'Der er virkelig mange gode brunch steder i Danmark.',
+      'Husk det sidste punkt "personligt", så du ikke skal på cafe med strithår og morgenånde.'
+    ])}</div>
+    ${madTrinFod('mad-snacks','Tilføj punkter til turen',"gåTil('mad-udstyr-0')")}
   </div>`;
 }
 /* ---- Trin 5: Udstyr — ét trin pr. gruppe, så siden ikke bliver en mur.
@@ -3557,6 +3608,15 @@ function egenRække(liste, p, tjek){
     <div class="tjekboks ${tjek.includes(p.id)?'markeret':''}" onclick="pakkeTjek('${p.id}')" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
     <div class="navn" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">${esc(p.tekst)}</div>
     <button class="eget-fjern" onclick="fjernEgetPunkt('${liste}','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
+  </div>`;
+}
+/* Samme egne-punkter-mekanik som pakke/hygge/hund, men uden pakkeTjek —
+   Morgenmad-trinnet er stadig planlægning, ikke "krydset af, er pakket".
+   Skrevet ind = valgt; krydset fjerner det igen. */
+function egetMorgenRække(p){
+  return `<div class="liste-punkt">
+    <div class="navn">${esc(p.tekst)}</div>
+    <button class="eget-fjern" onclick="fjernEgetPunkt('morgen','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
   </div>`;
 }
 function sætHundMed(på){
