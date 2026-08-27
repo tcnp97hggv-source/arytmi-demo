@@ -27,6 +27,7 @@ const IKONER = {
      'hjerte' står stadig i listen — den bruges af tælleren i hero'en. */
   puls:   '<path d="M2 12h5l1.5-3.5L10 15.5 11.5 5 13 16.5 14.5 10 16 12h6"/>',
   pil:    '<path d="M5 12h13m-5.5-5.5L18 12l-5.5 5.5"/>',
+  info:   '<circle cx="12" cy="12" r="8.3"/><path d="M12 11.2v5.3" stroke-linecap="round"/><circle cx="12" cy="7.7" r="1" fill="currentColor" stroke="none"/>',
   tilbage:'<path d="M19 12H6m5.5 5.5L6 12l5.5-5.5"/>',
   plus:   '<path d="M12 5.5v13M5.5 12h13"/>',
   tjek:   '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
@@ -345,7 +346,7 @@ const BILEN_GRUPPER = [
       brød:'De færreste p-pladser er i vater. Et par blokke under hjulene retter bilen op, så I ikke ligger og glider mod fodenden hele natten.' },
     { id:'myggenet',    navn:'Myggenet',          ikon:'blad', huske:true,
       brød:'Myggenet i vinduerne betyder, at I kan have en rude på klem hele natten. Ved vand og skov er det forskellen på frisk luft og en time med en summende gæst.' },
-    { id:'oplader',     navn:'Oplader',           ikon:'lyn',  huske:true,
+    { id:'oplader',     navn:'Oplader',           ikon:'lyn',  huske:true, tip:'Til mobil, computer o.l.',
       brød:'Ledninger til telefoner og det, I ellers har med. Tjek at de passer til bilens udtag og ikke kun til en stikkontakt.' },
     { id:'bord',        navn:'Bord',              ikon:'kurv', huske:true,
       brød:'Et lille klapbord gør forskellen på at spise i skødet og at spise ved et bord. Det fylder mindre, end man tror.' },
@@ -914,8 +915,11 @@ function nyForberedelse(ekstra){
     invForslag:[], invForslagFra:null, invEnigDato:null,
     /* egnePunkter er væk fra turen (14/8) — egne punkter bor i s.egneTing og
        huskes på tværs af ture. hundMed er turens eget valg: hunden er ikke
-       nødvendigvis med hver gang. */
-    bilType:null, strømKilde:null, bilHuske:[], hundMed:false, klarTjek:[], planlagt:false,
+       nødvendigvis med hver gang. Need to have er forudvalgt (KN 27/8): man
+       skal aktivt fjerne et punkt, hvis det ikke skal med — ikke aktivt
+       tilføje det. Nice to have/Hygge starter tomme (opt-in). */
+    bilType:null, bilHuske:BILEN_GRUPPER.find(g=>g.id==='need').punkter.filter(p=>p.huske).map(p=>p.id),
+    hundMed:false, klarTjek:[], planlagt:false,
     bilTjek:[], pakkeTjek:[],
     set:{mad:false},
     startet:new Date().toISOString().slice(0,10)
@@ -2963,6 +2967,12 @@ function tilOverblik(){
    ikke et skridt man skal kunne gå tilbage fra. */
 let åbneBilEmner = {};
 function bilFold(id){ åbneBilEmner[id] = !åbneBilEmner[id]; tegn(); }
+/* Ren bekræftelse (KN 27/8) — valgene på Bilen/Personligt gemmes allerede
+   ved hvert tryk på en tjekboks, så knappen behøver ikke gøre andet end at
+   sige "det er registreret", ligesom "Tilføj til tur" på Snacks/Drikkevarer. */
+function tilføjTilTurKnap(){
+  return `<button class="knap kontur bred" style="margin-top:18px" onclick="flash('Tilføjet til jeres tur.', 'tjek')">${ik('tjek')} Tilføj til tur</button>`;
+}
 function vælgBilType(id){
   if(!s.forberedelse) s.forberedelse = nyForberedelse();
   s.forberedelse.bilType = id;
@@ -3000,26 +3010,43 @@ function skærmBilen(){
   }
 
   const valgtType = BIL_TYPER.find(t=>t.id===f.bilType) || BIL_TYPER[0];
-  const emne = (p)=>{
+  /* Punkter man kan pakke (huske:true) er nu en direkte tjekliste: tryk på
+     rækken for at til-/fravælge, tryk info-ikonet for at folde brødteksten ud
+     — de to handlinger er adskilt (stopPropagation), så man ikke fravælger et
+     punkt ved et uheld, når man bare ville læse mere (KN 27/8). */
+  const huskeEmne = (p)=>{
     const åben = !!åbneBilEmner[p.id];
-    const markeret = tjek.includes(p.id);
     const husket = huske.includes(p.id);
-    const mærke = markeret ? 'Klaret' : husket ? 'På huskelisten' : '';
     return `
-      <div class="liste-punkt bil-emne" onclick="bilFold('${p.id}')" style="cursor:pointer">
-        <span style="color:var(--rav);flex-shrink:0">${ik(p.ikon)}</span>
-        <div class="navn">${p.navn}</div>
-        ${mærke?`<span class="bil-mærke">${ik('tjek')} ${mærke}</span>`:''}
-        <span class="bil-pil ${åben?'åben':''}">${ik('pil')}</span>
+      <div class="liste-punkt" onclick="bilHusk('${p.id}')" style="cursor:pointer">
+        <div class="tjekboks ${husket?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+        <div class="navn">${p.navn}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${esc(p.tip)}</div>`:''}</div>
+        <button class="bil-info" onclick="event.stopPropagation();bilFold('${p.id}')" aria-label="Mere om ${esc(p.navn)}">${ik('info')}</button>
       </div>
       ${åben?`<div class="bil-krop">
         <p>${p.brød}</p>
         <p class="bil-udkast">Udkast — OD skriver den endelige tekst.</p>
-        ${p.huske
-          ? `<button class="knap ${husket?'blød':'kontur'} bred" onclick="event.stopPropagation();bilHusk('${p.id}')">${ik(husket?'tjek':'plus')} ${husket?'Fjern fra huskelisten':'Føj til huskeliste'}</button>`
-          : `<button class="knap ${markeret?'blød':'kontur'} bred" onclick="event.stopPropagation();bilTjek('${p.id}')">${ik('tjek')} ${markeret?'Krydset af':'Kryds af'}</button>`}
       </div>`:''}`;
   };
+  /* Camp Mode (huske:false) er stadig noget, man TESTER derhjemme, ikke
+     pakker — den beholder derfor sin egen "Kryds af"-knap bag folden. */
+  const testEmne = (p)=>{
+    const åben = !!åbneBilEmner[p.id];
+    const markeret = tjek.includes(p.id);
+    return `
+      <div class="liste-punkt bil-emne" onclick="bilFold('${p.id}')" style="cursor:pointer">
+        <span style="color:var(--rav);flex-shrink:0">${ik(p.ikon)}</span>
+        <div class="navn">${p.navn}</div>
+        ${markeret?`<span class="bil-mærke">${ik('tjek')} Klaret</span>`:''}
+        <span class="bil-pil ${åben?'åben':''}">${ik('info')}</span>
+      </div>
+      ${åben?`<div class="bil-krop">
+        <p>${p.brød}</p>
+        <p class="bil-udkast">Udkast — OD skriver den endelige tekst.</p>
+        <button class="knap ${markeret?'blød':'kontur'} bred" onclick="event.stopPropagation();bilTjek('${p.id}')">${ik('tjek')} ${markeret?'Krydset af':'Kryds af'}</button>
+      </div>`:''}`;
+  };
+  const emne = p => p.huske ? huskeEmne(p) : testEmne(p);
 
   $('indhold').innerHTML = `<div class="side anim">
     ${sektionHeader('bilen')}
@@ -3032,7 +3059,7 @@ function skærmBilen(){
     </div>
     ${bilInstrumenter()}
     <div class="sektion" style="margin-top:26px"><h3>Det praktiske</h3></div>
-    <p class="dæmpet" style="margin:-4px 0 12px;font-size:13px">Fold ud, hvis du vil vide mere om det enkelte.</p>
+    <p class="dæmpet" style="margin:-4px 0 12px;font-size:13px">Tryk info-ikonet, hvis du vil vide mere om det enkelte.</p>
     ${BILEN_GRUPPER.map(g=>`
       <div class="sektion"><h3>${g.navn}</h3></div>
       ${g.under?`<p class="dæmpet" style="margin:-4px 0 12px;font-size:13px">${g.under}</p>`:''}
@@ -3041,6 +3068,7 @@ function skærmBilen(){
         ${g.åben ? egne(g.åben).map(p=>egetBilEmne(g.åben,p,huske)).join('')
                    + egetFeltRække(g.åben,'Hvad hygger I med?') : ''}
       </div>`).join('')}
+    ${tilføjTilTurKnap()}
     ${sektionFod('bilen')}
   </div>`;
 }
@@ -3055,17 +3083,11 @@ function skærmBilen(){
    giver én gang, ikke en procent appen finder på. De øvrige tre felter henter
    appen selv fra det, den allerede ved.
    ============================================================= */
-const STRØM_KILDER = [
-  { id:'bil',       navn:'Bilens batteri', under:'Camp Mode trækker herfra',      ikon:'lyn' },
-  { id:'powerbank', navn:'Powerbank',      under:'Eller en lille strømstation',   ikon:'lyn' },
-  { id:'ingen',     navn:'Ingen',          under:'Kun lys og telefoner på egen strøm', ikon:'måne' }
-];
-function sætStrømKilde(id){
-  if(!s.forberedelse) s.forberedelse = nyForberedelse();
-  s.forberedelse.strømKilde = id;
-  gem(); tegn();
-}
-/* Underlag og afstand kommer fra destinationen, hvis den er et testet sted. */
+/* "Hvor kommer strømmen fra?" er slettet (KN 27/8) — den spurgte om det
+   samme som Need to have-punktet "Strøm" allerede svarer på (brødteksten
+   dækker både elbil/Camp Mode-batteri og powerbank/station). Strøm-måleren
+   viser derfor nu, om punktet stadig står på listen, i stedet for at bede om
+   et separat svar. */
 function bilInstrumenter(){
   const f = s.forberedelse;
   const t = f.destination && f.destination.testetId
@@ -3073,7 +3095,7 @@ function bilInstrumenter(){
   const start = startGeo();
   const km = (start && t) ? Math.round(afstandKm(start, testetGeo(t))) : null;
   const campKlar = (f.bilTjek||[]).includes('camp');
-  const strøm = STRØM_KILDER.find(k=>k.id===f.strømKilde);
+  const strømKlar = (f.bilHuske||[]).includes('strøm');
   const måler = (navn, tal, enhed, under, ok)=>`
     <div class="maaler${ok?' ok':''}">
       <div class="m-navn">${navn}</div>
@@ -3083,34 +3105,27 @@ function bilInstrumenter(){
   return `
     <div class="sektion"><h3>Sådan står bilen</h3></div>
     <div class="maaler-net">
-      ${måler('Strøm', strøm?strøm.navn:'Ikke svaret', '', strøm?strøm.under:'Vælg nedenfor', !!strøm)}
+      ${måler('Strøm', strømKlar?'På listen':'Fjernet', '',
+              strømKlar?'Se Need to have':'Tilføj under Need to have', strømKlar)}
       ${måler('Camp Mode', campKlar?'Testet':'Ikke testet', '',
               campKlar?'Klar til natten':'Prøv den hjemme først', campKlar)}
       ${måler('Til stedet', km!=null?km:'—', km!=null?'km':'',
               km!=null?køretid(km)+' i bil':'Vælg destination først', false)}
       ${måler('Underlag', t&&t.underlag?esc(t.underlag):'—', '',
               t&&t.underlag?'Fra vores egen tur':'Ikke noteret endnu', false)}
-    </div>
-    <div class="seg-række" style="margin-top:0">
-      <div class="seg-titel">Hvor kommer strømmen fra?</div>
-      <div class="seg-valg">
-        ${STRØM_KILDER.map(k=>`
-          <button class="seg-knap ${f.strømKilde===k.id?'valgt':''}" onclick="sætStrømKilde('${k.id}')">
-            ${ik(k.ikon)}<span>${k.navn}</span>
-          </button>`).join('')}
-      </div>
     </div>`;
 }
 /* Et hygge-punkt, man selv har skrevet. Det har ingen brødtekst at folde ud —
-   kun "føj til huskelisten" og et kryds til at slette det igen. Modsat appens
-   egne punkter overlever det turen, så det står der næste gang. */
+   kun en tjekboks til at tilføje/fjerne det fra turen og et kryds til at
+   slette det helt (KN 27/8: samme tjekboks-mønster som de faste punkter, så
+   man ikke skal åbne noget for at tilføje det). Modsat appens egne punkter
+   overlever det turen, så det står der næste gang. */
 function egetBilEmne(liste, p, huske){
   const husket = huske.includes(p.id);
-  return `<div class="liste-punkt">
-    <span style="color:var(--rav);flex-shrink:0">${ik('gnist')}</span>
+  return `<div class="liste-punkt" onclick="bilHusk('${p.id}')" style="cursor:pointer">
+    <div class="tjekboks ${husket?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
     <div class="navn">${esc(p.tekst)}</div>
-    <button class="eget-tilføj" onclick="bilHusk('${p.id}')">${husket?'På listen':'Føj til'}</button>
-    <button class="eget-fjern" onclick="fjernEgetPunkt('${liste}','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
+    <button class="eget-fjern" onclick="event.stopPropagation();fjernEgetPunkt('${liste}','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
   </div>`;
 }
 function bilTjek(id){
@@ -3548,10 +3563,13 @@ function valgtUdstyr(){
   const alle = FORPLEJNING_UDSTYR.flatMap(g=>g.punkter);
   return f.udstyrValg.map(id=>alle.find(p=>p.id===id)).filter(Boolean);
 }
+/* Ingen strøget-streg her (KN 27/8): dette er stadig planlægning — punktet
+   tilføjes turen, når det vælges. Det krydsede/strøgede hører kun til på
+   "Klar til at pakke" (skærmKlarListe), som er en helt anden liste. */
 function pakkeRække(p, tjek){
   const markeret = tjek.includes(p.id);
   return `
-  <div class="liste-punkt ${markeret?'strøget':''}" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">
+  <div class="liste-punkt" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">
     <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
     <div class="navn">${p.tekst}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${p.tip}</div>`:''}</div>
   </div>`;
@@ -3604,7 +3622,7 @@ function egetFeltRække(liste, pladsholder){
 /* Én række på pakkelisten — også for dem, man selv har skrevet. Egne punkter
    har et kryds til at fjerne dem igen; appens egne har ikke. */
 function egenRække(liste, p, tjek){
-  return `<div class="liste-punkt ${tjek.includes(p.id)?'strøget':''}">
+  return `<div class="liste-punkt">
     <div class="tjekboks ${tjek.includes(p.id)?'markeret':''}" onclick="pakkeTjek('${p.id}')" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
     <div class="navn" onclick="pakkeTjek('${p.id}')" style="cursor:pointer">${esc(p.tekst)}</div>
     <button class="eget-fjern" onclick="fjernEgetPunkt('${liste}','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
@@ -3655,7 +3673,7 @@ function skærmPakke(){
         <span style="color:var(--rav);flex-shrink:0">${ik('blad')}</span>
         <div class="navn">Vi har hund med
           <div class="dæmpet" style="font-size:12.5px;margin-top:2px">${f.hundMed
-            ? `${hundKlaret} af ${hund.length} pakket`
+            ? `${hundKlaret} af ${hund.length} valgt`
             : 'Tryk for at føje hundens ting til listen'}</div>
         </div>
         <span class="bil-pil ${f.hundMed?'åben':''}">${ik('pil')}</span>
@@ -3669,6 +3687,7 @@ function skærmPakke(){
     </div>
 
     ${f.destination?`<p class="dæmpet" style="font-size:13px">Destination: ${esc(f.destination.navn)} — ${f.destination.testetId==='t1'?'tag badetøjet med, I er ved vandet.':'tjek om der er badevand i nærheden.'}</p>`:''}
+    ${tilføjTilTurKnap()}
     ${sektionFod('pakke')}
   </div>`;
 }

@@ -385,6 +385,12 @@
   .bil-pil.åben{transform:rotate(90deg)}
   .bil-mærke{font-size:12px;font-weight:650;color:var(--fjord);flex-shrink:0;display:flex;align-items:center;gap:4px}
   .bil-mærke svg{width:13px;height:13px}
+  /* Info-ikonet på tjeklistepunkter (KN 27/8, erstatter pilen): "der er mere
+     at læse, men du behøver ikke". Egen tap-flade, adskilt fra selve rækkens
+     til-/fravælg-klik. */
+  .bil-info{border:none;background:transparent;color:#c9c2b0;cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;padding:4px}
+  .bil-info svg{width:19px;height:19px}
   .bil-krop{padding:0 0 16px;border-bottom:1px solid var(--linje);animation:fold .28s ease}
   .bil-krop:last-child{border-bottom:none}
   .bil-krop p{font-size:14.5px;line-height:1.66}
@@ -922,8 +928,8 @@
      — det er kun fingerens mål, der vokser. */
   .knap.lille{min-height:44px}
   .tilbage{width:44px;height:44px}
-  .eget-fjern,.prik-valg,.tjekboks,.overblik-knap,.sted-chip{position:relative}
-  .eget-fjern::after,.tjekboks::after,.overblik-knap::after,.sted-chip::after{
+  .eget-fjern,.prik-valg,.tjekboks,.overblik-knap,.sted-chip,.bil-info{position:relative}
+  .eget-fjern::after,.tjekboks::after,.overblik-knap::after,.sted-chip::after,.bil-info::after{
     content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
     width:max(100%,44px);height:max(100%,44px)}
   /* Bedømmelsesprikkerne står fem i træk med 8px imellem — et 44px bredt felt
