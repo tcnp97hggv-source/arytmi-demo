@@ -392,21 +392,50 @@ const PAKKE_PUNKTER = [
   { id:'personligt', tekst:'Personlige ting — medicin, yndlingste eller lignende' }
 ];
 
-/* -- Mad/drikke: valgmuligheder (erstatter de gamle OD-artikler 26/7) --
+/* -- Mad/drikke: madscenarier (erstatter de gamle enkelt-retter 27/8) --
    Mad → Snacks → (Morgenmad, kun flerdages-ture) → Drikkevarer → Udstyr.
    "Drikke" er samtidig en selvstændig genvej direkte til Drikkevarer. */
 const MAD_VALG = [
-  { id:'pizza',        tekst:'Pizza' },
-  { id:'sandwich',     tekst:'Sandwich' },
-  { id:'tapas',        tekst:'Tapas — i boks eller købt i emballage der ikke skal anrettes' },
-  { id:'sushi',        tekst:'Sushi' },
-  { id:'pastasalat',   tekst:'Pastasalat' },
-  { id:'wraps',        tekst:'Wraps' },
-  { id:'snacktallerken', tekst:'Snacktallerken' },
-  { id:'takeaway',     tekst:'Take away' },
-  { id:'undervejs',    tekst:'Køb undervejs' },
-  { id:'andet-mad',    tekst:'Andet' }
+  { id:'tapas',    tekst:'Tapas/deleretter' },
+  { id:'takeaway', tekst:'Take Away' },
+  { id:'picnic',   tekst:'Kold picnic (hjemmelavet)' },
+  { id:'sammen',   tekst:'Lav-det-sammen' },
+  { id:'ude',      tekst:'Vi spiser ude/på vejen' }
 ];
+/* Uddybende indhold pr. madscenarie — kun 'tapas' har tekst fra Kennet endnu
+   (27/8). De fire andre i MAD_VALG viser "indhold på vej" på valgskærmen og
+   åbner ingen detaljeside, før de får et opslag her efter samme skabelon. */
+const MAD_SCENARIE_DETALJER = {
+  tapas: {
+    nr: '01',
+    tagline: 'Tapas er næsten skabt til en Arytmi og vores favorit',
+    intro: [
+      'Små retter, godt med dip, lidt vin og god tid.',
+      'Det fungerer klart bedst, når I kan have det hele inden for rækkevidde, så begræns udvalget og sørg for det kan ligge på max 2 fade/tallerkner eller beholdere.'
+    ],
+    brug: [
+      { id:'tallerkener-anret', tekst:'Tallerkener', tip:'eller små skåle til anretning' },
+      { id:'tallerkener-spise', tekst:'Tallerkner',  tip:'til at spise af' },
+      { id:'bestik',            tekst:'Bestik' },
+      { id:'glas',              tekst:'Glas', tip:'måske både vin og vandglas' },
+      { id:'lille-kniv',        tekst:'Lille kniv' },
+      { id:'lille-skærebræt',   tekst:'Lille skærebræt' },
+      { id:'servietter',        tekst:'Servietter' },
+      { id:'affaldspose',       tekst:'Affaldspose' },
+      { id:'vådservietter',     tekst:'Vådservietter' }
+    ],
+    sådanGørVi: 'Lav én samlet spiseplads i stedet for at have mad og emballage liggende rundt omkring. En bakke eller et skærebræt fungerer godt som fælles "bord". I bilen kan man ligge/halv ligge. Eller sidde på forsæder/bagagerum.',
+    tip: [
+      'Er du Tesla ejer kan man stoppe trunken, fjerne den yderste bagagerumsplade. Sæderne kan lægges "halvt" ned enten med mekanikken eller madrassen på bagsædet. Se billeder.',
+      'Sørg for, at I begge kan nå maden, og har alt det praktiske indenfor rækkevide, før I sætter jer til rette.'
+    ],
+    lilleEkstra: [
+      'Tag kun det frem, I skal bruge. Resten bliver i bilen.',
+      'Og glem ikke en god flaskeåbner (eller køb med skruelåg), hvis der skal vin på bordet.'
+    ],
+    efter: 'Vi tørrer diverse ting over med vådservietterne og lægger dem tilbage i tasken, så kan de ryge direkte i opvasker når vi kommer hjem.'
+  }
+};
 const SNACK_VALG = [
   { id:'slik-pose',      tekst:'Slik i pose' },
   { id:'slik-indpakket', tekst:'Indpakket slik' },
@@ -1768,7 +1797,8 @@ function pakkeListe(){
     ...(f.bilHuske||[]).filter(id=>id!=='strøm')
       .map(bilOpslag).filter(Boolean)
       .map(p=>({ id:'b-'+p.id, tekst:p.navn || p.tekst, gruppe:'Til bilen' })),
-    ...valgtUdstyr().map(p=>({ id:'u-'+p.id, tekst:p.tekst, gruppe:'Forplejning' }))
+    ...valgtUdstyr().map(p=>({ id:'u-'+p.id, tekst:p.tekst, gruppe:'Forplejning' })),
+    ...madScenarieUdstyr().map(p=>({ id:'ms-'+p.id, tekst:p.tekst, gruppe:'Forplejning' }))
   ];
 }
 /* De sidste forberedelser: strøm, og den mad og drikke der først kan i bilen
@@ -2980,6 +3010,16 @@ function valgtForplejning(){
     ...(f.drikkeValg||[]).map(id=>DRIKKE_VALG.find(x=>x.id===id))
   ].filter(Boolean);
 }
+/* "Det skal I bruge"-listerne fra de valgte madscenarier (kun dem med en
+   detaljeside, jf. MAD_SCENARIE_DETALJER) lander på pakkelisten, ligesom
+   Udstyr-trinnets valg gør. */
+function madScenarieUdstyr(){
+  const f = s.forberedelse; if(!f) return [];
+  return (f.madValg||[])
+    .map(id => MAD_SCENARIE_DETALJER[id])
+    .filter(Boolean)
+    .flatMap(d => d.brug);
+}
 /* Flerdages-tur (Hjem igen ≠ samme dag) får et morgenmads-trin ind i flowet. */
 function flerdagsTur(){ const f=s.forberedelse; return !!(f && f.retur && f.retur!=='samme'); }
 function madTrinTop(titel, under, etiket){
@@ -3206,14 +3246,65 @@ function skærmMadValg(){
   const f = s.forberedelse || nyForberedelse();
   const valgte = f.madValg || [];
   $('indhold').innerHTML = `<div class="side anim">
-    ${madTrinTop('Hvad skal I spise?')}
+    ${madTrinTop('Hvad skal I spise og hvordan?')}
     <div class="kort guide-brød">
-      <p>Arytmi er designet til at gøre det enkelt. Herunder finder I en liste med afprøvede muligheder. Du kan vælge muligheder, og appen vil derefter generere en liste med ting til pakkelisten, der er uundværlige.</p>
-      <p class="citat" style="margin-bottom:0">TIP: Vi er selv store tilhængere af at køre i den nærmeste delikatesse og købe små lækre anretninger, som vi deler som tapas.</p>
+      <p>Måltidslogistik er en svær disciplin, når det kommer til arytmer. Vi har derfor lavet det, vi kalder et "arytmisk madscenarie", som både sørger for det, du skal bruge, og giver vores bedste erfaringer til at gøre oplevelsen god.</p>
     </div>
-    ${valgListe(MAD_VALG, valgte, 'toggleMadValg')}
+    <p class="dæmpet" style="margin:0 0 10px;font-size:13px">Vælg herunder:</p>
+    <div class="liste">
+      ${MAD_VALG.map(p=>{
+        const markeret = valgte.includes(p.id);
+        const harDetalje = !!MAD_SCENARIE_DETALJER[p.id];
+        const aktion = harDetalje ? `gåTil('mad-scenarie-${p.id}')` : `madScenariePlaceholder()`;
+        return `<div class="liste-punkt" onclick="${aktion}" style="cursor:pointer">
+          <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+          <div class="navn">${esc(p.tekst)}${harDetalje?'':' <span class="dæmpet" style="font-size:12px">— indhold på vej</span>'}</div>
+          ${harDetalje?`<span class="tjek-pil">${ik('pil')}</span>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="sektion"><h3>Husk også: Snacks og drikkevarer, morgenmad</h3></div>
     ${madTrinFod('mad','Næste',"gåTil('mad-snacks')")}
   </div>`;
+}
+function madScenariePlaceholder(){ flash('Indhold til dette madscenarie er på vej.', 'klokke'); }
+/* ---- Madscenarie-detalje: kun 'tapas' har indhold endnu (27/8) ---- */
+function skærmMadScenarie(id){
+  const scenarie = MAD_VALG.find(x=>x.id===id);
+  const d = MAD_SCENARIE_DETALJER[id];
+  if(!scenarie || !d){ gåTil('mad-valg'); return; }
+  const afsnit = tekst => (Array.isArray(tekst)?tekst:[tekst]).map(t=>`<p>${esc(t)}</p>`).join('');
+  $('indhold').innerHTML = `<div class="side anim">
+    ${skærmTop(d.tagline, 'mad-valg', d.nr+' · '+scenarie.tekst.toUpperCase())}
+    <div class="kort guide-brød">${afsnit(d.intro)}</div>
+    <div class="sektion"><h3>Det skal I bruge</h3></div>
+    <div class="liste">
+      ${d.brug.map(p=>`
+        <div class="liste-punkt">
+          <div class="navn">${esc(p.tekst)}${p.tip?`<div class="dæmpet" style="font-size:12.5px;margin-top:2px">${esc(p.tip)}</div>`:''}</div>
+        </div>`).join('')}
+    </div>
+    <div class="sektion"><h3>Sådan gør vi</h3></div>
+    <p class="dæmpet" style="margin-bottom:14px">${esc(d.sådanGørVi)}</p>
+    ${d.tip?`<div class="kort"><div class="etiket">Tip</div>${afsnit(d.tip)}</div>`:''}
+    <div class="sektion"><h3>Det lille ekstra</h3></div>
+    <div class="dæmpet" style="margin-bottom:14px">${afsnit(d.lilleEkstra)}</div>
+    <div class="sektion"><h3>Efter måltidet</h3></div>
+    <p class="dæmpet" style="margin-bottom:20px">${esc(d.efter)}</p>
+    <button class="knap primær bred" onclick="tilføjMadScenarie('${id}')">Tilføj til program &amp; pakkeliste ${ik('pil')}</button>
+    <div style="text-align:center;margin-top:10px"><button class="knap kontur lille" onclick="tilbage('mad-valg')">${ik('tilbage')} Tilbage</button></div>
+  </div>`;
+}
+/* Den egentlige "vælg"-handling — svarer til toggleMadValg, men ligger for
+   enden af detaljesiden i stedet for på selve valglisten (KN 27/8: knappen
+   hedder "Tilføj til program & pakkeliste", ikke bare en afkrydsning). */
+function tilføjMadScenarie(id){
+  if(!s.forberedelse) s.forberedelse = nyForberedelse();
+  const arr = s.forberedelse.madValg || (s.forberedelse.madValg=[]);
+  if(!arr.includes(id)) arr.push(id);
+  gem();
+  flash('Tilføjet til jeres program og pakkeliste.', 'tjek');
+  tilbage('mad-valg');
 }
 /* ---- Trin 2: Snacks ---- */
 function skærmMadSnacks(){
@@ -3580,6 +3671,7 @@ function tegn(){
     case aktivSkærm==='mad':          skærmMad(); break;
     case aktivSkærm==='mad-tidsplan':    skærmMadTidsplan(); break;
     case aktivSkærm==='mad-valg':        skærmMadValg(); break;
+    case aktivSkærm.startsWith('mad-scenarie-'): skærmMadScenarie(aktivSkærm.slice(13)); break;
     case aktivSkærm==='mad-snacks':      skærmMadSnacks(); break;
     case aktivSkærm==='mad-morgen':      skærmMadMorgen(); break;
     case aktivSkærm==='mad-drikkevarer': skærmMadDrikkevarer(); break;
