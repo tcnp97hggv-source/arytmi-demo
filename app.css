@@ -385,6 +385,11 @@
   .bil-pil.åben{transform:rotate(90deg)}
   .bil-mærke{font-size:12px;font-weight:650;color:var(--fjord);flex-shrink:0;display:flex;align-items:center;gap:4px}
   .bil-mærke svg{width:13px;height:13px}
+  /* Nummeret foran hvert madscenarie (01–05, OD 30/8). Tal i Inter med lige
+     brede cifre, så de står i kolonne — samme regel som resten af appens tal. */
+  .mad-nr{font-family:var(--skrift-brød);font-variant-numeric:tabular-nums lining-nums;
+    font-weight:700;font-size:12.5px;letter-spacing:.5px;color:var(--rav);
+    flex-shrink:0;min-width:22px}
   /* Info-ikonet på tjeklistepunkter (KN 27/8, erstatter pilen): "der er mere
      at læse, men du behøver ikke". Egen tap-flade, adskilt fra selve rækkens
      til-/fravælg-klik. */
