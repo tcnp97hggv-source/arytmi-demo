@@ -353,15 +353,7 @@
      spørgsmålet får hele bredden nedenunder. */
   .trin-top{margin-bottom:16px}
   .trin-top .etiket-række{display:flex;align-items:center;gap:12px;margin-bottom:5px;min-height:34px}
-  /* Genvej ud til overblikket. Ligger samme sted på hvert trin i flowet, så
-     vejen hjem altid er den samme — og Tilbage/Næste kun betyder ét skridt. */
-  .overblik-knap{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
-    border:1px solid var(--linje);background:var(--flade);color:var(--fjord);
-    font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.3px;
-    padding:8px 13px;border-radius:100px;cursor:pointer;
-    box-shadow:0 3px 12px rgba(58,50,39,.05);transition:transform .18s,background .18s,color .18s}
-  .overblik-knap .ik{width:15px;height:15px}
-  .overblik-knap:hover{transform:translateY(-1px);background:#fff;color:var(--gran)}
+  /* .overblik-knap er fjernet 31/8 (OD) — vejen hjem er bundnavigationen. */
 
   /* ---------- fremskridt ---------- */
   .fremskridt{height:6px;background:var(--flade-dyb);border-radius:100px;margin:16px 0;overflow:hidden}
@@ -916,7 +908,7 @@
      generer ingen på telefonen. */
   :where(button,a,input,textarea,select,[tabindex]):focus-visible{
     outline:2px solid var(--rav);outline-offset:2px;border-radius:4px}
-  .knap:focus-visible,.tilbage:focus-visible,.overblik-knap:focus-visible,
+  .knap:focus-visible,.tilbage:focus-visible,
   .navpunkt:focus-visible,.sted-chip:focus-visible,.eget-tilføj:focus-visible{
     outline:2px solid var(--rav);outline-offset:3px}
   .rund-knap:focus-visible,.tjekboks:focus-visible,.prik-valg:focus-visible{
@@ -933,8 +925,8 @@
      — det er kun fingerens mål, der vokser. */
   .knap.lille{min-height:44px}
   .tilbage{width:44px;height:44px}
-  .eget-fjern,.prik-valg,.tjekboks,.overblik-knap,.sted-chip,.bil-info{position:relative}
-  .eget-fjern::after,.tjekboks::after,.overblik-knap::after,.sted-chip::after,.bil-info::after{
+  .eget-fjern,.prik-valg,.tjekboks,.sted-chip,.bil-info{position:relative}
+  .eget-fjern::after,.tjekboks::after,.sted-chip::after,.bil-info::after{
     content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
     width:max(100%,44px);height:max(100%,44px)}
   /* Bedømmelsesprikkerne står fem i træk med 8px imellem — et 44px bredt felt
@@ -943,3 +935,64 @@
   .prik-valg::after{
     content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
     width:100%;height:44px}
+
+  /* ---------- Dine arytmer (OD 31/8) ---------- */
+  /* Overskrifterne der deler listen i kommende og afholdte ture. */
+  .aryt-sektion{font-size:17px;margin:26px 0 12px}
+  /* De to greb under hver kommende tur: se turplanen, eller kom videre.
+     Side om side på en telefon — de er lige vigtige, og en kolonne ville
+     skubbe næste tur ned under kanten. */
+  .aryt-knapper{display:flex;gap:8px;margin-top:14px}
+  .aryt-knapper .knap{flex:1;min-width:0;padding-left:10px;padding-right:10px;
+    justify-content:center;text-align:center;white-space:normal;line-height:1.25}
+  /* Turen forsiden viser lige nu — markeret med kobberkant, så man kan se
+     hvilken af flere ture, headeren taler om. */
+  .aryt-nu{border-color:var(--rav-lys);box-shadow:0 0 0 1.5px var(--rav-lys) inset}
+  /* Datoen står på egen linje i kommende-kortene — stednavn + lang dato på
+     samme række pressede navnet ned i tre linjer på en 375px-skærm. */
+  .tur-kort .dato{white-space:normal}
+  /* Pakkelisternes overskrifter i den dekorative font (OD 31/8) — de seks
+     lister skal kunne skelnes fra rækkerne inde i dem. */
+  .pakke-titel{font-family:var(--skrift-display);font-weight:600;font-size:16.5px;
+    letter-spacing:.2px;color:var(--gran)}
+
+  /* ---------- fasebånd (OD 31/8) ----------
+     Tre faser: planlægning · klargøring · afsted. Den aktive står i sin egen
+     farve, de klarede står dæmpet i deres. Så kan man se på et halvt sekund,
+     hvilket sted i turen listen hører til. */
+  .fase-bånd{display:flex;gap:6px;margin:0 0 16px}
+  .fase-trin{flex:1;text-align:center;font-size:10.5px;letter-spacing:1.1px;
+    text-transform:uppercase;font-weight:700;color:var(--dæmpet);padding:7px 4px;
+    border-radius:100px;background:var(--flade);border:1px solid var(--linje);
+    transition:background .25s,color .25s,border-color .25s}
+  .fase-trin.nu{color:#faf9f5;background:var(--f);border-color:var(--f)}
+  .fase-trin.klaret{color:#faf9f5;background:var(--f);border-color:var(--f);opacity:.42}
+
+  /* ---------- knap-hierarki (31/8) ----------
+     Tre niveauer, og kun tre. Før stod fire konturknapper i tre forskellige
+     bredder oven på hinanden nederst på overblikket — ingen af dem fortalte,
+     hvad man egentlig skulle gøre.
+
+       .primær   Skærmens ene rigtige greb. Fyldt. Højst én pr. skærm.
+       .kontur   Den understøttende vej. Kant, ingen flade.
+       .stille   Udveje og fortrydelser. Tekst, ingen kant, ingen flade —
+                 læselig, men den trækker ikke øjet. */
+  /* Farverne er MØRKERE end --dæmpet med vilje. --dæmpet (#6b675c) giver 3,8:1
+     mod sidebaggrunden — fint til hjælpetekst, for lidt til en knap på 13px,
+     hvor AA kræver 4,5. Målt: 5,2:1 og 4,9:1. */
+  .knap.stille{background:none;border:none;box-shadow:none;color:#57534a;
+    font-size:13px;font-weight:600;letter-spacing:.2px;padding:10px 14px;min-height:44px}
+  .knap.stille .ik{width:15px;height:15px}
+  /* Terrakotta, ikke rød: det er en fortrydelse, ikke en advarsel. */
+  .knap.stille.fare{color:#7d4938}
+  @media(hover:hover){
+    .knap.stille:hover{color:var(--gran)}
+    .knap.stille.fare:hover{color:#5e3729}
+  }
+  /* Rækken de står i. Wrapper på små skærme, så to lange labels ikke klemmes. */
+  .stille-række{display:flex;justify-content:center;align-items:center;
+    gap:6px;flex-wrap:wrap}
+  /* Foden under skærmens indhold: en hårfin streg, så det stille lag læses som
+     "her er siden slut", ikke som endnu en række valg. */
+  .side-fod{margin-top:24px;padding-top:16px;border-top:1px solid var(--linje)}
+  .side-fod .knap.kontur{margin-bottom:2px}
