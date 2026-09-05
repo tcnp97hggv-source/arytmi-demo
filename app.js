@@ -451,10 +451,9 @@ const MAD_SCENARIE_DETALJER = {
       { id:'tapas-køletaske',         tekst:'Køle/varmetaske' }
     ],
     sådanGørVi: 'Lav én samlet spiseplads i stedet for at have mad og emballage liggende rundt omkring. En bakke eller et skærebræt fungerer godt som fælles "bord". I bilen kan man ligge/halv ligge. Eller sidde på forsæder/bagagerum.',
-    tip: [
-      'Er du Tesla ejer kan man stoppe trunken, fjerne den yderste bagagerumsplade. Sæderne kan lægges "halvt" ned enten med mekanikken eller madrassen på bagsædet. Se billeder.',
-      'Sørg for, at I begge kan nå maden, og har alt det praktiske indenfor rækkevide, før I sætter jer til rette.'
-    ],
+    /* Tesla-tippet er ude (KN 4/9). Det talte til én bilmodel i stedet for til
+       måltidet — og madscenarierne skal kunne læses af alle, uanset bil. */
+    tip: 'Sørg for, at I begge kan nå maden, og har alt det praktiske indenfor rækkevide, før I sætter jer til rette.',
     lilleEkstra: [
       'Tag kun det frem, I skal bruge. Resten bliver i bilen.',
       'Og glem ikke en god flaskeåbner (eller køb med skruelåg), hvis der skal vin på bordet.'
@@ -483,7 +482,8 @@ const MAD_SCENARIE_DETALJER = {
       'Find jeres spiseplads, før I åbner maden.',
       'Brug bagagerummet, et bord eller en anden fast flade som fælles spiseplads. Find affaldsposen frem med det samme til emballagen så den er af vejen.'
     ],
-    tip: 'Er du Tesla ejer kan man tømme trunken og fjerne den yderste bagagerumsplade. Sæderne kan lægges "halvt" ned enten med mekanikken eller madrassen på bagsædet. De fungerer fint som ryglæn. Se billeder.',
+    /* Tesla-tippet er ude (KN 4/9) — samme grund som i tapas. Scenariet har
+       ingen tip-boks nu; feltet er valgfrit, og siden springer den over. */
     lilleEkstra: [
       'Har I køletasker fungerer de lige så godt til at holde maden varm.',
       'Og tag altid et par ekstra servietter med. Altid.'
@@ -655,7 +655,6 @@ function friskState(){
        medbringe…" (OD 30/8) — de er pr. scenarie og ikke fælles, så en
        pizzaskærer skrevet under Take Away ikke dukker op under Tapas. */
     egneTing:tommeEgneTing(),
-    anmeldAfventer:null, // {sted, dato}
     ture:[]              // {sted,dato,score:{destination,app,hygge},kommentar,minde,plan}
   };
 }
@@ -1674,7 +1673,13 @@ function skærmHjem(){
        overordnede er på plads. Rør den ikke før da. */
     under='Vælg mindre, oplev mere. Alt for mange idéer drukner i planlægning — her går du direkte fra idé til afsted.';
     knap={ tekst:'Start her', aria:'Forbered tur', ikon:'bil', aktion:'startForberedelse()' };
-    ekstraForside = `<button class="spontan-link" onclick="startSpontan()">${ik('gnist')} Eller start spontan arytme her</button>`;
+    /* Underknappen LOGGER nu turen bagefter i stedet for at starte en hurtig
+       forberedelse (KN 4/9). En spontan tur er per definition allerede kørt —
+       den skal skrives ind, ikke planlægges. Bemærk: 'hurtig'-skærmen findes
+       stadig og er stadig med i navigationstesten, men der er ingen vej ind
+       til den fra appen længere. Skal den helt ud, er det en selvstændig
+       oprydning (noteret i Arytmi-status.md). */
+    ekstraForside = `<button class="spontan-link" onclick="logSpontanModal()">${ik('gnist')} Log spontan tur</button>`;
   }
 
   // Rund hovedknap til fuldskærms-forsiden — med pulserende hjerteslag-ringe.
@@ -1728,9 +1733,12 @@ function startForberedelse(){
    hvor langt · hvad vil I opleve. Ét flow, uanset om man trykker
    Start eller den spontane knap.
    ============================================================= */
-const RADIUS_TEKST = ['Under 30 min','30–60 min','1–2 timer','2–4 timer'];
+const RADIUS_TEKST = ['Under 30 min','30–60 min','1–2 timer','Mere end 4 timer'];
 /* Køretid → fugleflugt. Landevejsfart ca. 65 km/t, og vejen er sjældent lige —
-   derfor ca. 80 % af den kørte afstand. Bruges til cirklen på kortet. */
+   derfor ca. 80 % af den kørte afstand. Bruges til cirklen på kortet.
+   Sidste trin hedder "Mere end 4 timer" (KN 4/9), men radius bliver på 200 km:
+   200 km fugleflugt fra et hvilket som helst punkt i Danmark rammer allerede
+   hele landet, så et større tal ville ikke give ét sted mere at vælge imellem. */
 const RADIUS_KM = [25, 50, 100, 200];
 function turTilbage(trin){
   tilbage(['hjem','turdato','hvorfra','hvorlangt'][trin] || 'hjem');
@@ -1775,7 +1783,7 @@ function datoFelter(){
            onchange="sætTid('afgangstid', this.value)">
     <div style="border-top:1px solid var(--linje);margin:20px 0 4px"></div>
     <label class="felt-etiket">Hjem igen? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
-    <div class="seg-valg">${seg('samme','I dag')}${seg('næste','I morgen')}${seg('dato','Vælg dato')}</div>
+    <div class="seg-valg">${seg('samme','Samme dag')}${seg('næste','Dagen efter')}${seg('dato','Vælg dato')}</div>
     ${f.retur==='dato'?`<div style="margin-top:10px">${datoSelects('retur', f.returDato, 'fremtid', 'sætReturDato')}</div>`:''}
     <label class="felt-etiket">Ca. hvornår er I hjemme? <span class="dæmpet" style="font-weight:400">(valgfrit)</span></label>
     <input type="time" step="900" style="width:100%" value="${f.returtid||''}"
@@ -1785,11 +1793,11 @@ function datoFelter(){
      — Dato-trinnet skal kun handle om datoer). Det spørges der om på
      tidsplan-skærmen, hvor det er motiveret: dér kan man se, at svaret er
      forskellen på, om frokosten dagen efter er jeres eller hjemme i køkkenet.
-     "I dag"/"I morgen" (24/8, KN's ønske) er relativt til AFGANGSDATOEN, ikke
-     til den rigtige kalenderdato — sætRetur() og alt der læser f.retur
-     ('samme'/'næste'/'dato') er urørt. Præcist ved en afgang i morgen; ved en
-     afgang længere ude i fremtiden betyder det stadig "samme dag som turen"/
-     "dagen efter", bare med en mere hverdagsagtig ordlyd. */
+     "Samme dag"/"Dagen efter" (KN 4/9) er relativt til AFGANGSDATOEN, ikke til
+     den rigtige kalenderdato. Valgene hed "I dag"/"I morgen" fra 24/8, og de ord
+     var kun sande, hvis man kørte i dag — ved en afgang om tre uger løj de.
+     sætRetur() og alt der læser f.retur ('samme'/'næste'/'dato') er urørt; det
+     er kun ordlyden, der er skiftet. */
 }
 function sætRetur(v){ s.forberedelse.retur=v; gem(); tegn(); }
 /* Ingen tegn() her: feltet er lige blevet forladt, og en gentegning ville
@@ -1859,7 +1867,7 @@ function skærmHvorLangt(){
         <div class="radius-under">kørsel fra ${esc(f.startNavn||'jeres startpunkt')}</div>
       </div>
       <input type="range" class="radius" min="0" max="3" step="1" value="${f.radius}" oninput="s.forberedelse.radius=+this.value;gem();opdaterRadius(this.value)">
-      <div class="radius-mærker"><span>30 min</span><span>1 t</span><span>2 t</span><span>4 t</span></div>
+      <div class="radius-mærker"><span>30 min</span><span>1 t</span><span>2 t</span><span>4 t+</span></div>
     </div>
     ${wizardBund('Videre',"gåTil('onsker')", true)}
     ${annullérLinje()}
@@ -2004,19 +2012,39 @@ function skærmForslag(){
    Af sted er derfor heller ikke en tilstand længere: turen er klar, når den er
    pakket. Knapperne, der før kaldte afSted(), fører nu bare til Dine arytmer. */
 function tilAfsted(){ nulstilHistorik(); gåTil('log'); }
-/* "Vil du gemme din tur" på et pakket kort i Dine arytmer. Turen bliver
-   liggende i arytmer, indtil anmeldelsen er sendt eller sprunget over — så
-   forsvinder den ikke, hvis man fortryder undervejs. */
-function gemTur(id){
-  const a = s.arytmer.find(x=>x.id===id); if(!a) return;
-  s.anmeldAfventer = {
-    turId: id,
-    sted: a.destination ? a.destination.navn : 'Jeres sted',
-    dato: a.dato,
-    plan: turSnapshot(a)
-  };
-  anmeldKladde = null;
-  gem(); vælgTur(id); gåTil('anmeld');
+/* Turene logges SELV (KN 4/9). Knappen "Vil du gemme din tur" er væk fra de
+   kommende ture: den bad om et tryk for noget, appen godt selv kunne se var
+   sket. Er turens sidste dag passeret, flytter den herfra og ned under
+   Afholdte ture — anmeldelsen kan man så tage bagefter, hvis man vil.
+
+   Tomme kladder med en passeret dato bliver slettet i stedet for logget. En
+   kladde, hvor der aldrig blev valgt noget, er ikke en tur, man har været på. */
+function turSlutDato(a){
+  if(!a.dato) return null;
+  if(a.retur === 'dato' && a.returDato) return a.returDato;
+  if(a.retur === 'næste'){
+    const d = new Date(a.dato + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0,10);
+  }
+  return a.dato;
+}
+function logAfholdteTure(){
+  const iDag = new Date().toISOString().slice(0,10);
+  let ændret = false;
+  s.arytmer.slice().forEach(a => {
+    const slut = turSlutDato(a);
+    if(!slut || slut >= iDag) return;
+    if(!tomKladde(a)){
+      s.ture.unshift({
+        sted: a.destination ? a.destination.navn : 'Jeres sted',
+        dato: a.dato, score: null, kommentar: '', minde: '', plan: turSnapshot(a)
+      });
+    }
+    sletTur(a.id);
+    ændret = true;
+  });
+  if(ændret) gem();
 }
 
 /* =============================================================
@@ -3053,7 +3081,7 @@ function turSnapshot(f){
     radius: f.radius, oplevelser: f.oplevelser || null,
     madValg: [...(f.madValg||[])], snackValg: [...(f.snackValg||[])],
     morgenValg: [...(f.morgenValg||[])], brugValg: [...(f.brugValg||[])],
-    brugSet: [...(f.brugSet||[])],
+    brugSet: [...(f.brugSet||[])], morgenSet: !!f.morgenSet,
     bilType: f.bilType || null, bilHuske: [...(f.bilHuske||[])],
     hundMed: !!f.hundMed
   };
@@ -3487,6 +3515,7 @@ function skærmBilen(nr){
     </div>
     <div class="sektion"><h3>${esc(g.navn)}</h3></div>`:''}
     ${g.under?`<p class="dæmpet" style="margin:-4px 0 12px;font-size:13px">${g.under}</p>`:''}
+    ${vælgAlleLinje('bilHuske', [...g.punkter, ...(g.åben ? egne(g.åben) : [])])}
     <div class="liste">
       ${g.punkter.map(emne).join('')}
       ${g.åben ? egne(g.åben).map(p=>egetBilEmne(g.åben,p,huske)).join('')
@@ -3564,13 +3593,15 @@ function madScenarieMad(){
   return madScenarieValgte().filter(p=>p.handle).map(p=>({ ...p, gruppe:'Handleliste' }));
 }
 /* Morgenmad-trinnets valgte punkter (faste + selvskrevne) lander på
-   pakkelisten under Madudstyr sammen med scenariernes grej (OD 30/8). */
+   pakkelisten under Madudstyr sammen med scenariernes grej (OD 30/8).
+   Egne punkter tælles nu med på samme vilkår som de faste — de skal stå i
+   morgenValg (KN 4/9). forvælgMorgen() sørger for, at de starter valgt. */
 function morgenUdstyr(){
   const f = s.forberedelse; if(!f) return [];
-  return [
-    ...(f.morgenValg||[]).map(id=>MORGEN_VALG.find(x=>x.id===id)).filter(Boolean),
-    ...egne('morgen')
-  ].map(p=>({ ...p, gruppe:'Madudstyr' }));
+  const valgte = f.morgenValg || [];
+  return [...MORGEN_VALG, ...egne('morgen')]
+    .filter(p=>valgte.includes(p.id))
+    .map(p=>({ ...p, gruppe:'Madudstyr' }));
 }
 /* Flerdages-tur (Hjem igen ≠ samme dag) får et morgenmads-trin ind i flowet. */
 function flerdagsTur(){ const f=s.forberedelse; return !!(f && f.retur && f.retur!=='samme'); }
@@ -3616,6 +3647,47 @@ function toggleValg(arrNavn, id){
 }
 function toggleSnackValg(id){ toggleValg('snackValg', id); }
 function toggleMorgenValg(id){ toggleValg('morgenValg', id); }
+/* Vælg alle / Fravælg alle over en emneliste (KN 4/9). Ét sted, så alle
+   listerne opfører sig ens — og ordet følger listens tilstand: er alt valgt,
+   er det eneste fornuftige greb at fravælge. Id'erne følger med i onclick som
+   én streng adskilt af |, så hver liste kan sende sit eget udsnit uden at
+   funktionen skal vide, hvor punkterne kom fra.
+   'scenarie' bruges kun af madscenarierne: et punkt kan først nå pakkelisten,
+   når selve scenariet ligger på turen — samme regel som i toggleBrugValg(). */
+function vælgAlleLinje(arrNavn, punkter, scenarie){
+  if(!punkter.length) return '';
+  const valgte = (s.forberedelse && s.forberedelse[arrNavn]) || [];
+  const alle = punkter.every(p=>valgte.includes(p.id));
+  const ids = punkter.map(p=>p.id).join('|');
+  return `<div class="vælg-alle">
+    <button class="som-link" onclick="skiftAlleValg('${arrNavn}','${ids}'${scenarie?`,'${scenarie}'`:''})">${alle?'Fravælg alle':'Vælg alle'}</button>
+  </div>`;
+}
+function skiftAlleValg(arrNavn, ids, scenarie){
+  if(!s.forberedelse) s.forberedelse = nyForberedelse();
+  const f = s.forberedelse;
+  const liste = String(ids).split('|');
+  const arr = f[arrNavn] || (f[arrNavn] = []);
+  if(liste.every(id=>arr.includes(id))){
+    f[arrNavn] = arr.filter(id=>!liste.includes(id));
+  } else {
+    liste.forEach(id=>{ if(!arr.includes(id)) arr.push(id); });
+    if(scenarie && !(f.madValg||[]).includes(scenarie)) (f.madValg = f.madValg||[]).push(scenarie);
+  }
+  gem(); tegn();
+}
+/* Egne morgenpunkter er FORVALGT, første gang morgentrinnet åbnes på en tur
+   (KN 4/9) — samme greb som forvælgBrug() i madscenarierne. Markøren
+   f.morgenSet sørger for, at et punkt, man bevidst har fravalgt, ikke bliver
+   sat på igen, næste gang siden tegnes. De FASTE punkter forvælges ikke; dem
+   tager man selv stilling til, som man altid har gjort. */
+function forvælgMorgen(){
+  const f = s.forberedelse; if(!f || f.morgenSet) return;
+  f.morgenSet = true;
+  const arr = f.morgenValg || (f.morgenValg = []);
+  egne('morgen').forEach(p=>{ if(!arr.includes(p.id)) arr.push(p.id); });
+  gem();
+}
 /* Et enkelt punkt fra et madscenaries "Det skal I bruge" (30/8). Vælger man
    noget under et scenarie, man endnu ikke har tilføjet turen, tilføjes
    scenariet automatisk — ellers ville afkrydsningen ikke kunne nå pakkelisten,
@@ -3723,6 +3795,7 @@ function skærmMadScenarie(id){
     <div class="sektion"><h3>${esc(d.brugTitel||'Det skal I bruge')}</h3></div>
     <p class="dæmpet" style="margin:0 0 6px">Fravælg punkter herunder du ikke skal bruge og/eller tilføj punkter i bunden du gerne vil medbringe.</p>
     ${d.brugIntro?`<p class="dæmpet" style="margin:0 0 10px">${esc(d.brugIntro)}</p>`:''}
+    ${vælgAlleLinje('brugValg', [...d.brug, ...egne(egneListe)], id)}
     <div class="liste">
       ${d.brug.map(brugRk).join('')}
       ${egne(egneListe).map(p=>egetBrugRække(id, p, valgte)).join('')}
@@ -3753,8 +3826,10 @@ function skærmMadSnacks(){
       <p>Det absolut vigtigste på enhver tur: snacks og hygge.</p>
     </div>
     <div class="sektion"><h3>Det skal I overveje</h3></div>
+    ${vælgAlleLinje('snackValg', SNACK_VALG.filter(p=>!p.del))}
     ${valgListe(SNACK_VALG.filter(p=>!p.del), valgte, 'toggleSnackValg')}
     <div class="sektion" style="margin-top:20px"><h3>Hvis ikke du har planlagt mad, mangler du måske:</h3></div>
+    ${vælgAlleLinje('snackValg', SNACK_VALG.filter(p=>p.del===2))}
     ${valgListe(SNACK_VALG.filter(p=>p.del===2), valgte, 'toggleSnackValg')}
     ${madTrinFod('mad', næsteMål?'Næste':'Færdig', næsteMål?`gåTil('${næsteMål}')`:'forplejningFærdig()')}
   </div>`;
@@ -3762,6 +3837,7 @@ function skærmMadSnacks(){
 /* ---- Trin 3: Morgenmad (kun flerdages-ture) — rent informativt, ingen valg ---- */
 function skærmMadMorgen(){
   const f = s.forberedelse || nyForberedelse();
+  forvælgMorgen();
   const valgte = f.morgenValg || [];
   const afsnit = tekst => (Array.isArray(tekst)?tekst:[tekst]).map(t=>`<p>${esc(t)}</p>`).join('');
   const valgRk = p => `<div class="liste-punkt" onclick="toggleMorgenValg('${p.id}')" style="cursor:pointer">
@@ -3789,9 +3865,10 @@ function skærmMadMorgen(){
     <!-- Huskelisten står NEDERST og teksten over (OD 31/8) — samme rækkefølge
          som madscenarierne fik 30/8: læs først, tag stilling bagefter. -->
     <div class="sektion"><h3>Tænk over disse ting</h3></div>
+    ${vælgAlleLinje('morgenValg', [...MORGEN_VALG, ...egne('morgen')])}
     <div class="liste">
       ${MORGEN_VALG.map(valgRk).join('')}
-      ${egne('morgen').map(egetMorgenRække).join('')}
+      ${egne('morgen').map(p=>egetMorgenRække(p, valgte)).join('')}
       ${egetFeltRække('morgen','Skriv jeres eget punkt')}
     </div>
     ${madTrinFod('mad-snacks','Færdig','forplejningFærdig()')}
@@ -3842,11 +3919,13 @@ let egneTæller = Date.now();
 /* Hvilken valgliste et selvskrevet punkt hører hjemme i. Bruges til at
    markere det som VALGT med det samme (OD 30/8: "lige nu skal jeg trykke igen
    for at aktivere det") — at skrive noget ind ER at vælge det.
-   'morgen' står ikke her: morgenUdstyr() tager alle egne morgen-punkter med
-   ubetinget, så de er valgt i kraft af at eksistere. */
+   'morgen' kom til 4/9: egne morgenpunkter følger nu morgenValg som alle de
+   andre lister. Før tog morgenUdstyr() dem med ubetinget, og så kunne man
+   ikke lade ét punkt blive hjemme på en enkelt tur uden at slette det helt. */
 function egenValgliste(liste){
   if(liste.startsWith('mad-')) return 'brugValg';
   if(liste === 'hygge') return 'bilHuske';
+  if(liste === 'morgen') return 'morgenValg';
   if(liste === 'pakke' || liste === 'hund') return 'pakkeTjek';
   return null;
 }
@@ -3885,6 +3964,7 @@ function fjernEgetPunkt(liste, id){
     f.pakkeTjek = (f.pakkeTjek||[]).filter(x=>x!==id);
     f.bilHuske  = (f.bilHuske||[]).filter(x=>x!==id);
     f.brugValg  = (f.brugValg||[]).filter(x=>x!==id);
+    f.morgenValg = (f.morgenValg||[]).filter(x=>x!==id);
     /* klarTjek gemmer id'et PRÆFIKSET (p-, b-, ms-, mo-), så et rent
        !==id-filter ramte aldrig — punktet blev slettet, men lå og talte med
        som "pakket" på klar-listen. */
@@ -3915,13 +3995,16 @@ function egenRække(liste, p, tjek){
     <button class="eget-fjern" onclick="fjernEgetPunkt('${liste}','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
   </div>`;
 }
-/* Samme egne-punkter-mekanik som pakke/hygge/hund, men uden pakkeTjek —
-   Morgenmad-trinnet er stadig planlægning, ikke "krydset af, er pakket".
-   Skrevet ind = valgt; krydset fjerner det igen. */
-function egetMorgenRække(p){
-  return `<div class="liste-punkt">
+/* Samme egne-punkter-mekanik som pakke/hygge/hund. Punktet har nu sin egen
+   tjekboks (KN 4/9): appen husker det fra tur til tur og sætter det på igen —
+   men man skal kunne fravælge det på DENNE tur uden at miste det. Krydset er
+   stadig det eneste, der får appen til at glemme punktet helt. */
+function egetMorgenRække(p, valgte){
+  const markeret = (valgte||[]).includes(p.id);
+  return `<div class="liste-punkt" onclick="toggleMorgenValg('${p.id}')" style="cursor:pointer">
+    <div class="tjekboks ${markeret?'markeret':''}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
     <div class="navn">${esc(p.tekst)}</div>
-    <button class="eget-fjern" onclick="fjernEgetPunkt('morgen','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
+    <button class="eget-fjern" onclick="event.stopPropagation();fjernEgetPunkt('morgen','${p.id}')" aria-label="Fjern punkt">${ik('kryds')}</button>
   </div>`;
 }
 function sætHundMed(på){
@@ -3947,6 +4030,7 @@ function skærmPakke(){
       <p>Vi har herunder lavet en liste med ting, du kan krydse af, som er vigtige på turen.</p>
       <p class="citat" style="margin-bottom:0">OBS: Giver du denne arytme som gave, bliver de personlige punkter tilføjet din ledsagers liste med ting at huske.</p>
     </div>
+    ${vælgAlleLinje('pakkeTjek', [...PAKKE_PUNKTER, ...egne('pakke')])}
     <div class="liste">
       ${PAKKE_PUNKTER.map(p=>pakkeRække(p,tjek)).join('')}
       ${egne('pakke').map(p=>egenRække('pakke',p,tjek)).join('')}
@@ -3967,6 +4051,7 @@ function skærmPakke(){
       </div>
       ${f.hundMed ? `
       <div class="bil-krop" style="padding-bottom:0;border-bottom:none">
+        ${vælgAlleLinje('pakkeTjek', [...HUND_PUNKTER, ...egne('hund')])}
         ${HUND_PUNKTER.map(p=>pakkeRække(p,tjek)).join('')}
         ${egne('hund').map(p=>egenRække('hund',p,tjek)).join('')}
         ${egetFeltRække('hund','Andet til hunden')}
@@ -3986,57 +4071,104 @@ function pakkeTjek(id){
 }
 
 /* =============================================================
-   ANMELD TUR — 3 spørgsmål + kommentar
-   ============================================================= */
-let anmeldKladde = null;
-function skærmAnmeld(){
-  if(!s.anmeldAfventer){ gåTil('log'); return; }
-  if(!anmeldKladde) anmeldKladde = { destination:0, app:0, hygge:0, kommentar:'' };
-  const bedøm = (felt,tekst)=>`
+   LOG SPONTAN TUR / ANMELDELSE — én pop-up, to indgange
+   =============================================================
+   Fuldskærms-anmeldelsen er væk (KN 4/9). Den lå bag knappen "Vil du gemme
+   din tur", og den knap findes ikke længere — turene logges selv. Tilbage er
+   ét lille skema med dato, sted og de tre spørgsmål, og det bruges to steder:
+
+     logSpontanModal()   — turen I bare tog, skrevet ind bagefter (forsiden)
+     logSpontanModal(n)  — anmeld eller ret s.ture[n] (Dine arytmer)
+
+   Kladden lever i en almindelig variabel og ikke i s: den skal overleve en
+   gentegning af selve pop-uppen, ikke en genstart af appen. */
+let spontanKladde = null;
+function logSpontanModal(n){
+  const gammel = document.getElementById('spontan-modal');
+  if(gammel) gammel.remove();
+  const redigerer = typeof n === 'number';
+  const t = redigerer ? s.ture[n] : null;
+  if(redigerer && !t) return;
+  spontanKladde = t
+    ? { n, dato: t.dato || '', sted: t.sted || '',
+        destination: (t.score && t.score.destination) || 0,
+        app: (t.score && t.score.app) || 0,
+        hygge: (t.score && t.score.hygge) || 0,
+        kommentar: t.kommentar || '' }
+    : { n: null, dato: new Date().toISOString().slice(0,10), sted: '',
+        destination: 0, app: 0, hygge: 0, kommentar: '' };
+  const div = document.createElement('div');
+  div.id = 'spontan-modal';
+  div.className = 'modal-bag';
+  div.innerHTML = '<div class="modal-kort spontan-kort" id="spontan-kort"></div>';
+  document.body.appendChild(div);
+  div.addEventListener('click', e => { if(e.target === div) lukSpontanModal(); });
+  tegnSpontanModal();
+}
+function lukSpontanModal(){
+  const div = document.getElementById('spontan-modal');
+  if(div) div.remove();
+  spontanKladde = null;
+}
+/* Tekstfelterne gemmer UDEN gentegning — ellers mister man markøren midt i en
+   sætning (samme grund som gemMinde() i loggen). Prikkerne skal derimod tegnes
+   om, for det er dem, der viser svaret. */
+function spontanFelt(felt, værdi){ if(spontanKladde) spontanKladde[felt] = værdi; }
+function spontanBedøm(felt, tal){ if(spontanKladde){ spontanKladde[felt] = tal; tegnSpontanModal(); } }
+function tegnSpontanModal(){
+  const kort = document.getElementById('spontan-kort');
+  const k = spontanKladde;
+  if(!kort || !k) return;
+  const bedøm = (felt, tekst) => `
     <div class="bedøm-række"><span style="font-size:14px;flex:1">${tekst}</span>
-      <div class="prikker">${[1,2,3,4,5].map(n=>
-        `<button class="prik-valg ${anmeldKladde[felt]>=n?'valgt':''}" onclick="anmeldKladde.${felt}=${n};tegn()">${n}</button>`).join('')}
+      <div class="prikker">${[1,2,3,4,5].map(tal =>
+        `<button class="prik-valg ${k[felt] >= tal ? 'valgt' : ''}" onclick="spontanBedøm('${felt}',${tal})">${tal}</button>`).join('')}
       </div>
     </div>`;
-  $('indhold').innerHTML = `<div class="side anim">
-    ${skærmTop('Anmeld turen','log','30 sekunder — så er I færdige')}
-    <p class="dæmpet" style="margin:-6px 0 14px">Anmeldelsen er kun til eget forbrug, så du kan bruge det til kommende ture.</p>
-    <div class="kort">
-      <div class="etiket">${esc(s.anmeldAfventer.sted||'Jeres tur')} · ${pænDato(s.anmeldAfventer.dato)}</div>
-      ${bedøm('destination','Hvor god var destinationen?')}
-      ${bedøm('app','Hvor nemt var det med Arytmi-appen?')}
-      ${bedøm('hygge','Hvor hyggelig var turen for jer?')}
-      <label class="felt-etiket">Kommentar (helt frivilligt)</label>
-      <textarea placeholder="Skriv løs — eller lad være" oninput="anmeldKladde.kommentar=this.value">${esc(anmeldKladde.kommentar)}</textarea>
-    </div>
-    <button class="knap primær bred" onclick="sendAnmeldelse()" style="margin-bottom:10px">Send anmeldelse</button>
-    <div class="stille-række"><button class="knap stille" onclick="skipAnmeldelse()">Spring over</button></div>
-  </div>`;
+  kort.innerHTML = `
+    <div class="etiket">${k.n === null ? 'Log spontan tur' : 'Anmeld turen'}</div>
+    <p style="margin:6px 0 4px">${k.n === null
+      ? 'Turen I bare tog. Skriv den ind, så tæller den med i året.'
+      : 'Anmeldelsen er kun til eget forbrug, så du kan bruge den til kommende ture.'}</p>
+    <label class="felt-etiket">Dato</label>
+    <input type="date" value="${k.dato}" onchange="spontanFelt('dato',this.value)">
+    <label class="felt-etiket">Destination</label>
+    <input type="text" placeholder="Hvor kørte I hen?" value="${esc(k.sted)}" oninput="spontanFelt('sted',this.value)">
+    <div style="border-top:1px solid var(--linje);margin:18px 0 0"></div>
+    ${bedøm('destination','Hvor god var destinationen?')}
+    ${bedøm('app','Hvor nemt var det med Arytmi-appen?')}
+    ${bedøm('hygge','Hvor hyggelig var turen for jer?')}
+    <label class="felt-etiket">Kommentar (helt frivilligt)</label>
+    <textarea placeholder="Skriv løs — eller lad være" oninput="spontanFelt('kommentar',this.value)">${esc(k.kommentar)}</textarea>
+    <div class="modal-knapper">
+      <button class="knap kontur bred" onclick="lukSpontanModal()">Fortryd</button>
+      <button class="knap primær bred" onclick="gemSpontanTur()">Gem</button>
+    </div>`;
 }
-function sendAnmeldelse(){
-  s.ture.unshift({
-    sted:s.anmeldAfventer.sted||'Jeres sted', dato:s.anmeldAfventer.dato,
-    score:{destination:anmeldKladde.destination, app:anmeldKladde.app, hygge:anmeldKladde.hygge},
-    kommentar:anmeldKladde.kommentar.trim(),
-    minde:'', plan:s.anmeldAfventer.plan||null
-  });
-  afsluttAnmeldelse();
-  flash('Tak! Turen er gemt under afholdte ture.', 'mail');
+function gemSpontanTur(){
+  const k = spontanKladde;
+  if(!k) return;
+  if(!k.dato){ flash('Vælg en dato for turen.', 'klokke'); return; }
+  const harScore = !!(k.destination || k.app || k.hygge);
+  const ny = {
+    sted: (k.sted || '').trim() || 'Spontan tur',
+    dato: k.dato,
+    score: harScore ? { destination:k.destination, app:k.app, hygge:k.hygge } : null,
+    kommentar: (k.kommentar || '').trim()
+  };
+  const førstegang = k.n === null;
+  if(førstegang){
+    s.ture.unshift({ ...ny, minde: '', plan: null });
+  } else {
+    // minde og plan er turens egne — de må ikke ryge, fordi man retter en score
+    const t = s.ture[k.n];
+    if(t) Object.assign(t, ny);
+  }
+  gem(); lukSpontanModal();
+  nulstilHistorik(); gåTil('log');
+  flash(førstegang ? 'Turen er logget.' : 'Anmeldelsen er gemt.', 'tjek');
 }
-function skipAnmeldelse(){
-  s.ture.unshift({ sted:s.anmeldAfventer.sted||'Jeres sted', dato:s.anmeldAfventer.dato,
-    score:null, kommentar:'', minde:'', plan:s.anmeldAfventer.plan||null });
-  afsluttAnmeldelse();
-  flash('Helt fint — turen er gemt uden anmeldelse.');
-}
-/* Turen flytter fra kommende til afholdte. Først HER slettes den fra
-   s.arytmer — så den ikke er væk, hvis man fortryder undervejs på
-   anmeldelsessiden. */
-function afsluttAnmeldelse(){
-  if(s.anmeldAfventer && s.anmeldAfventer.turId) sletTur(s.anmeldAfventer.turId);
-  s.anmeldAfventer = null; anmeldKladde = null;
-  gem(); nulstilHistorik(); gåTil('log');
-}
+
 /* Det man selv skriver om turen bagefter — "bryllupsdag i solen", "alt
    kiksede men fantastisk udsigt" (OD 30/8). Gemmes pr. tur i loggen og kan
    rettes når som helst. */
@@ -4068,7 +4200,11 @@ function startGentagelse(t){
    LOG
    ============================================================= */
 function bølge(n){ return `<span class="bølger">${'●'.repeat(n||0)}${'○'.repeat(5-(n||0))}</span>`; }
-function årshjulSVG(){
+/* Året som et ur: hver afholdt tur er en prik dér, hvor den ligger på årets
+   runde. Hjulet bor nu i loggens header oven på hero-scenen (KN 4/9) — før
+   fyldte det et helt kort midt i listen. Derfor lyse streger på mørk bund, og
+   diameteren gives med som argument i stedet for at være låst til 232 px. */
+function årshjulSVG(px){
   const iÅr = new Date().getFullYear();
   const tureIÅr = s.ture.filter(t=>t.dato && String(t.dato).startsWith(String(iÅr)));
   const R = 90, C = 120;
@@ -4078,23 +4214,24 @@ function årshjulSVG(){
     {fra:5/12, til:8/12, farve:'#d9b48c'},{fra:8/12, til:11/12, farve:'#c08d5a'}
   ];
   const pkt = (v,r) => `${C+r*Math.cos(v)} ${C+r*Math.sin(v)}`;
-  const buer = sæsoner.map(sæ=>`<path d="M ${pkt(vink(sæ.fra),R)} A ${R} ${R} 0 0 1 ${pkt(vink(sæ.til),R)}" fill="none" stroke="${sæ.farve}" stroke-width="3.5" stroke-linecap="round" opacity=".55"/>`).join('');
+  const buer = sæsoner.map(sæ=>`<path d="M ${pkt(vink(sæ.fra),R)} A ${R} ${R} 0 0 1 ${pkt(vink(sæ.til),R)}" fill="none" stroke="${sæ.farve}" stroke-width="4.5" stroke-linecap="round" opacity=".92"/>`).join('');
   let prikker = '';
   tureIÅr.forEach((t,i)=>{
     const d = new Date(t.dato+'T12:00:00');
     const v = vink(((d-new Date(iÅr,0,1))/86400000)/365);
-    prikker += `<circle class="års-prik" style="animation-delay:${i*.4}s" cx="${C+R*Math.cos(v)}" cy="${C+R*Math.sin(v)}" r="6.5" fill="#b0794e" stroke="#faf9f5" stroke-width="2.5"/>`;
+    prikker += `<circle class="års-prik" style="animation-delay:${i*.4}s" cx="${C+R*Math.cos(v)}" cy="${C+R*Math.sin(v)}" r="7" fill="#e8d5ae" stroke="#26201a" stroke-width="2.5"/>`;
   });
   let mdrTegn = '';
   for(let m=0;m<12;m++){
     const v = vink(m/12);
-    mdrTegn += `<text x="${C+(R+20)*Math.cos(v)}" y="${C+(R+20)*Math.sin(v)+4}" text-anchor="middle" font-size="10" fill="#8e8a7f">${'JFMAMJJASOND'[m]}</text>`;
+    mdrTegn += `<text x="${C+(R+20)*Math.cos(v)}" y="${C+(R+20)*Math.sin(v)+4}" text-anchor="middle" font-size="11" fill="rgba(246,243,234,.7)">${'JFMAMJJASOND'[m]}</text>`;
   }
-  return `<svg viewBox="0 0 240 240" width="232" height="232">
-    <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#ddd8cb" stroke-width="1.5"/>
+  const d = px || 132;
+  return `<svg class="års-ur" viewBox="0 0 240 240" width="${d}" height="${d}" aria-hidden="true">
+    <circle cx="${C}" cy="${C}" r="${R}" fill="rgba(20,16,11,.3)" stroke="rgba(246,243,234,.3)" stroke-width="1.5"/>
     ${buer}${mdrTegn}${prikker}
-    <text x="${C}" y="${C-2}" text-anchor="middle" font-size="40" font-weight="600" fill="#3a3227" font-family="Iowan Old Style,Palatino,Georgia,serif">${tureIÅr.length}</text>
-    <text x="${C}" y="${C+20}" text-anchor="middle" font-size="12" fill="#8e8a7f">${tureIÅr.length===1?'tur':'ture'} i år</text>
+    <text x="${C}" y="${C-2}" text-anchor="middle" font-size="46" font-weight="600" fill="#f6f3ea" font-family="Iowan Old Style,Palatino,Georgia,serif">${tureIÅr.length}</text>
+    <text x="${C}" y="${C+22}" text-anchor="middle" font-size="13" fill="rgba(246,243,234,.75)">${tureIÅr.length===1?'tur':'ture'} i år</text>
   </svg>`;
 }
 /* Regnereglerne for "er turen klar" bor i forplejningKlar(), bilenKlar() og
@@ -4175,28 +4312,49 @@ function kommendeKort(a){
       <div class="dato" style="margin-top:4px">${naar}</div>
       <div class="dæmpet" style="font-size:13px;margin-top:6px">${linje}</div>
       <div class="aryt-knapper">
-        <button class="knap kontur bred lille" onclick="åbnTurplan('${a.id}')">${ik('bog')} Se turplan</button>
+        <button class="knap kontur bred lille" onclick="åbnTurplan('${a.id}')">${ik('bog')} Se/ret turplan</button>
         ${st.færdig
           ? `<button class="knap primær bred lille" onclick="åbnPakkeliste('${a.id}')">${ik('tjek')} Hent pakkeliste</button>`
           : `<button class="knap primær bred lille" onclick="fortsætPlanlægning('${a.id}')">${ik('pil')} Færdiggør planlægning</button>`}
       </div>
-      ${st.pakketFærdig?`<button class="knap kontur bred lille" style="margin-top:8px" onclick="gemTur('${a.id}')">${ik('puls')} Vil du gemme din tur</button>`:''}
     </div>`;
 }
 function skærmLog(){
   const tomt = !s.ture.length;
   const kommende = s.arytmer.slice().sort((a,b)=>(a.dato||'9999')<(b.dato||'9999')?-1:1);
-  $('indhold').innerHTML = `<div class="side anim">
-    <div style="padding-top:26px">
-      <div class="etiket">Jeres ture</div>
-      <h1 style="margin-top:6px">Dine arytmer</h1>
+  /* Afholdte ture sorteres på TURENS dato, ikke på hvornår den blev skrevet
+     ind (KN 4/9). Det oprindelige indeks følger med i n, fordi gemMinde() og
+     gentagTur() og anmeldelsen skriver direkte i s.ture[n]. Sorterede man
+     selve s.ture, ville de indeks pege på en anden tur næste gang. */
+  const afholdte = s.ture.map((t,n)=>({t,n}))
+    .sort((a,b)=>String(b.t.dato||'').localeCompare(String(a.t.dato||'')));
+  $('indhold').innerHTML = `
+  <div class="ned-hero">
+    ${heroScene('klar', 340)}
+    <div class="ned-lag">
+      <div class="ned-top"><div class="h-logo">${logoSVG(true)}</div></div>
+      <!-- Årshjulet er flyttet herop (KN 4/9). Det fyldte et helt kort midt i
+           listen; her er det halvt så stort og laver samtidig den samme
+           signatur som nedtællingsforsiden og "Turen er planlagt". -->
+      <div class="log-hoved">
+        <div>
+          <div class="ned-label">Jeres ture</div>
+          <h1 class="log-titel">Dine arytmer</h1>
+        </div>
+        ${årshjulSVG(132)}
+      </div>
+      <!-- Samme runde knap som forsidens "Start her" (KN 4/9): at starte en ny
+           arytme skal se ens ud, uanset hvor i appen man står. -->
+      <div class="rund-start log-start">
+        <button class="rund-knap med-ord" onclick="nyArytme()" aria-label="Planlæg en ny arytme">
+          <span class="rk-ring"></span>${pulsIKnap()}<span class="rk-ord">Ny arytme</span>
+        </button>
+      </div>
     </div>
-    <!-- Fyldt knap kun når listen er tom — dér ER det skærmens greb. Ligger der
-         ture, er det DEM man kom for; så træder knappen et niveau ned, så den
-         ikke konkurrerer med hvert korts egen handling (31/8). -->
-    <button class="knap ${(kommende.length||!tomt)?'kontur':'primær'} bred" style="margin-top:16px" onclick="nyArytme()">${ik('gnist')} Planlæg en ny arytme</button>
+  </div>
+  <div class="tjek-blok">
     ${kommende.length ? `
-    <h2 class="aryt-sektion">Kommende ture</h2>
+    <h2 class="aryt-sektion" style="margin-top:6px">Kommende ture</h2>
     ${kommende.map(kommendeKort).join('')}` : ''}
     ${(kommende.length && !tomt) ? '<h2 class="aryt-sektion">Afholdte ture</h2>' : ''}
     ${tomt ? `
@@ -4204,9 +4362,7 @@ function skærmLog(){
       <div style="color:var(--rav);margin-bottom:12px"><svg class="ik" style="width:44px;height:44px" viewBox="0 0 24 24">${IKONER.måne}</svg></div>
       <h3>${kommende.length ? 'Ingen afholdte ture endnu.' : 'Ingen ture endnu.'}</h3>
       <p class="dæmpet" style="margin-top:8px">Den første bliver den, I husker bedst.</p>
-    </div>` : `
-    <div class="kort" style="margin-top:18px;display:flex;justify-content:center;padding:26px 0 18px">${årshjulSVG()}</div>
-    ${s.ture.map((t,n)=>`
+    </div>` : afholdte.map(({t,n})=>`
     <div class="tur-kort">
       <div class="top"><h3>${esc(t.sted)}</h3><span class="dato">${pænDato(t.dato)}</span></div>
       ${t.score ? `
@@ -4221,8 +4377,15 @@ function skærmLog(){
       <label class="felt-etiket">Hvad skal I huske fra turen?</label>
       <textarea placeholder="Fx bryllupsdag i solen, eller: alt kiksede, men fantastisk udsigt"
                 oninput="gemMinde(${n}, this.value)">${esc(t.minde||'')}</textarea>
-      ${t.plan?`<button class="knap kontur bred lille" style="margin-top:12px" onclick="gentagTur(${n})">${ik('puls')} Gentag turen</button>`:''}
-    </div>`).join('')}`}
+      <!-- Anmeldelsen bor i samme pop-up som "Log spontan tur" (KN 4/9). Den
+           fuldskærms-anmeldelse er væk sammen med "Vil du gemme din tur":
+           turene logges nu selv, og anmeldelsen er noget man KAN gøre
+           bagefter — ikke en port, man skal igennem for at få turen gemt. -->
+      <div class="aryt-knapper">
+        <button class="knap kontur bred lille" onclick="logSpontanModal(${n})">${ik('puls')} ${t.score?'Ret anmeldelsen':'Anmeld turen'}</button>
+        ${t.plan?`<button class="knap kontur bred lille" onclick="gentagTur(${n})">${ik('puls')} Gentag turen</button>`:''}
+      </div>
+    </div>`).join('')}
   </div>`;
 }
 
@@ -4264,6 +4427,9 @@ function skærmProfil(){
    ============================================================= */
 function tegn(){
   if(!s.onboarded){ skærmOnboarding(); tegnNav(); return; }
+  // Passerede ture flytter selv ned i loggen (KN 4/9), FØR skærmen tegnes —
+  // ellers ville forsiden nå at vise en tur, der ligger bag os, som "kommende".
+  logAfholdteTure();
   sikrAktivTur();
   switch(true){
     case aktivSkærm==='hjem':         skærmHjem(); break;
@@ -4289,7 +4455,6 @@ function tegn(){
     // egne underlister. Gamle dybe links lander samme sted.
     case aktivSkærm==='klar-pakke': case aktivSkærm==='klar-sidste':
       skærmKlarListe(); break;
-    case aktivSkærm==='anmeld':       skærmAnmeld(); break;
     case aktivSkærm==='log':          skærmLog(); break;
     case aktivSkærm==='profil':       skærmProfil(); break;
     case aktivSkærm==='invitation':      skærmInvitation(); break;

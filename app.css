@@ -943,6 +943,32 @@
      Side om side på en telefon — de er lige vigtige, og en kolonne ville
      skubbe næste tur ned under kanten. */
   .aryt-knapper{display:flex;gap:8px;margin-top:14px}
+  /* Loggens header (KN 4/9): årshjulet og "Ny arytme" ligger oven på
+     hero-scenen — samme signatur som nedtællingsforsiden. Før stod titlen for
+     sig selv, og hjulet fyldte et helt kort midt nede i listen. */
+  .log-hoved{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .log-titel{font-size:26px;line-height:1.15;color:#f6f3ea;text-shadow:0 2px 16px rgba(0,0,0,.3)}
+  .års-ur{flex-shrink:0}
+  .rund-start.log-start{margin-top:10px;gap:0}
+  @media(max-width:360px){ .års-ur{width:112px;height:112px} .log-titel{font-size:23px} }
+
+  /* Pop-uppen "Log spontan tur"/"Anmeld turen" er et skema, ikke en besked —
+     derfor venstrestillet, og med lov til at scrolle på en lav telefon. */
+  .spontan-kort{text-align:left;max-height:82vh;overflow-y:auto;padding-bottom:0}
+  /* Gem-knappen skal blive stående, også når skemaet må scrolles på en lav
+     telefon (375x667) — ellers ligger vejen ud af pop-uppen under kanten. */
+  .spontan-kort .modal-knapper{position:sticky;bottom:0;background:var(--flade);
+    padding:12px 0 20px;margin-top:14px}
+  .spontan-kort p{font-size:14px;margin-bottom:2px}
+  /* Prikkerne skal levne plads til selve spørgsmålet i en smal pop-up —
+     ellers brækker "Hvor god var destinationen?" over tre linjer, og skemaet
+     bliver dobbelt så højt som det behøver. */
+  .spontan-kort .bedøm-række{padding:11px 0}
+  .spontan-kort .prikker{gap:6px}
+  .spontan-kort .prik-valg{width:25px;height:25px}
+
+  /* Vælg alle / Fravælg alle over en emneliste (KN 4/9) */
+  .vælg-alle{text-align:right;margin:0 0 4px}
   .aryt-knapper .knap{flex:1;min-width:0;padding-left:10px;padding-right:10px;
     justify-content:center;text-align:center;white-space:normal;line-height:1.25}
   /* Turen forsiden viser lige nu — markeret med kobberkant, så man kan se
